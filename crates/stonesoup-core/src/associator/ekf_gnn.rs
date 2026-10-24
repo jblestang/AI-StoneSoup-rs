@@ -11,6 +11,7 @@ use alloc::vec::Vec;
 use crate::error::Error;
 use crate::filter::ekf::ExtendedKalmanUpdater;
 use crate::filter::kalman::{GaussianMeasurementPrediction, KalmanPredictor, KalmanWorkspace};
+use crate::linalg::fixed::{add2x2, mul2x4_4x2, mul2x4_4x4, transpose2x4};
 use crate::linalg::VecN;
 use crate::models::bearing_range::CartesianToBearingRange;
 use crate::state::GaussianState;
@@ -29,6 +30,21 @@ fn missed_hypothesis(prediction: GaussianState, gate: f64) -> MeasurementHypothe
     }
 }
 
+fn ekf_meas_pred(
+    model: &CartesianToBearingRange,
+    predicted: &GaussianState,
+    ws: &mut KalmanWorkspace,
+) -> Result<GaussianMeasurementPrediction, Error> {
+    ws.h = model.jacobian(predicted)?;
+    ws.r = model.r();
+    let mean = model.predict_measurement(predicted)?;
+    let hp = mul2x4_4x4(ws.h, predicted.cov)?;
+    let ht = transpose2x4(ws.h)?;
+    let hph = mul2x4_4x2(hp, ht)?;
+    let cov = add2x2(hph, ws.r)?;
+    Ok(GaussianMeasurementPrediction { mean, cov })
+}
+
 fn ekf_distance_hypotheses(
     track_tail: &GaussianState,
     association_time: Timestamp,
@@ -36,6 +52,7 @@ fn ekf_distance_hypotheses(
     gate: f64,
     predictor: &KalmanPredictor,
     updater: &ExtendedKalmanUpdater,
+    det_models: Option<&[CartesianToBearingRange]>,
     ws: &mut KalmanWorkspace,
     out: &mut [MeasurementHypothesis],
 ) -> Result<usize, Error> {
@@ -50,7 +67,12 @@ fn ekf_distance_hypotheses(
             return Err(Error::CapacityExceeded);
         }
         let prediction = predictor.predict(track_tail, det.timestamp, ws)?;
-        let meas_pred = updater.predict_measurement(&prediction, ws)?;
+        let meas_pred = if let Some(models) = det_models {
+            let model = models.get(i).ok_or(Error::InvalidDimension)?;
+            ekf_meas_pred(model, &prediction, ws)?
+        } else {
+            updater.predict_measurement(&prediction, ws)?
+        };
         let innovation = CartesianToBearingRange::innovation(det.vector.0, meas_pred.mean.0)?;
         let distance = mahalanobis(
             VecN(innovation),
@@ -83,6 +105,32 @@ pub fn associate_gnn_2d_ekf(
     ws: &mut KalmanWorkspace,
     out: &mut [GnnAssignment],
 ) -> Result<usize, Error> {
+    associate_gnn_2d_ekf_det_models(
+        track_tails,
+        association_time,
+        detections,
+        gate,
+        predictor,
+        updater,
+        None,
+        ws,
+        out,
+    )
+}
+
+/// Like [`associate_gnn_2d_ekf`], with optional per-detection bearing–range models (multi-sensor).
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+pub fn associate_gnn_2d_ekf_det_models(
+    track_tails: &[GaussianState],
+    association_time: Timestamp,
+    detections: &[Detection],
+    gate: f64,
+    predictor: &KalmanPredictor,
+    updater: &ExtendedKalmanUpdater,
+    det_models: Option<&[CartesianToBearingRange]>,
+    ws: &mut KalmanWorkspace,
+    out: &mut [GnnAssignment],
+) -> Result<usize, Error> {
     let n_tracks = track_tails.len();
     let n_dets = detections.len();
     if n_tracks == 0 || n_dets > MAX_GNN_ASSIGN_DETS {
@@ -104,6 +152,7 @@ pub fn associate_gnn_2d_ekf(
             gate,
             predictor,
             updater,
+            det_models,
             ws,
             &mut scratch,
         )?;
@@ -172,6 +221,7 @@ mod tests {
             5.0,
             &predictor,
             &updater,
+            None,
             &mut ws,
             &mut scratch,
         )

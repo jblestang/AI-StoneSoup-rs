@@ -50,4 +50,8 @@ if ! grep -q 'AKKF.py' "$csv"; then
   echo "catalogue: AKKF.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
-echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + single sensor mgmt + AKKF)"
+if ! grep -q '02_MultiSensorManagement.py' "$csv"; then
+  echo "catalogue: 02_MultiSensorManagement.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + single sensor mgmt + AKKF + multi sensor mgmt)"
