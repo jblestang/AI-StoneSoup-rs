@@ -122,6 +122,9 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "27" | "bearing-only" | "bot" => Some(ScenarioId::Lot22BearingOnlyExample),
         "28" | "multi-tracker" | "multi_tracker" => Some(ScenarioId::Lot23MultiTrackerExample),
         "29" | "ensemble" | "enkf" => Some(ScenarioId::Lot24EnsembleFilterExample),
+        "30" | "particle-flow" | "particle_flow" | "gromov" => {
+            Some(ScenarioId::Lot25ParticleFlowExample)
+        }
         _ => None,
     }
 }

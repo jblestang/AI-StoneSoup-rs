@@ -98,4 +98,8 @@ if ! grep -q 'EnsembleFilterExample.py' "$csv"; then
   echo "catalogue: EnsembleFilterExample.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
+if ! grep -q 'ParticleFlow.py' "$csv"; then
+  echo "catalogue: ParticleFlow.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
 echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + sensor mgmt + AKKF + multi + optimised + architecture + OOSM examples)"

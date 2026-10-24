@@ -6,7 +6,7 @@ Plot panel only (no egui catalogue sidebar). Colors and layers match `apps/stone
 
 | File | Catalogue |
 |------|-----------|
-| `tutorial_01.png` … `tutorial_29.png` | Registry entries **01–29** (tutorials + OOSM/filter examples) |
+| `tutorial_01.png` … `tutorial_30.png` | Registry entries **01–30** (tutorials + OOSM/filter examples) |
 | `tutorial_11_step_*.png` | Resampling tutorial — per resampler case |
 | `tutorial_11_all_cases.png` | Resampling — 2×3 grid of all cases |
 

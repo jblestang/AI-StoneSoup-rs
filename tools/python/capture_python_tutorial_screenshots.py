@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture Stone Soup Rust viewer-style PNGs for catalogue entries 01–29."""
+"""Capture Stone Soup Rust viewer-style PNGs for catalogue entries 01–30."""
 from __future__ import annotations
 
 import json
@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(os.environ.get("OUT", ROOT / "screenshot" / "python"))
-TUTORIALS = tuple(f"{i:02d}" for i in range(1, 30))
+TUTORIALS = tuple(f"{i:02d}" for i in range(1, 31))
 
 
 def dump_bin() -> Path:
