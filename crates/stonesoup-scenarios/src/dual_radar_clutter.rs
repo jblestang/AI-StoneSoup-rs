@@ -659,11 +659,12 @@ impl DualRadarClutterSim {
         Ok(())
     }
 
-    fn tracker_update(
+    /// GNN + EKF on the current active set for one sensor's detections (no initiation).
+    fn associate_update_actives(
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
-    ) -> Result<(), ScenarioError> {
+    ) -> Result<(Vec<Detection>, Vec<CartesianToBearingRange>), ScenarioError> {
         let ts = self.ts();
         let mut det_used = alloc::vec![false; detections.len()];
         let n_act = self.active.len();
@@ -704,7 +705,6 @@ impl DualRadarClutterSim {
                 }
             }
         }
-        self.delete_stale_active()?;
         let mut unassoc = Vec::new();
         let mut un_models = Vec::new();
         for (i, det) in detections.iter().enumerate() {
@@ -713,8 +713,18 @@ impl DualRadarClutterSim {
                 un_models.push(det_models[i]);
             }
         }
+        Ok((unassoc, un_models))
+    }
+
+    fn finish_tracker_step(
+        &mut self,
+        unassoc: &[Detection],
+        un_models: &[CartesianToBearingRange],
+    ) -> Result<(), ScenarioError> {
+        let ts = self.ts();
+        self.delete_stale_active()?;
         if !unassoc.is_empty() {
-            self.multi_initiate(&unassoc, &un_models)?;
+            self.multi_initiate(unassoc, un_models)?;
         }
         self.snapshot_active_paths(ts);
         Ok(())
@@ -729,8 +739,8 @@ impl DualRadarClutterSim {
             let ts = self.ts();
             self.log_truths_at(ts);
             self.prior.timestamp = ts;
-            let mut det_buf = Vec::with_capacity(32);
-            let mut det_models = Vec::with_capacity(32);
+            let mut step_unassoc = Vec::with_capacity(16);
+            let mut step_unassoc_models = Vec::with_capacity(16);
             let mut chunk = alloc::vec![
                 Detection {
                     vector: stonesoup_core::VecN([0.0, 0.0]),
@@ -739,19 +749,24 @@ impl DualRadarClutterSim {
                 };
                 MAX_GNN_ASSIGN_DETS
             ];
+            let mut any_dets = false;
             for ri in 0..2 {
                 let got = self.generate_sensor_dets(ri, ts, &mut chunk)?;
-                let model = radar_model(self.radar_rt[ri].dwell_rad)?;
-                for chunk_det in chunk.iter().take(got) {
-                    if det_buf.len() >= MAX_GNN_ASSIGN_DETS {
-                        break;
-                    }
-                    det_buf.push(*chunk_det);
-                    det_models.push(model);
+                if got == 0 {
+                    continue;
                 }
+                any_dets = true;
+                let model = radar_model(self.radar_rt[ri].dwell_rad)?;
+                let dets = &chunk[..got];
+                let models: alloc::vec::Vec<CartesianToBearingRange> =
+                    alloc::vec![model; got];
+                let (mut unassoc, mut un_models) =
+                    self.associate_update_actives(dets, &models)?;
+                step_unassoc.append(&mut unassoc);
+                step_unassoc_models.append(&mut un_models);
             }
-            if !det_buf.is_empty() {
-                self.tracker_update(&det_buf, &det_models)?;
+            if any_dets {
+                self.finish_tracker_step(&step_unassoc, &step_unassoc_models)?;
             } else {
                 self.delete_stale_active()?;
                 self.snapshot_active_paths(ts);

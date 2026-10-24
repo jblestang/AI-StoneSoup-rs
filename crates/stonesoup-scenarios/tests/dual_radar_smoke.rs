@@ -51,4 +51,9 @@ fn dual_radar_runs_full_duration_with_per_rotation_target_cap() {
         4,
         "TrackToTruth should yield one continuous track per truth"
     );
+    assert_eq!(
+        stats.fused_completed.len(),
+        4,
+        "sequential per-sensor updates: one filter segment per truth"
+    );
 }
