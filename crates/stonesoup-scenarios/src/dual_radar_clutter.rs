@@ -58,7 +58,8 @@ pub const JPDA_CLUTTER_DENSITY: f64 = {
 const JPDA_DET_ASSOCIATED_THRESH: f64 = 0.35;
 const JPDA_MEAS_UPDATE_THRESH: f64 = 0.45;
 /// Stone Soup ``MultiMeasurementInitiator.min_points`` (associated updates, ``updates_only``).
-pub const INITIATOR_MIN_POINTS: u8 = 3;
+/// With ``from_init`` counting as 1: **2** ⇒ one initiation detection plus one associated update.
+pub const INITIATOR_MIN_POINTS: u8 = 2;
 /// Stone Soup ``UpdateTimeStepsDeleter`` on holding tracks.
 pub const HOLDING_TIME_STEPS_DELETER: usize = 5;
 
