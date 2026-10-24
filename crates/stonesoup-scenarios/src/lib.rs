@@ -6,6 +6,7 @@ extern crate alloc;
 mod lot10_single_sensor;
 mod lot11_kdtree;
 mod lot13_multi_sensor;
+mod lot14_optimised_sensor;
 mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;
@@ -35,6 +36,10 @@ pub use lot11_kdtree::{Lot11KdtreeScenario, MAX_LOT11_KDTREE_STEPS};
 pub use lot13_multi_sensor::{
     Lot13MultiSensorScenario, Lot13SensorManagerMode, LOT13_SENSOR_X, MAX_LOT13_STEPS,
     MAX_LOT13_TRACKS,
+};
+pub use lot14_optimised_sensor::{
+    Lot14OptimisedSensorMode, Lot14OptimisedSensorScenario, LOT14_SENSOR_X, MAX_LOT14_STEPS,
+    MAX_LOT14_TRACKS,
 };
 pub use lot1_kalman::{
     tutorial_cov, Lot1KalmanScenario, Lot1Snapshot, Lot1StepOutcome, MAX_LOT1_STEPS, MEASUREMENTS,
