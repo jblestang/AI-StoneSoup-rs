@@ -5,6 +5,15 @@ use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
 };
 use crate::lot2_ukf::Lot2UkfScenario;
+use crate::lot3_clutter::{
+    Lot3ClutterScenario, Lot3StepOutcome, MAX_DETS_PER_STEP, MAX_LOT3_STEPS,
+};
+use crate::lot3_jpda::Lot3JpdaScenario;
+use crate::lot3_jpda::MAX_LOT3_JPDA_STEPS;
+use crate::lot3_multitarget::Lot3MultiTargetScenario;
+use crate::lot3_multitarget::MAX_LOT3_MT_STEPS;
+use crate::lot3_pda::Lot3PdaScenario;
+use crate::lot3_pda::MAX_LOT3_PDA_STEPS;
 use crate::particle_lot2::Lot2ParticleScenario;
 use crate::registry::{ScenarioError, ScenarioId};
 
@@ -22,6 +31,23 @@ pub struct ViewerSnapshot {
     pub ellipse_angle_rad: f64,
     pub rmse: f64,
     pub finished: bool,
+    /// Tutorial 05: all detections at the current step (`det_count` valid entries).
+    pub det_count: u8,
+    pub det_xy: [[f64; 2]; MAX_DETS_PER_STEP],
+    pub det_is_true: [bool; MAX_DETS_PER_STEP],
+    /// Tutorial 05: nearest-neighbour pick, if any.
+    pub associated_xy: Option<(f64, f64)>,
+    /// Tutorials 06/08: second target truth and estimate (x–y).
+    pub truth_b_xy: Option<(f64, f64)>,
+    pub estimate_b_xy: Option<(f64, f64)>,
+}
+
+const fn empty_det_xy() -> [[f64; 2]; MAX_DETS_PER_STEP] {
+    [[0.0, 0.0]; MAX_DETS_PER_STEP]
+}
+
+const fn empty_det_flags() -> [bool; MAX_DETS_PER_STEP] {
+    [false; MAX_DETS_PER_STEP]
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,6 +73,10 @@ pub enum AnyScenario {
     Lot2Ekf(Lot2EkfScenario),
     Lot2Ukf(Lot2UkfScenario),
     Lot2Pf(Lot2ParticleScenario),
+    Lot3(Lot3ClutterScenario),
+    Lot3Pda(Lot3PdaScenario),
+    Lot3Mt(Lot3MultiTargetScenario),
+    Lot3Jpda(Lot3JpdaScenario),
 }
 
 impl AnyScenario {
@@ -61,6 +91,16 @@ impl AnyScenario {
             ScenarioId::Lot2ParticleTutorial => {
                 Ok(Self::Lot2Pf(Lot2ParticleScenario::tutorial_defaults()?))
             }
+            ScenarioId::Lot3ClutterTutorial => {
+                Ok(Self::Lot3(Lot3ClutterScenario::tutorial_defaults()?))
+            }
+            ScenarioId::Lot3PdaTutorial => Ok(Self::Lot3Pda(Lot3PdaScenario::tutorial_defaults()?)),
+            ScenarioId::Lot3MultiTargetTutorial => {
+                Ok(Self::Lot3Mt(Lot3MultiTargetScenario::tutorial_defaults()?))
+            }
+            ScenarioId::Lot3JpdaTutorial => {
+                Ok(Self::Lot3Jpda(Lot3JpdaScenario::tutorial_defaults()?))
+            }
         }
     }
 
@@ -71,6 +111,10 @@ impl AnyScenario {
             Self::Lot2Ekf(_) => ScenarioId::Lot2EkfTutorial,
             Self::Lot2Ukf(_) => ScenarioId::Lot2UkfTutorial,
             Self::Lot2Pf(_) => ScenarioId::Lot2ParticleTutorial,
+            Self::Lot3(_) => ScenarioId::Lot3ClutterTutorial,
+            Self::Lot3Pda(_) => ScenarioId::Lot3PdaTutorial,
+            Self::Lot3Mt(_) => ScenarioId::Lot3MultiTargetTutorial,
+            Self::Lot3Jpda(_) => ScenarioId::Lot3JpdaTutorial,
         }
     }
 }
@@ -82,6 +126,10 @@ impl Scenario for AnyScenario {
             Self::Lot2Ekf(s) => s.reset(),
             Self::Lot2Ukf(s) => s.reset(),
             Self::Lot2Pf(s) => s.reset(),
+            Self::Lot3(s) => s.reset(),
+            Self::Lot3Pda(s) => s.reset(),
+            Self::Lot3Mt(s) => s.reset(),
+            Self::Lot3Jpda(s) => s.reset(),
         }
     }
 
@@ -103,6 +151,31 @@ impl Scenario for AnyScenario {
                 Lot2StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
                 Lot2StepOutcome::Finished => ScenarioStepOutcome::Finished,
             },
+            Self::Lot3(s) => match s.step()? {
+                Lot3StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
+                Lot3StepOutcome::Finished => ScenarioStepOutcome::Finished,
+            },
+            Self::Lot3Pda(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot3Mt(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot3Jpda(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -122,6 +195,12 @@ impl Scenario for AnyScenario {
                     ellipse_angle_rad: snap.ellipse_angle_rad,
                     rmse: snap.rmse,
                     finished: snap.finished,
+                    det_count: 0,
+                    det_xy: empty_det_xy(),
+                    det_is_true: empty_det_flags(),
+                    associated_xy: None,
+                    truth_b_xy: None,
+                    estimate_b_xy: None,
                 })
             }
             Self::Lot2Ekf(s) => lot2_viewer_snapshot(s.snapshot()?),
@@ -131,6 +210,10 @@ impl Scenario for AnyScenario {
                 frame.ellipse_semi = None;
                 Ok(frame)
             }
+            Self::Lot3(s) => lot3_viewer_snapshot(s.snapshot()?),
+            Self::Lot3Pda(s) => lot3_pda_viewer_snapshot(s),
+            Self::Lot3Mt(s) => lot3_mt_viewer_snapshot(s),
+            Self::Lot3Jpda(s) => lot3_jpda_viewer_snapshot(s),
         }
     }
 }
@@ -147,5 +230,146 @@ fn lot2_viewer_snapshot(snap: Lot2Snapshot) -> Result<ViewerSnapshot, ScenarioEr
         ellipse_angle_rad: snap.ellipse_angle_rad,
         rmse: snap.rmse,
         finished: snap.finished,
+        det_count: 0,
+        det_xy: empty_det_xy(),
+        det_is_true: empty_det_flags(),
+        associated_xy: None,
+        truth_b_xy: None,
+        estimate_b_xy: None,
+    })
+}
+
+fn lot3_viewer_snapshot(
+    snap: crate::lot3_clutter::Lot3Snapshot,
+) -> Result<ViewerSnapshot, ScenarioError> {
+    let mut det_xy = empty_det_xy();
+    let mut det_is_true = empty_det_flags();
+    for i in 0..snap.measurement_count.min(MAX_DETS_PER_STEP) {
+        det_xy[i] = [snap.measurements[i].xy.0, snap.measurements[i].xy.1];
+        det_is_true[i] = snap.measurements[i].is_true;
+    }
+    let measurement_xy = snap
+        .associated_xy
+        .or_else(|| snap.measurements.first().map(|m| m.xy))
+        .unwrap_or((0.0, 0.0));
+    Ok(ViewerSnapshot {
+        step: snap.step,
+        max_steps: MAX_LOT3_STEPS,
+        truth_xy: snap.truth_xy,
+        estimate_xy: snap.estimate_xy,
+        measurement_xy,
+        bearing_range: None,
+        ellipse_semi: Some(snap.ellipse_semi),
+        ellipse_angle_rad: snap.ellipse_angle_rad,
+        rmse: snap.rmse,
+        finished: snap.finished,
+        det_count: snap.measurement_count.min(MAX_DETS_PER_STEP) as u8,
+        det_xy,
+        det_is_true,
+        associated_xy: snap.associated_xy,
+        truth_b_xy: None,
+        estimate_b_xy: None,
+    })
+}
+
+fn lot3_pda_viewer_snapshot(s: &Lot3PdaScenario) -> Result<ViewerSnapshot, ScenarioError> {
+    let step = s.step_index();
+    let idx = if step == 0 { 0 } else { step.saturating_sub(1) };
+    let truth = crate::lot3_pda::TRUTH
+        .get(idx)
+        .copied()
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let est = s.estimate_state();
+    Ok(ViewerSnapshot {
+        step,
+        max_steps: MAX_LOT3_PDA_STEPS,
+        truth_xy: (truth[0], truth[2]),
+        estimate_xy: (est.mean.0[0], est.mean.0[2]),
+        measurement_xy: (0.0, 0.0),
+        bearing_range: None,
+        ellipse_semi: None,
+        ellipse_angle_rad: 0.0,
+        rmse: 0.0,
+        finished: step >= MAX_LOT3_PDA_STEPS,
+        det_count: 0,
+        det_xy: empty_det_xy(),
+        det_is_true: empty_det_flags(),
+        associated_xy: None,
+        truth_b_xy: None,
+        estimate_b_xy: None,
+    })
+}
+
+fn lot3_mt_viewer_snapshot(s: &Lot3MultiTargetScenario) -> Result<ViewerSnapshot, ScenarioError> {
+    let step = s.step_index();
+    let idx = if step == 0 { 0 } else { step.saturating_sub(1) };
+    let ta = crate::lot3_multitarget::TRUTH_A
+        .get(idx)
+        .copied()
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let tb = crate::lot3_multitarget::TRUTH_B
+        .get(idx)
+        .copied()
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let a = s
+        .track_state(0)
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let b = s
+        .track_state(1)
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    Ok(ViewerSnapshot {
+        step,
+        max_steps: MAX_LOT3_MT_STEPS,
+        truth_xy: (ta[0], ta[2]),
+        estimate_xy: (a.mean.0[0], a.mean.0[2]),
+        measurement_xy: (0.0, 0.0),
+        bearing_range: None,
+        ellipse_semi: None,
+        ellipse_angle_rad: 0.0,
+        rmse: 0.0,
+        finished: step >= MAX_LOT3_MT_STEPS,
+        det_count: 0,
+        det_xy: empty_det_xy(),
+        det_is_true: empty_det_flags(),
+        associated_xy: None,
+        truth_b_xy: Some((tb[0], tb[2])),
+        estimate_b_xy: Some((b.mean.0[0], b.mean.0[2])),
+    })
+}
+
+fn lot3_jpda_viewer_snapshot(s: &Lot3JpdaScenario) -> Result<ViewerSnapshot, ScenarioError> {
+    let step = s.step_index();
+    let idx = if step == 0 { 0 } else { step.saturating_sub(1) };
+    let ta = crate::lot3_jpda::TRUTH_A
+        .get(idx)
+        .copied()
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let tb = crate::lot3_jpda::TRUTH_B
+        .get(idx)
+        .copied()
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let a = s
+        .track_state(0)
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let b = s
+        .track_state(1)
+        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    Ok(ViewerSnapshot {
+        step,
+        max_steps: MAX_LOT3_JPDA_STEPS,
+        truth_xy: (ta[0], ta[2]),
+        estimate_xy: (a.mean.0[0], a.mean.0[2]),
+        measurement_xy: (0.0, 0.0),
+        bearing_range: None,
+        ellipse_semi: None,
+        ellipse_angle_rad: 0.0,
+        rmse: 0.0,
+        finished: step >= MAX_LOT3_JPDA_STEPS,
+        det_count: 0,
+        det_xy: empty_det_xy(),
+        det_is_true: empty_det_flags(),
+        associated_xy: None,
+        truth_b_xy: Some((tb[0], tb[2])),
+        estimate_b_xy: Some((b.mean.0[0], b.mean.0[2])),
     })
 }

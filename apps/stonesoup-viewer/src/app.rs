@@ -7,8 +7,12 @@ use stonesoup_scenarios::{
     TUTORIAL02_SENSOR_XY,
 };
 
-/// NumPy / Stone Soup fixture seed (tutorials 01–04).
+/// NumPy / Stone Soup fixture seed (tutorials 01–08).
 const FIXTURE_SEED: u32 = 1991;
+
+/// Document title set when `?finish=1` run completes (WASM screenshot automation).
+#[cfg(target_arch = "wasm32")]
+pub const WASM_READY_TITLE: &str = "stonesoup-viewer-ready";
 
 pub struct ViewerApp {
     active_id: ScenarioId,
@@ -20,8 +24,18 @@ pub struct ViewerApp {
     truth_trail: Vec<[f64; 2]>,
     meas_trail: Vec<[f64; 2]>,
     est_trail: Vec<[f64; 2]>,
+    truth_b_trail: Vec<[f64; 2]>,
+    est_b_trail: Vec<[f64; 2]>,
     last_ellipse: Option<EllipseOverlay>,
     last_advance: f64,
+    /// Current-step detections (Tutorial 05 clutter).
+    step_clutter: Vec<[f64; 2]>,
+    step_true_dets: Vec<[f64; 2]>,
+    step_associated: Option<[f64; 2]>,
+    #[cfg(target_arch = "wasm32")]
+    wasm_query_handled: bool,
+    #[cfg(target_arch = "wasm32")]
+    pending_auto_finish: bool,
 }
 
 impl Default for ViewerApp {
@@ -36,9 +50,33 @@ impl Default for ViewerApp {
             truth_trail: Vec::new(),
             meas_trail: Vec::new(),
             est_trail: Vec::new(),
+            truth_b_trail: Vec::new(),
+            est_b_trail: Vec::new(),
             last_ellipse: None,
             last_advance: 0.0,
+            step_clutter: Vec::new(),
+            step_true_dets: Vec::new(),
+            step_associated: None,
+            #[cfg(target_arch = "wasm32")]
+            wasm_query_handled: false,
+            #[cfg(target_arch = "wasm32")]
+            pending_auto_finish: false,
         }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
+    match code {
+        "01" | "1" => Some(ScenarioId::Lot1KalmanTutorial),
+        "02" | "2" => Some(ScenarioId::Lot2EkfTutorial),
+        "03" | "3" => Some(ScenarioId::Lot2UkfTutorial),
+        "04" | "4" => Some(ScenarioId::Lot2ParticleTutorial),
+        "05" | "5" => Some(ScenarioId::Lot3ClutterTutorial),
+        "06" | "6" => Some(ScenarioId::Lot3MultiTargetTutorial),
+        "07" | "7" => Some(ScenarioId::Lot3PdaTutorial),
+        "08" | "8" => Some(ScenarioId::Lot3JpdaTutorial),
+        _ => None,
     }
 }
 
@@ -94,7 +132,12 @@ impl ViewerApp {
         self.truth_trail.clear();
         self.meas_trail.clear();
         self.est_trail.clear();
+        self.truth_b_trail.clear();
+        self.est_b_trail.clear();
         self.last_ellipse = None;
+        self.step_clutter.clear();
+        self.step_true_dets.clear();
+        self.step_associated = None;
     }
 
     pub fn reset(&mut self) {
@@ -111,15 +154,103 @@ impl ViewerApp {
 
     fn apply_snapshot(&mut self, snap: ViewerSnapshot) {
         self.truth_trail.push([snap.truth_xy.0, snap.truth_xy.1]);
-        self.meas_trail
-            .push([snap.measurement_xy.0, snap.measurement_xy.1]);
+        self.step_clutter.clear();
+        self.step_true_dets.clear();
+        for i in 0..snap.det_count as usize {
+            let p = [snap.det_xy[i][0], snap.det_xy[i][1]];
+            if snap.det_is_true[i] {
+                self.step_true_dets.push(p);
+            } else {
+                self.step_clutter.push(p);
+            }
+        }
+        self.step_associated = snap.associated_xy.map(|(x, y)| [x, y]);
+        if let Some(p) = self.step_associated {
+            self.meas_trail.push(p);
+        } else if snap.det_count == 0 {
+            self.meas_trail
+                .push([snap.measurement_xy.0, snap.measurement_xy.1]);
+        }
         self.est_trail
             .push([snap.estimate_xy.0, snap.estimate_xy.1]);
+        if let Some(t) = snap.truth_b_xy {
+            self.truth_b_trail.push([t.0, t.1]);
+        }
+        if let Some(e) = snap.estimate_b_xy {
+            self.est_b_trail.push([e.0, e.1]);
+        }
         self.last_ellipse = snap.ellipse_semi.map(|semi| EllipseOverlay {
             center: [snap.estimate_xy.0, snap.estimate_xy.1],
             semi,
             angle_rad: snap.ellipse_angle_rad,
         });
+    }
+
+    /// Advance until the scenario reports finished; rebuild trails for the plot.
+    pub fn finish_to_end(&mut self) {
+        self.playing = false;
+        self.clear_trails();
+        self.ensure_scenario();
+        loop {
+            let progress = {
+                let Some(s) = &mut self.scenario else {
+                    break;
+                };
+                match s.step() {
+                    Ok(ScenarioStepOutcome::Stepped) => (true, s.viewer_snapshot().ok()),
+                    Ok(ScenarioStepOutcome::Finished) => (false, s.viewer_snapshot().ok()),
+                    Err(e) => {
+                        self.error = Some(format!("{e:?}"));
+                        break;
+                    }
+                }
+            };
+            if let Some(snap) = progress.1 {
+                self.apply_snapshot(snap);
+            }
+            if !progress.0 {
+                break;
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
+        if let Some(window) = web_sys::window() {
+            let _ = window.document().and_then(|d| {
+                d.set_title(WASM_READY_TITLE);
+                Some(())
+            });
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn apply_wasm_query_params(&mut self) {
+        if self.wasm_query_handled {
+            return;
+        }
+        self.wasm_query_handled = true;
+        let Some(window) = web_sys::window() else {
+            return;
+        };
+        let Ok(search) = window.location().search() else {
+            return;
+        };
+        let mut tutorial: Option<String> = None;
+        let mut finish = false;
+        for pair in search.trim_start_matches('?').split('&') {
+            let Some((key, value)) = pair.split_once('=') else {
+                continue;
+            };
+            match key {
+                "tutorial" => tutorial = Some(value.to_string()),
+                "finish" if value == "1" || value.eq_ignore_ascii_case("true") => finish = true,
+                _ => {}
+            }
+        }
+        if let Some(code) = tutorial.as_deref().and_then(scenario_id_from_tutorial) {
+            self.load_scenario(code);
+        }
+        if finish {
+            self.pending_auto_finish = true;
+        }
     }
 
     pub fn step_once(&mut self) {
@@ -164,13 +295,29 @@ impl ViewerApp {
     }
 
     fn is_lot2(&self) -> bool {
-        !matches!(self.active_id, ScenarioId::Lot1KalmanTutorial)
+        matches!(
+            self.active_id,
+            ScenarioId::Lot2EkfTutorial
+                | ScenarioId::Lot2UkfTutorial
+                | ScenarioId::Lot2ParticleTutorial
+        )
+    }
+
+    fn is_lot3(&self) -> bool {
+        matches!(self.active_id, ScenarioId::Lot3ClutterTutorial)
     }
 }
 
 impl eframe::App for ViewerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        #[cfg(target_arch = "wasm32")]
+        self.apply_wasm_query_params();
         self.ensure_scenario();
+        #[cfg(target_arch = "wasm32")]
+        if self.pending_auto_finish {
+            self.pending_auto_finish = false;
+            self.finish_to_end();
+        }
         if self.playing {
             let now = ctx.input(|i| i.time);
             let delay = 0.4 / f64::from(self.speed.max(0.1));
@@ -283,7 +430,27 @@ impl eframe::App for ViewerApp {
                                 .color(egui::Color32::LIGHT_GRAY),
                         );
                     }
-                    if !self.meas_trail.is_empty() {
+                    if self.is_lot3() && !self.step_clutter.is_empty() {
+                        let clutter: PlotPoints =
+                            self.step_clutter.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.points(
+                            Points::new(clutter)
+                                .name("Clutter")
+                                .radius(3.0)
+                                .color(egui::Color32::from_rgb(180, 120, 80)),
+                        );
+                    }
+                    if self.is_lot3() && !self.step_true_dets.is_empty() {
+                        let truth_dets: PlotPoints =
+                            self.step_true_dets.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.points(
+                            Points::new(truth_dets)
+                                .name("True detections (step)")
+                                .radius(5.0)
+                                .color(egui::Color32::LIGHT_BLUE),
+                        );
+                    }
+                    if !self.is_lot3() && !self.meas_trail.is_empty() {
                         plot_ui.points(
                             Points::new(meas_pts)
                                 .name("Detections (Cartesian)")
@@ -291,8 +458,40 @@ impl eframe::App for ViewerApp {
                                 .color(egui::Color32::LIGHT_BLUE),
                         );
                     }
+                    if self.is_lot3() {
+                        if let Some(p) = self.step_associated {
+                            plot_ui.points(
+                                Points::new(vec![[p[0], p[1]]])
+                                    .name("Associated detection")
+                                    .radius(6.0)
+                                    .color(egui::Color32::from_rgb(255, 200, 60)),
+                            );
+                        }
+                    }
                     if !self.est_trail.is_empty() {
-                        plot_ui.line(Line::new(est_pts).name("Track").color(egui::Color32::GREEN));
+                        plot_ui.line(
+                            Line::new(est_pts)
+                                .name("Track A")
+                                .color(egui::Color32::GREEN),
+                        );
+                    }
+                    if !self.truth_b_trail.is_empty() {
+                        let tb: PlotPoints =
+                            self.truth_b_trail.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.line(
+                            Line::new(tb)
+                                .name("Ground truth B")
+                                .color(egui::Color32::from_rgb(200, 200, 255)),
+                        );
+                    }
+                    if !self.est_b_trail.is_empty() {
+                        let eb: PlotPoints =
+                            self.est_b_trail.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.line(
+                            Line::new(eb)
+                                .name("Track B")
+                                .color(egui::Color32::from_rgb(255, 140, 80)),
+                        );
                     }
                     if let Some(el) = self.last_ellipse {
                         let ring = ellipse_ring(el.center, el.semi, el.angle_rad, 48);
