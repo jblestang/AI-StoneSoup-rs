@@ -1,5 +1,12 @@
 //! Small heap matrices for kernel filters (AKKF), `no_std` + `alloc`.
 
+#![allow(
+    clippy::indexing_slicing,
+    clippy::arithmetic_side_effects,
+    clippy::identity_op,
+    clippy::erasing_op
+)]
+
 extern crate alloc;
 
 use alloc::vec;

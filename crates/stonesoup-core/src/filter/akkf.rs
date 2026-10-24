@@ -1,5 +1,13 @@
 //! Adaptive kernel Kalman filter (AKKF) — quadratic kernel, Tutorial `AKKF.py`.
 
+#![allow(
+    clippy::indexing_slicing,
+    clippy::arithmetic_side_effects,
+    clippy::erasing_op,
+    clippy::identity_op,
+    clippy::too_many_arguments
+)]
+
 extern crate alloc;
 
 use alloc::vec;
@@ -29,10 +37,7 @@ pub struct KernelParticleState {
 }
 
 impl KernelParticleState {
-    pub fn new_uniform(
-        particles: &[[f64; 4]],
-        timestamp: Timestamp,
-    ) -> Result<Self, Error> {
+    pub fn new_uniform(particles: &[[f64; 4]], timestamp: Timestamp) -> Result<Self, Error> {
         let n = particles.len();
         if n == 0 || n > AKKF_MAX_PARTICLES {
             return Err(Error::InvalidDimension);
@@ -65,11 +70,7 @@ impl KernelParticleState {
         timestamp: Timestamp,
     ) -> Result<Self, Error> {
         let n = weights.len();
-        if n == 0
-            || n > AKKF_MAX_PARTICLES
-            || state_cols.len() != 4 * n
-            || kernel_covar.n != n
-        {
+        if n == 0 || n > AKKF_MAX_PARTICLES || state_cols.len() != 4 * n || kernel_covar.n != n {
             return Err(Error::InvalidDimension);
         }
         if let Some(ref prop) = proposal_cols {
@@ -130,7 +131,8 @@ impl AdaptiveKernelKalmanPredictor {
             return Err(Error::InvalidDimension);
         }
         let k_tilde_tilde = quadratic_gram(&self.kernel, 4, proposal_cols, proposal_cols, n)?;
-        let k_tilde_nontilde = quadratic_gram(&self.kernel, 4, proposal_cols, &prior.state_cols, n)?;
+        let k_tilde_nontilde =
+            quadratic_gram(&self.kernel, 4, proposal_cols, &prior.state_cols, n)?;
 
         let mut reg = DynMat::identity(n)?;
         reg = reg.scale(self.lambda_predictor)?;
@@ -211,9 +213,7 @@ impl AdaptiveKernelKalmanUpdater {
         let gyy_s = g_yy.mul(&predicted.kernel_covar)?;
         let mut reg = DynMat::identity(n)?;
         reg = reg.scale(self.lambda_updater)?;
-        let q_akkf = predicted
-            .kernel_covar
-            .mul(&gyy_s.add(&reg)?.pinv()?)?;
+        let q_akkf = predicted.kernel_covar.mul(&gyy_s.add(&reg)?.pinv()?)?;
 
         let gyy_w = mat_vec(&g_yy, &predicted.weights)?;
         let mut delta = vec![0.0; n];
@@ -227,7 +227,9 @@ impl AdaptiveKernelKalmanUpdater {
         }
 
         let q_gyy = q_akkf.mul(&g_yy)?;
-        let updated_covariance = predicted.kernel_covar.sub(&q_gyy.mul(&predicted.kernel_covar)?)?;
+        let updated_covariance = predicted
+            .kernel_covar
+            .sub(&q_gyy.mul(&predicted.kernel_covar)?)?;
 
         Ok((updated_weights, updated_covariance))
     }

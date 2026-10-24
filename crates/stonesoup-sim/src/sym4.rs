@@ -6,8 +6,7 @@ use stonesoup_core::Error;
 pub fn diagonal_svd_a4(d: [f64; 4]) -> [[f64; 4]; 4] {
     let mut order = [(0usize, d[0]), (1, d[1]), (2, d[2]), (3, d[3])];
     order.sort_by(|a, b| {
-        b.1
-            .partial_cmp(&a.1)
+        b.1.partial_cmp(&a.1)
             .unwrap_or(core::cmp::Ordering::Equal)
             .then(b.0.cmp(&a.0))
     });

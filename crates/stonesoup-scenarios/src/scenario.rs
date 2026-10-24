@@ -148,7 +148,9 @@ impl AnyScenario {
                 Ok(Self::Lot7Gmphd(Lot7GmPhdScenario::tutorial_defaults()?))
             }
             ScenarioId::Lot8AsdTutorial => Ok(Self::Lot8Asd(Lot8AsdScenario::tutorial_defaults()?)),
-            ScenarioId::Lot9AkkfTutorial => Ok(Self::Lot9Akkf(Lot9AkkfScenario::tutorial_defaults()?)),
+            ScenarioId::Lot9AkkfTutorial => {
+                Ok(Self::Lot9Akkf(Lot9AkkfScenario::tutorial_defaults()?))
+            }
         }
     }
 

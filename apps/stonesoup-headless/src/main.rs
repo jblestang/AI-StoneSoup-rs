@@ -7,10 +7,9 @@ use stonesoup_scenarios::{
     Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario,
     Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario,
     Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario,
-    Lot9AkkfScenario,
-    ScenarioId, ScenarioRegistry, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS,
-    MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS,
-    MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
+    Lot9AkkfScenario, ScenarioId, ScenarioRegistry, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
+    MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS,
+    MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {

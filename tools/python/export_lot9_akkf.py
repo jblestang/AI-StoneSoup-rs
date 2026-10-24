@@ -21,6 +21,7 @@ def write_rust(payload: dict) -> None:
         f"pub const LOT9_NUM_PARTICLES: usize = {n};",
         f"pub const LOT9_NUM_STEPS: usize = {steps};",
         f"pub const LOT9_Q: f64 = {payload['q']};",
+        f"#[allow(dead_code)]",
         f"pub const LOT9_BEARING_NOISE_VAR: f64 = {payload['bearing_noise_var']};",
         "pub const LOT9_TRUTH_XY: [[f64; 2]; LOT9_NUM_STEPS] = [",
     ]
