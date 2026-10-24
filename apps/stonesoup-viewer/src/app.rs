@@ -104,6 +104,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "13" | "gmphd" | "phd" | "gm-phd" => Some(ScenarioId::Lot7GmphdTutorial),
         "14" | "asd" => Some(ScenarioId::Lot8AsdTutorial),
         "15" | "kdtree" => Some(ScenarioId::Lot11KdtreeTutorial),
+        "16" | "sensor" | "sensormanagement" => Some(ScenarioId::Lot10SingleSensorTutorial),
         _ => None,
     }
 }
@@ -342,6 +343,7 @@ impl ViewerApp {
             ScenarioId::Lot2EkfTutorial
                 | ScenarioId::Lot2UkfTutorial
                 | ScenarioId::Lot2ParticleTutorial
+                | ScenarioId::Lot10SingleSensorTutorial
         )
     }
 
@@ -354,6 +356,7 @@ impl ViewerApp {
                 | ScenarioId::Lot3JpdaTutorial
                 | ScenarioId::Lot4InitiatorsTutorial
                 | ScenarioId::Lot4SimulationTutorial
+                | ScenarioId::Lot10SingleSensorTutorial
                 | ScenarioId::Lot11KdtreeTutorial
         )
     }
@@ -506,6 +509,8 @@ impl eframe::App for ViewerApp {
             let est_pts: PlotPoints = self.est_trail.iter().map(|p| [p[0], p[1]]).collect();
             let sensor = if self.is_lot2() {
                 Some(TUTORIAL02_SENSOR_XY)
+            } else if matches!(self.active_id, ScenarioId::Lot10SingleSensorTutorial) {
+                Some(stonesoup_scenarios::LOT10_SENSOR_XY)
             } else {
                 None
             };

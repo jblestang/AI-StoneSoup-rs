@@ -102,6 +102,7 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "13" | "gmphd" => Some(ScenarioId::Lot7GmphdTutorial),
         "14" | "asd" => Some(ScenarioId::Lot8AsdTutorial),
         "15" | "kdtree" => Some(ScenarioId::Lot11KdtreeTutorial),
+        "16" | "sensor" => Some(ScenarioId::Lot10SingleSensorTutorial),
         _ => None,
     }
 }
@@ -124,6 +125,7 @@ fn is_lot3_meas(id: ScenarioId) -> bool {
             | ScenarioId::Lot3JpdaTutorial
             | ScenarioId::Lot4InitiatorsTutorial
             | ScenarioId::Lot4SimulationTutorial
+            | ScenarioId::Lot10SingleSensorTutorial
             | ScenarioId::Lot11KdtreeTutorial
     )
 }

@@ -1,8 +1,8 @@
 use crate::error::Error;
-use crate::filter::kalman::KalmanWorkspace;
+use crate::filter::kalman::{GaussianMeasurementPrediction, KalmanWorkspace};
 use crate::linalg::fixed::{
-    add_vec4, i_minus_kh, inv2, mul2x4_4x2, mul2x4_4x4, mul4x2_2x1, mul4x2_2x2, mul4x4, mul4x4_4x2,
-    transpose2x4,
+    add2x2, add_vec4, i_minus_kh, inv2, mul2x4_4x2, mul2x4_4x4, mul4x2_2x1, mul4x2_2x2, mul4x4,
+    mul4x4_4x2, transpose2x4,
 };
 use crate::linalg::VecN;
 use crate::models::bearing_range::CartesianToBearingRange;
@@ -18,6 +18,22 @@ impl ExtendedKalmanUpdater {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn new(measurement: CartesianToBearingRange) -> Self {
         Self { measurement }
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn predict_measurement(
+        &self,
+        predicted: &GaussianState,
+        ws: &mut KalmanWorkspace,
+    ) -> Result<GaussianMeasurementPrediction, Error> {
+        ws.h = self.measurement.jacobian(predicted)?;
+        ws.r = self.measurement.r();
+        let mean = self.measurement.predict_measurement(predicted)?;
+        let hp = mul2x4_4x4(ws.h, predicted.cov)?;
+        let ht = transpose2x4(ws.h)?;
+        let hph = mul2x4_4x2(hp, ht)?;
+        let cov = add2x2(hph, ws.r)?;
+        Ok(GaussianMeasurementPrediction { mean, cov })
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
