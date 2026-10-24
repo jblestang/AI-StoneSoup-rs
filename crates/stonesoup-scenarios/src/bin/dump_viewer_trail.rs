@@ -110,6 +110,7 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "21" | "data-incest" => Some(ScenarioId::Lot16DataIncestTutorial),
         "22" | "arch-intro" => Some(ScenarioId::Lot17ArchIntroTutorial),
         "23" | "oosm" => Some(ScenarioId::Lot18SimpleOosmExample),
+        "24" | "kalman-oosm" => Some(ScenarioId::Lot19KalmanOosmExample),
         _ => None,
     }
 }

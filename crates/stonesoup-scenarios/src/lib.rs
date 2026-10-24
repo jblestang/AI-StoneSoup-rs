@@ -11,6 +11,7 @@ mod lot15_network_info_arch;
 mod lot16_data_incest;
 mod lot17_arch_intro;
 mod lot18_simple_oosm;
+mod lot19_kalman_oosm;
 mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;
@@ -54,6 +55,9 @@ pub use lot16_data_incest::{
 pub use lot17_arch_intro::{Lot17ArchIntroScenario, LOT17_INTRO_EDGE_COUNT, MAX_LOT17_STEPS};
 pub use lot18_simple_oosm::{
     Lot18OosmMode, Lot18SimpleOosmScenario, MAX_LOT18_SCANS, MAX_LOT18_STEPS,
+};
+pub use lot19_kalman_oosm::{
+    Lot19KalmanOosmMode, Lot19KalmanOosmScenario, MAX_LOT19_LOOPS, MAX_LOT19_STEPS,
 };
 pub use lot1_kalman::{
     tutorial_cov, Lot1KalmanScenario, Lot1Snapshot, Lot1StepOutcome, MAX_LOT1_STEPS, MEASUREMENTS,

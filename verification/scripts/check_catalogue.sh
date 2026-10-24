@@ -74,4 +74,8 @@ if ! grep -q 'example_simple_oosm.py' "$csv"; then
   echo "catalogue: example_simple_oosm.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
-echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + sensor mgmt + AKKF + multi + optimised + architecture + simple OOSM example)"
+if ! grep -q 'KalmanFilterOOSMExample.py' "$csv"; then
+  echo "catalogue: KalmanFilterOOSMExample.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + sensor mgmt + AKKF + multi + optimised + architecture + OOSM examples)"
