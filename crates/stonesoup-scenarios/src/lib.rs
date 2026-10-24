@@ -19,6 +19,7 @@ pub mod lot5_resampling_fixtures;
 mod lot6_information;
 mod lot7_gm_phd;
 mod lot8_asd;
+mod lot9_akkf;
 mod particle_lot2;
 mod registry;
 pub mod scenario;
@@ -46,6 +47,7 @@ pub use lot6_information::{
 };
 pub use lot7_gm_phd::{Lot7GmPhdScenario, Lot7StepOutcome, LOT7_REDUCED, MAX_LOT7_STEPS};
 pub use lot8_asd::{Lot8AsdScenario, Lot8Snapshot, Lot8StepOutcome, MAX_LOT8_STEPS};
+pub use lot9_akkf::{Lot9AkkfScenario, Lot9Snapshot, Lot9StepOutcome, MAX_LOT9_STEPS};
 pub use particle_lot2::{Lot2ParticleScenario, LOT2_PF_PARTICLES};
 pub use registry::{ScenarioDescriptor, ScenarioError, ScenarioId, ScenarioRegistry};
 pub use scenario::{AnyScenario, Scenario, ScenarioStepOutcome, ViewerSnapshot};

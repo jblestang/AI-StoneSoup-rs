@@ -101,6 +101,7 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "12" | "information" => Some(ScenarioId::Lot6InformationFilterTutorial),
         "13" | "gmphd" => Some(ScenarioId::Lot7GmphdTutorial),
         "14" | "asd" => Some(ScenarioId::Lot8AsdTutorial),
+        "15" | "akkf" => Some(ScenarioId::Lot9AkkfTutorial),
         _ => None,
     }
 }

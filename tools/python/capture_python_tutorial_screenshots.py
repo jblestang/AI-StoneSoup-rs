@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture Stone Soup Rust viewer-style PNGs for catalogue tutorials 01–14."""
+"""Capture Stone Soup Rust viewer-style PNGs for catalogue tutorials 01–15."""
 from __future__ import annotations
 
 import json

@@ -103,6 +103,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "12" | "information" | "if" => Some(ScenarioId::Lot6InformationFilterTutorial),
         "13" | "gmphd" | "phd" | "gm-phd" => Some(ScenarioId::Lot7GmphdTutorial),
         "14" | "asd" => Some(ScenarioId::Lot8AsdTutorial),
+        "15" | "akkf" | "kernel" => Some(ScenarioId::Lot9AkkfTutorial),
         _ => None,
     }
 }

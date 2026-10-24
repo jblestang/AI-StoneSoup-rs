@@ -16,9 +16,11 @@
 
 **Lot 8:** complete — **ASD filter** tutorial (`ASDFilter.py`: accumulated state densities, OOS measurement order, `max_nstep=30`). Headless: `lot8_asd`. WASM viewer: `?tutorial=14`. Parity: `parity_lot8_asd` (101 act-state updates vs Stone Soup export).
 
+**Lot 9:** complete — **AKKF** tutorial (`AKKF.py`: quadratic kernel, bearing-only BOT, 30 particles). Headless: `lot9_akkf`. WASM viewer: `?tutorial=15`. Parity: `parity_lot9_akkf` (30 steps, weighted mean vs Stone Soup export).
+
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (tutorials **01–14**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (tutorials **01–15**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
@@ -32,5 +34,5 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated catalogue tutorials at pinned SHA: **01–14** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD).
-- **Next feature lots:** AKKF, sensor management, architecture, KD-tree, etc. (`PORTING_MATRIX.csv` `todo` rows).
+- Validated catalogue tutorials at pinned SHA: **01–15** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = AKKF).
+- **Next feature lots:** sensor management, architecture, KD-tree, etc. (`PORTING_MATRIX.csv` `todo` rows).
