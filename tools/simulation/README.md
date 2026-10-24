@@ -15,7 +15,7 @@ Writes `verification/reports/dual_radar_clutter_stats.json`.
 | A | 6 s | 400 km |
 | B | 3 s | **178.9 km** (√0.2 × 400 km, **20% area overlap**) |
 
-Co-located **90° FOV** rotating bearing–range sensors, **fused** **JPDA + EKF**: **sequential per-sensor** updates on the same active set (initiation after both radars), conflict-group JPDA, **3-point** initiation, **30 s** coast delete. Post-run **TrackToTruth** (2 km, 3-of-3 confirm) builds **one continuous track per target**.
+Co-located **90° FOV** rotating bearing–range sensors, **fused** **JPDA + EKF**: **sequential per-sensor** updates on the same active set (initiation after both radars), conflict-group JPDA, **M-of-N** tentative confirmation (**3 hits / 5 scans**), **30 s** coast delete. Clutter density `λ / V_surveillance` per radar. Post-run **TrackToTruth** (2 km, 3-of-3 confirm) builds **one continuous track per target**.
 
 - **60 s** simulation (`Δt = 0.25 s`, 240 steps); up to **250 target detections per rotation per radar** (counter resets each 360° sweep). **Clutter is additional** (Poisson λ=0.1 per dwell). ~10 revs on A, ~20 on B in 60 s.
 - **250** distinct simulated targets (random range/bearing in the surveillance disk).

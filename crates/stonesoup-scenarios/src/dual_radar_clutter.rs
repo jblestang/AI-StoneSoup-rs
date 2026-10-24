@@ -39,11 +39,26 @@ pub const NUM_TRUTHS: usize = 250;
 const TRUTH_MIN_RANGE_M: f64 = 50_000.0;
 const TRUTH_MAX_RANGE_M: f64 = RANGE_A_M * 0.98;
 pub const JPDA_PROB_DETECT: f64 = 0.9;
-/// Bearing–range clutter spatial density (approx. uniform disk, λ≈0.1 per dwell).
-pub const JPDA_CLUTTER_DENSITY: f64 = 5e-12;
+const CLUTTER_RANGE_EXTENT_FRAC: f64 = 0.95;
+
+/// Uniform clutter in bearing (rad) × range (m): `CLUTTER_LAMBDA / V_surveillance`.
+#[inline]
+pub fn clutter_spatial_density(max_range_m: f64) -> f64 {
+    let fov_rad = FOV_DEG * core::f64::consts::PI / 180.0;
+    CLUTTER_LAMBDA / (fov_rad * max_range_m * CLUTTER_RANGE_EXTENT_FRAC)
+}
+
+/// Default for radar A (`clutter_spatial_density(RANGE_A_M)`).
+#[allow(dead_code)]
+pub const JPDA_CLUTTER_DENSITY: f64 = {
+    const FOV: f64 = FOV_DEG * core::f64::consts::PI / 180.0;
+    CLUTTER_LAMBDA / (FOV * RANGE_A_M * CLUTTER_RANGE_EXTENT_FRAC)
+};
 const JPDA_DET_ASSOCIATED_THRESH: f64 = 0.35;
 const JPDA_MEAS_UPDATE_THRESH: f64 = 0.45;
-pub const MIN_POINTS: u8 = 3;
+/// Promote tentative track after **M** JPDA measurement hits within **N** scan opportunities.
+pub const CONFIRM_HITS_M: u8 = 3;
+pub const CONFIRM_WINDOW_N: u8 = 5;
 pub const COAST_SECONDS: f64 = 30.0;
 pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
 pub const SEED: u64 = 42;
@@ -72,7 +87,10 @@ struct RadarRuntime {
 #[derive(Debug, Clone, Copy)]
 struct HoldingTrack {
     tail: GaussianState,
-    updates: u8,
+    /// Associated-measurement hits in the current confirmation window.
+    hits: u8,
+    /// Scan opportunities since tentative birth (including birth scan).
+    scans: u8,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -572,8 +590,23 @@ impl DualRadarClutterSim {
         if self.holding.len() >= MAX_HOLDING {
             return Err(ScenarioError::Core(Error::CapacityExceeded));
         }
-        self.holding.push(HoldingTrack { tail, updates: 1 });
+        self.holding.push(HoldingTrack {
+            tail,
+            hits: 1,
+            scans: 1,
+        });
         Ok(())
+    }
+
+    fn drop_unconfirmed_holdings(&mut self) {
+        self.holding.retain(|ht| ht.scans < CONFIRM_WINDOW_N || ht.hits >= CONFIRM_HITS_M);
+    }
+
+    fn age_holdings_without_measurements(&mut self) {
+        for ht in &mut self.holding {
+            ht.scans = ht.scans.saturating_add(1);
+        }
+        self.drop_unconfirmed_holdings();
     }
 
     fn finish_track(&mut self, t: ActiveTrack, step: usize) -> Result<(), ScenarioError> {
@@ -646,49 +679,67 @@ impl DualRadarClutterSim {
             .sum()
     }
 
-    fn multi_initiate(
+    /// JPDA update on tentatives using **all** plots this step; M-of-N promote / drop.
+    fn confirm_holdings_m_of_n(
+        &mut self,
+        detections: &[Detection],
+        det_models: &[CartesianToBearingRange],
+        clutter_density: f64,
+    ) -> Result<(), ScenarioError> {
+        let ts = self.ts();
+        let n_hold = self.holding.len();
+        if n_hold == 0 || detections.is_empty() || n_hold > MAX_JPDA_EKF_TRACKS {
+            return Ok(());
+        }
+        let mut hold_tails: Vec<GaussianState> = self.holding.iter().map(|h| h.tail).collect();
+        let template = hold_tails[0];
+        let mut sets = alloc::vec![Self::empty_jpda_set(template); n_hold];
+        jpda_associate_ekf_det_models(
+            &hold_tails,
+            ts,
+            detections,
+            JPDA_PROB_DETECT,
+            clutter_density,
+            &self.predictor,
+            &self.updater,
+            det_models,
+            &mut self.ws,
+            &mut sets,
+        )
+        .map_err(ScenarioError::Core)?;
+        self.jpda_apply_sets(&mut hold_tails, &sets, detections, det_models)?;
+        for (slot, (tail, set)) in self
+            .holding
+            .iter_mut()
+            .zip(hold_tails.iter().zip(sets.iter()))
+        {
+            slot.tail = *tail;
+            slot.scans = slot.scans.saturating_add(1);
+            if Self::meas_association_prob(set) >= JPDA_MEAS_UPDATE_THRESH {
+                slot.hits = slot.hits.saturating_add(1);
+            }
+        }
+        let mut promote = Vec::new();
+        self.holding.retain(|ht| {
+            if ht.hits >= CONFIRM_HITS_M {
+                promote.push(ht.tail);
+                false
+            } else {
+                true
+            }
+        });
+        self.drop_unconfirmed_holdings();
+        for tail in promote {
+            self.insert_active(tail, self.step)?;
+        }
+        Ok(())
+    }
+
+    fn initiate_holdings_from_unassoc(
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
     ) -> Result<(), ScenarioError> {
-        let ts = self.ts();
-        let n_hold = self.holding.len();
-        if n_hold > 0 && !detections.is_empty() && n_hold <= MAX_JPDA_EKF_TRACKS {
-            let mut hold_tails: Vec<GaussianState> =
-                self.holding.iter().map(|h| h.tail).collect();
-            let template = hold_tails[0];
-            let mut sets = alloc::vec![Self::empty_jpda_set(template); n_hold];
-            jpda_associate_ekf_det_models(
-                &hold_tails,
-                ts,
-                detections,
-                JPDA_PROB_DETECT,
-                JPDA_CLUTTER_DENSITY,
-                &self.predictor,
-                &self.updater,
-                det_models,
-                &mut self.ws,
-                &mut sets,
-            )
-            .map_err(ScenarioError::Core)?;
-            self.jpda_apply_sets(&mut hold_tails, &sets, detections, det_models)?;
-            for (slot, tail) in self.holding.iter_mut().zip(hold_tails.iter()) {
-                slot.tail = *tail;
-                slot.updates = slot.updates.saturating_add(1);
-            }
-            let mut promote = Vec::new();
-            self.holding.retain(|ht| {
-                if ht.updates >= MIN_POINTS {
-                    promote.push(ht.tail);
-                    false
-                } else {
-                    true
-                }
-            });
-            for tail in promote {
-                self.insert_active(tail, self.step)?;
-            }
-        }
         for (i, det) in detections.iter().enumerate() {
             let init = initiate_bearing_range(&self.prior, det, det_models[i])?;
             let _ = self.insert_holding(init);
@@ -701,6 +752,7 @@ impl DualRadarClutterSim {
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
+        clutter_density: f64,
     ) -> Result<(Vec<Detection>, Vec<CartesianToBearingRange>), ScenarioError> {
         let ts = self.ts();
         let n_dets = detections.len();
@@ -715,7 +767,7 @@ impl DualRadarClutterSim {
                 ts,
                 detections,
                 JPDA_PROB_DETECT,
-                JPDA_CLUTTER_DENSITY,
+                clutter_density,
                 &self.predictor,
                 &self.updater,
                 det_models,
@@ -748,13 +800,19 @@ impl DualRadarClutterSim {
 
     fn finish_tracker_step(
         &mut self,
+        step_dets: &[Detection],
+        step_models: &[CartesianToBearingRange],
         unassoc: &[Detection],
         un_models: &[CartesianToBearingRange],
+        clutter_density: f64,
     ) -> Result<(), ScenarioError> {
         let ts = self.ts();
         self.delete_stale_active()?;
+        if !step_dets.is_empty() {
+            self.confirm_holdings_m_of_n(step_dets, step_models, clutter_density)?;
+        }
         if !unassoc.is_empty() {
-            self.multi_initiate(unassoc, un_models)?;
+            self.initiate_holdings_from_unassoc(unassoc, un_models)?;
         }
         self.snapshot_active_paths(ts);
         Ok(())
@@ -771,6 +829,8 @@ impl DualRadarClutterSim {
             self.prior.timestamp = ts;
             let mut step_unassoc = Vec::with_capacity(16);
             let mut step_unassoc_models = Vec::with_capacity(16);
+            let mut step_all_dets = Vec::with_capacity(32);
+            let mut step_all_models = Vec::with_capacity(32);
             let mut chunk = alloc::vec![
                 Detection {
                     vector: stonesoup_core::VecN([0.0, 0.0]),
@@ -790,15 +850,28 @@ impl DualRadarClutterSim {
                 let dets = &chunk[..got];
                 let models: alloc::vec::Vec<CartesianToBearingRange> =
                     alloc::vec![model; got];
+                step_all_dets.extend_from_slice(dets);
+                step_all_models.extend(models.iter().copied());
+                let clutter_rho = clutter_spatial_density(self.radars[ri].max_range_m);
                 let (mut unassoc, mut un_models) =
-                    self.associate_update_actives(dets, &models)?;
+                    self.associate_update_actives(dets, &models, clutter_rho)?;
                 step_unassoc.append(&mut unassoc);
                 step_unassoc_models.append(&mut un_models);
             }
             if any_dets {
-                self.finish_tracker_step(&step_unassoc, &step_unassoc_models)?;
+                let pooled_clutter = 0.5
+                    * (clutter_spatial_density(self.radars[0].max_range_m)
+                        + clutter_spatial_density(self.radars[1].max_range_m));
+                self.finish_tracker_step(
+                    &step_all_dets,
+                    &step_all_models,
+                    &step_unassoc,
+                    &step_unassoc_models,
+                    pooled_clutter,
+                )?;
             } else {
                 self.delete_stale_active()?;
+                self.age_holdings_without_measurements();
                 self.snapshot_active_paths(ts);
             }
             self.step += 1;
