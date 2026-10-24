@@ -14,6 +14,7 @@ stonesoup-core = { path = "../stonesoup-core" }
 stonesoup-sim = { path = "../stonesoup-sim" }
 libm = { workspace = true }
 no-panic = { version = "0.1.34", optional = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
 
 [[bin]]
@@ -23,6 +24,10 @@ path = "src/bin/dump_viewer_trail.rs"
 [[bin]]
 name = "dual_radar_clutter_stats"
 path = "src/bin/dual_radar_clutter_stats.rs"
+
+[[bin]]
+name = "dual_radar_clutter_viz"
+path = "src/bin/dual_radar_clutter_viz.rs"
 
 [dev-dependencies]
 serde_json = { workspace = true }

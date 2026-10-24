@@ -1076,6 +1076,98 @@ pub fn max_simulation_steps() -> usize {
     libm::ceil(SIM_DURATION_S / DT_S) as usize
 }
 
+/// Lightweight snapshot for x–y tracking plots (see `dual_radar_clutter_viz` bin).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct DualRadarVizExport {
+    pub range_a_km: f64,
+    pub range_b_km: f64,
+    pub num_truths: usize,
+    pub truths_with_any_plot: usize,
+    pub continuous_track_count: usize,
+    pub truths: alloc::vec::Vec<TruthVizPoint>,
+    pub track_polylines: alloc::vec::Vec<TrackVizPolyline>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct TruthVizPoint {
+    pub id: u16,
+    pub x_km: f64,
+    pub y_km: f64,
+    /// `none` | `a_only` | `b_only` | `both`
+    pub plot_visibility: &'static str,
+    pub has_continuous_track: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct TrackVizPolyline {
+    pub truth_id: u16,
+    pub points_km: alloc::vec::Vec<[f64; 2]>,
+}
+
+impl DualRadarClutterSim {
+    pub fn build_viz_export(&self, stats: &DualRadarStats) -> DualRadarVizExport {
+        let mut continuous = alloc::vec![false; NUM_TRUTHS];
+        for ct in &stats.continuous_truth_tracks {
+            let i = ct.truth_id as usize;
+            if i < NUM_TRUTHS {
+                continuous[i] = true;
+            }
+        }
+        let truths = self
+            .truths
+            .iter()
+            .enumerate()
+            .map(|(i, gt)| {
+                let vis = match (
+                    self.truths_plot_seen_a.get(i).copied().unwrap_or(false),
+                    self.truths_plot_seen_b.get(i).copied().unwrap_or(false),
+                ) {
+                    (true, true) => "both",
+                    (true, false) => "a_only",
+                    (false, true) => "b_only",
+                    _ => "none",
+                };
+                TruthVizPoint {
+                    id: i as u16,
+                    x_km: gt.state[0] / 1000.0,
+                    y_km: gt.state[2] / 1000.0,
+                    plot_visibility: vis,
+                    has_continuous_track: continuous.get(i).copied().unwrap_or(false),
+                }
+            })
+            .collect();
+        let mut track_polylines = alloc::vec::Vec::new();
+        for ct in &stats.continuous_truth_tracks {
+            let mut points = alloc::vec::Vec::new();
+            for fid in &ct.linked_filter_track_ids {
+                let Some(path) = self.filter_paths.iter().find(|p| p.id == *fid) else {
+                    continue;
+                };
+                for (idx, (_, mean)) in path.states.iter().enumerate() {
+                    if idx % 6 == 0 {
+                        points.push([mean[0] / 1000.0, mean[2] / 1000.0]);
+                    }
+                }
+            }
+            if points.len() >= 2 {
+                track_polylines.push(TrackVizPolyline {
+                    truth_id: ct.truth_id,
+                    points_km: points,
+                });
+            }
+        }
+        DualRadarVizExport {
+            range_a_km: RANGE_A_M / 1000.0,
+            range_b_km: RANGE_B_M / 1000.0,
+            num_truths: NUM_TRUTHS,
+            truths_with_any_plot: stats.truths_with_any_plot,
+            continuous_track_count: stats.continuous_truth_track_count,
+            truths,
+            track_polylines,
+        }
+    }
+}
+
 impl DualRadarStats {
     pub fn clutter_fraction(&self) -> f64 {
         let total = self.total_true + self.total_clutter;
