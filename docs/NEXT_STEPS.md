@@ -32,13 +32,15 @@
 
 **Lot 19:** complete — **Kalman filter OOSM** example (`KalmanFilterOOSMExample.py`: three EKF trackers — ignore delay, lag-adjusted, sensor-1-only; Stone Soup export + Rust fixture replay). Headless: `lot19_kalman_oosm`. WASM viewer: `?tutorial=24` (aliases `kalman-oosm`, `ekf-oosm`). Parity: `parity_lot19_kalman_oosm` (exact replay for all three tracker modes).
 
+**Lot 20:** complete — **Particle filter OOSM** example (`PF_OOSM_example.py`: Orton–Marrs-style PF OOSM vs ignore-delayed track; Stone Soup export + Rust fixture replay). Headless: `lot20_pf_oosm`. WASM viewer: `?tutorial=25` (aliases `pf-oosm`, `particle-oosm`). Parity: `parity_lot20_pf_oosm`.
+
 **Lot 17:** complete — **Introduction to architectures** tutorial (`01_Introduction_to_Architectures.py`: static B→A and C→A information graph; Stone Soup topology export + viewer layout). Headless: `lot17_arch_intro`. WASM viewer: `?tutorial=22` (aliases `arch-intro`, `intro-arch`). Parity: `parity_lot17_arch_intro`.
 
 **Lot 16:** complete — **Avoiding data incest** tutorial (`03_Avoiding_Data_Incest.py`: NH vs hierarchical information architectures, Fusion Node 1 tracks + mean covariance trace replay). Headless: `lot16_data_incest`. WASM viewer: `?tutorial=21` (aliases `data-incest`, `incest`). Parity: `parity_lot16_data_incest` (fixture replay; NH lower mean cov trace vs hierarchical).
 
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (catalogue **01–24**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (catalogue **01–25**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
@@ -52,5 +54,5 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated catalogue entries at pinned SHA: **01–24** (includes examples **23** = simple OOSM, **24** = Kalman OOSM) (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management; **20** = network/information architectures; **21** = data incest architectures; **22** = architecture introduction graph).
+- Validated catalogue entries at pinned SHA: **01–25** (includes examples **23** = simple OOSM, **24** = Kalman OOSM, **25** = PF OOSM) (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management; **20** = network/information architectures; **21** = data incest architectures; **22** = architecture introduction graph).
 - **Next feature lots:** remaining OOSM examples, native architecture engine, etc. (`PORTING_MATRIX.csv` `todo` rows).
