@@ -23,6 +23,7 @@ pub enum ScenarioId {
     Lot13MultiSensorTutorial,
     Lot14OptimisedSensorTutorial,
     Lot15NetworkInfoArchTutorial,
+    Lot16DataIncestTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -40,7 +41,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 20] = [
+        static LIST: [ScenarioDescriptor; 21] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -182,6 +183,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot16DataIncestTutorial,
+                title: "21 — Avoiding data incest",
+                upstream_path: "docs/tutorials/architecture/03_Avoiding_Data_Incest.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -212,7 +220,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot12AkkfTutorial
             | ScenarioId::Lot13MultiSensorTutorial
             | ScenarioId::Lot14OptimisedSensorTutorial
-            | ScenarioId::Lot15NetworkInfoArchTutorial => {
+            | ScenarioId::Lot15NetworkInfoArchTutorial
+            | ScenarioId::Lot16DataIncestTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -240,7 +249,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot12AkkfTutorial
             | ScenarioId::Lot13MultiSensorTutorial
             | ScenarioId::Lot14OptimisedSensorTutorial
-            | ScenarioId::Lot15NetworkInfoArchTutorial => {
+            | ScenarioId::Lot15NetworkInfoArchTutorial
+            | ScenarioId::Lot16DataIncestTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

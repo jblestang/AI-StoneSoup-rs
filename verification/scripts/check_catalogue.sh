@@ -62,4 +62,8 @@ if ! grep -q '02_Information_and_Network_Architectures.py' "$csv"; then
   echo "catalogue: 02_Information_and_Network_Architectures.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
-echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + sensor mgmt + AKKF + multi + optimised + network/info arch)"
+if ! grep -q '03_Avoiding_Data_Incest.py' "$csv"; then
+  echo "catalogue: 03_Avoiding_Data_Incest.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + sensor mgmt + AKKF + multi + optimised + architecture lots)"
