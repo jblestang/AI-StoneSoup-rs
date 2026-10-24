@@ -1,0 +1,55 @@
+{
+  "parameters": {
+    "plots_per_radar": 250,
+    "clutter_fraction_target": 0.1,
+    "clutter_rate_poisson": 0.52,
+    "overlap_fraction_area_nominal": 0.2,
+    "overlap_area_fraction_co_located_disks": 0.25,
+    "range_a_km": 400.0,
+    "range_b_km": 200.0,
+    "period_a_s": 6.0,
+    "period_b_s": 3.0,
+    "rpm_a": 10.0,
+    "rpm_b": 20.0,
+    "fov_deg": 90.0,
+    "dt_s": 0.25,
+    "num_truths": 4,
+    "truth_layout": "four targets at 80 km on cardinal bearings",
+    "seed": 42
+  },
+  "plots": {
+    "radar_a_plots": 250,
+    "radar_b_plots": 250,
+    "total_true_detections": 458,
+    "total_clutter_detections": 42,
+    "clutter_fraction_actual": 0.084,
+    "simulation_steps": 231
+  },
+  "truths": {
+    "simulated": 4,
+    "with_any_plot": 4,
+    "with_confirmed_track": 4
+  },
+  "tracks": {
+    "total_unique_tracks": 7,
+    "truth_associated_tracks": 7,
+    "false_tracks": 0,
+    "mean_duration_s_all": 56.142857142857146,
+    "mean_duration_s_true": 56.142857142857146,
+    "mean_duration_s_false": 0.0,
+    "median_duration_s_true": 56.75,
+    "median_duration_s_false": 0.0,
+    "max_duration_s": 57.5,
+    "min_duration_s": 52.5,
+    "durations_s_true": [
+      56.75,
+      55.5,
+      56.25,
+      57.5,
+      57.0,
+      57.5,
+      52.5
+    ],
+    "durations_s_false": []
+  }
+}
