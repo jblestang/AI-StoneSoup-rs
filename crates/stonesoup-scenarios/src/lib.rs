@@ -15,6 +15,7 @@ mod lot19_kalman_oosm;
 mod lot1_kalman;
 mod lot20_pf_oosm;
 mod lot21_oosm_algorithm;
+mod lot22_bearing_only;
 mod lot2_ekf;
 mod lot2_ukf;
 mod lot3_clutter;
@@ -69,6 +70,7 @@ pub use lot20_pf_oosm::{Lot20PfOosmMode, Lot20PfOosmScenario, MAX_LOT20_SCANS, M
 pub use lot21_oosm_algorithm::{
     Lot21OosmAlgorithmMode, Lot21OosmAlgorithmScenario, LOT21_NUM_SCANS, MAX_LOT21_STEPS,
 };
+pub use lot22_bearing_only::{Lot22BearingOnlyScenario, MAX_LOT22_STEPS};
 pub use lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
     TUTORIAL02_SENSOR_XY,

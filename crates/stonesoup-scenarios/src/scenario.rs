@@ -12,6 +12,7 @@ use crate::lot19_kalman_oosm::Lot19KalmanOosmScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
 use crate::lot20_pf_oosm::Lot20PfOosmScenario;
 use crate::lot21_oosm_algorithm::Lot21OosmAlgorithmScenario;
+use crate::lot22_bearing_only::Lot22BearingOnlyScenario;
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
 };
@@ -130,6 +131,7 @@ pub enum AnyScenario {
     Lot19KalmanOosm(Lot19KalmanOosmScenario),
     Lot20PfOosm(Lot20PfOosmScenario),
     Lot21OosmAlgorithm(Lot21OosmAlgorithmScenario),
+    Lot22BearingOnly(Lot22BearingOnlyScenario),
 }
 
 impl AnyScenario {
@@ -222,6 +224,9 @@ impl AnyScenario {
                     crate::lot21_oosm_algorithm::Lot21OosmAlgorithmMode::OosmTarget0,
                 )?,
             )),
+            ScenarioId::Lot22BearingOnlyExample => Ok(Self::Lot22BearingOnly(
+                Lot22BearingOnlyScenario::tutorial_defaults()?,
+            )),
         }
     }
 
@@ -254,6 +259,7 @@ impl AnyScenario {
             Self::Lot19KalmanOosm(_) => ScenarioId::Lot19KalmanOosmExample,
             Self::Lot20PfOosm(_) => ScenarioId::Lot20PfOosmExample,
             Self::Lot21OosmAlgorithm(_) => ScenarioId::Lot21OosmAlgorithmExample,
+            Self::Lot22BearingOnly(_) => ScenarioId::Lot22BearingOnlyExample,
         }
     }
 }
@@ -287,6 +293,7 @@ impl Scenario for AnyScenario {
             Self::Lot19KalmanOosm(s) => s.reset(),
             Self::Lot20PfOosm(s) => s.reset(),
             Self::Lot21OosmAlgorithm(s) => s.reset(),
+            Self::Lot22BearingOnly(s) => s.reset(),
         }
     }
 
@@ -447,6 +454,13 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot22BearingOnly(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -575,6 +589,7 @@ impl Scenario for AnyScenario {
             Self::Lot19KalmanOosm(s) => s.viewer_snapshot(),
             Self::Lot20PfOosm(s) => s.viewer_snapshot(),
             Self::Lot21OosmAlgorithm(s) => s.viewer_snapshot(),
+            Self::Lot22BearingOnly(s) => s.viewer_snapshot(),
         }
     }
 }
