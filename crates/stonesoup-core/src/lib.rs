@@ -5,6 +5,8 @@
 //!
 //! State vector order for Lot 1 (2D nearly-constant velocity): `[x, vx, y, vy]` (SI: m, m/s).
 
+extern crate alloc;
+
 mod assign;
 mod associator;
 mod deleter;
@@ -25,8 +27,8 @@ pub use associator::{
     associate_nearest_neighbour, gm_reduce_single, jpda_associate, pda_hypotheses,
     pda_merged_update, AssociationOutcome, GnnAssignment, GnnTrackAssignment, JpdaHypothesisSet,
     KdTree2D, MeasurementHypothesis, ProbabilityHypothesis, KDTREE_GNN_COV_MULTIPLIER,
-    KDTREE_GNN_NEIGHBOURS, MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS, MAX_GNN_TRACKS,
-    MAX_KDTREE_POINTS, MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
+    KDTREE_GNN_NEIGHBOURS, MAX_GNN_ASSIGN_DETS, MAX_GNN_TRACKS, MAX_KDTREE_POINTS,
+    MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
 };
 pub use deleter::{covariance_trace, should_delete_covariance_trace};
 pub use error::Error;

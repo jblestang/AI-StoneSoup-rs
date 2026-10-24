@@ -5,7 +5,7 @@ use stonesoup_core::{
     should_delete_covariance_trace, ConstantVelocity2d, Detection, Duration, GaussianState,
     GnnAssignment, KalmanPredictor, KalmanUpdater, KalmanWorkspace, LinearGaussianMeasurement, Mat,
     MeasurementHypothesis, Timestamp, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS,
-    MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS,
+    MAX_GNN_ASSIGN_DETS,
 };
 
 use crate::lot3_meas::push_measurements;
@@ -47,27 +47,6 @@ pub struct Lot4MultiTargetTracker {
     max_steps: usize,
     meas_offsets: &'static [usize],
     meas_xy: &'static [[f64; 2]],
-}
-
-fn compress_unassigned_detections(
-    detections: &[Detection],
-    det_used: &[bool],
-    out: &mut [Detection],
-    orig_index: &mut [usize],
-) -> Result<usize, ScenarioError> {
-    let mut n = 0usize;
-    for (i, det) in detections.iter().enumerate() {
-        if det_used.get(i).copied().unwrap_or(false) {
-            continue;
-        }
-        if n >= out.len() || n >= orig_index.len() {
-            return Err(ScenarioError::Core(stonesoup_core::Error::CapacityExceeded));
-        }
-        out[n] = *det;
-        orig_index[n] = i;
-        n += 1;
-    }
-    Ok(n)
 }
 
 impl Lot4MultiTargetTracker {
@@ -230,52 +209,31 @@ impl Lot4MultiTargetTracker {
                     detection_index: None,
                     distance: self.params.gate,
                 },
-            }; MAX_GNN_ASSIGN_TRACKS];
-            let mut comp_dets = [Detection {
-                vector: stonesoup_core::VecN([0.0, 0.0]),
-                timestamp: ts,
-                sensor: stonesoup_core::SensorId(0),
-            }; MAX_GNN_ASSIGN_DETS];
-            let mut comp_map = [0usize; MAX_GNN_ASSIGN_DETS];
-            let mut hold_offset = 0usize;
-            while hold_offset < n_hold {
-                let chunk = (n_hold - hold_offset).min(MAX_GNN_ASSIGN_TRACKS);
-                let n_comp = compress_unassigned_detections(
-                    detections,
-                    &det_used,
-                    &mut comp_dets,
-                    &mut comp_map,
-                )?;
-                self.associate_gnn(
-                    &hold_tails[hold_offset..hold_offset + chunk],
-                    ts,
-                    &comp_dets[..n_comp],
-                    &mut assigns[..chunk],
-                )?;
+            }; MAX_LOT4_HOLDING_TRACKS];
+            self.associate_gnn(
+                &hold_tails[..n_hold],
+                ts,
+                detections,
+                &mut assigns[..n_hold],
+            )?;
 
-                for t in 0..chunk {
-                    let slot = hold_map[hold_offset + t];
-                    let h = &assigns[t].hypothesis;
-                    let ht = self.holding[slot]
-                        .as_mut()
-                        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
-                    if let Some(di) = h.detection_index {
-                        let orig = comp_map
-                            .get(di)
-                            .copied()
-                            .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
-                        let post = self
-                            .updater
-                            .update(&h.prediction, &detections[orig], &mut self.ws)
-                            .map_err(ScenarioError::Core)?;
-                        ht.tail = post;
-                        ht.updates = ht.updates.saturating_add(1);
-                        det_used[orig] = true;
-                    } else {
-                        ht.tail = h.prediction;
-                    }
+            for t in 0..n_hold {
+                let slot = hold_map[t];
+                let h = &assigns[t].hypothesis;
+                let ht = self.holding[slot]
+                    .as_mut()
+                    .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+                if let Some(di) = h.detection_index {
+                    let post = self
+                        .updater
+                        .update(&h.prediction, &detections[di], &mut self.ws)
+                        .map_err(ScenarioError::Core)?;
+                    ht.tail = post;
+                    ht.updates = ht.updates.saturating_add(1);
+                    det_used[di] = true;
+                } else {
+                    ht.tail = h.prediction;
                 }
-                hold_offset += chunk;
             }
 
             for slot in 0..MAX_LOT4_HOLDING_TRACKS {
@@ -347,7 +305,7 @@ impl Lot4MultiTargetTracker {
                     detection_index: None,
                     distance: self.params.gate,
                 },
-            }; MAX_GNN_ASSIGN_TRACKS];
+            }; MAX_LOT4_ACTIVE_TRACKS];
             self.associate_gnn(&act_tails[..n_act], ts, detections, &mut assigns)?;
 
             for t in 0..n_act {

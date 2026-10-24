@@ -2,6 +2,8 @@
 
 #![allow(clippy::indexing_slicing, clippy::arithmetic_side_effects)]
 
+use alloc::vec;
+
 use crate::Error;
 
 const INF: f64 = 1e100;
@@ -19,32 +21,31 @@ pub fn linear_sum_assignment_min(
         return Err(Error::InvalidDimension);
     }
     let n = rows.max(cols);
-    if n > 96 {
-        return Err(Error::CapacityExceeded);
-    }
-    let mut a = [0.0f64; 96 * 96];
+    // Algorithm uses dummy index `0` and columns `1..=n`.
+    let nn = n + 1;
+    let mut a = vec![0.0f64; nn * nn];
     for i in 0..rows {
         for j in 0..cols {
-            a[i * n + j] = cost[i * cols + j];
+            a[i * nn + j] = cost[i * cols + j];
         }
         for j in cols..n {
-            a[i * n + j] = INF;
+            a[i * nn + j] = INF;
         }
     }
     for i in rows..n {
         for j in 0..n {
-            a[i * n + j] = 0.0;
+            a[i * nn + j] = 0.0;
         }
     }
-    let mut u = [0.0f64; 96];
-    let mut v = [0.0f64; 96];
-    let mut p = [0usize; 96];
-    let mut way = [0usize; 96];
+    let mut u = vec![0.0f64; nn];
+    let mut v = vec![0.0f64; nn];
+    let mut p = vec![0usize; nn];
+    let mut way = vec![0usize; nn];
     for i in 1..=n {
         p[0] = i;
         let mut j0 = 0usize;
-        let mut minv = [INF; 96];
-        let mut used = [false; 96];
+        let mut minv = vec![INF; nn];
+        let mut used = vec![false; nn];
         loop {
             used[j0] = true;
             let i0 = p[j0];
@@ -54,7 +55,7 @@ pub fn linear_sum_assignment_min(
                 if used[j] {
                     continue;
                 }
-                let cur = a[(i0 - 1) * n + (j - 1)] - u[i0] - v[j];
+                let cur = a[(i0 - 1) * nn + (j - 1)] - u[i0] - v[j];
                 if cur < minv[j] {
                     minv[j] = cur;
                     way[j] = j0;
