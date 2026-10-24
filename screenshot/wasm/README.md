@@ -1,6 +1,6 @@
 # WASM viewer — tutorial final states
 
-PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) running as **WebAssembly**, each tutorial stepped to completion (catalogue tutorials 01–14).
+PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) running as **WebAssembly**, each tutorial stepped to completion (catalogue tutorials 01–15).
 
 | File | Tutorial |
 |------|----------|
@@ -18,6 +18,7 @@ PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) ru
 | `tutorial_12.png` | 12 — Information filter |
 | `tutorial_13.png` | 13 — GM-PHD |
 | `tutorial_14.png` | 14 — ASD (accumulated state densities) |
+| `tutorial_15.png` | 15 — KD-tree GNN data association |
 
 ## Regenerate
 

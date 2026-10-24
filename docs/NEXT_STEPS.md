@@ -20,7 +20,7 @@
 
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (tutorials **01–14**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (tutorials **01–15**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
