@@ -9,14 +9,16 @@ from typing import Any
 
 
 def main() -> None:
-    src = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("verification/reports/dual_radar_viz.json")
+    args = sys.argv[1:]
+    src = Path(args[0]) if args else Path("verification/reports/dual_radar_viz.json")
     dest = (
-        Path(sys.argv[2])
-        if len(sys.argv) > 2
+        Path(args[1])
+        if len(args) > 1
         else Path("/opt/cursor/artifacts/screenshots/dual_radar_tracking_result.png")
     )
+    dpi = int(args[2]) if len(args) > 2 else 300
     payload = json.loads(src.read_text())
-    plot(payload, dest)
+    plot(payload, dest, dpi=dpi)
     print(dest)
 
 
@@ -25,7 +27,7 @@ def bearing_north_cw_to_matplotlib_deg(bearing_deg: float) -> float:
     return 90.0 - bearing_deg
 
 
-def plot(payload: dict[str, Any], dest: Path) -> None:
+def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -55,7 +57,7 @@ def plot(payload: dict[str, Any], dest: Path) -> None:
                 }
             )
 
-    fig, ax = plt.subplots(figsize=(14, 14), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(16, 16), constrained_layout=True)
     ax.set_aspect("equal", adjustable="box")
     ax.set_xlabel("East (km)")
     ax.set_ylabel("North (km)")
@@ -194,7 +196,7 @@ def plot(payload: dict[str, Any], dest: Path) -> None:
     ]
     ax.legend(handles=legend_elems, loc="upper right", fontsize=8)
 
-    fig.savefig(dest, dpi=120)
+    fig.savefig(dest, dpi=dpi, facecolor="white")
     plt.close(fig)
 
 
