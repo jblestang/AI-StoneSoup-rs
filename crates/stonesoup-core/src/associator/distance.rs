@@ -16,7 +16,7 @@ use crate::types::Detection;
 
 use super::nearest_neighbour::MeasurementHypothesis;
 
-pub const MAX_DISTANCE_HYPOTHESES: usize = 32;
+pub const MAX_DISTANCE_HYPOTHESES: usize = 48;
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn mahalanobis(
