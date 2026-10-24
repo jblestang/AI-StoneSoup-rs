@@ -19,6 +19,7 @@ use crate::lot4_tracker::MAX_LOT4_ACTIVE_TRACKS;
 use crate::lot4_tutorial09::Lot4Tutorial09Scenario;
 use crate::lot4_tutorial10::Lot4Tutorial10Scenario;
 use crate::lot5_resampling::Lot5ResamplingScenario;
+use crate::lot6_information::{Lot6InformationScenario, Lot6StepOutcome, MAX_LOT6_STEPS};
 use crate::particle_lot2::Lot2ParticleScenario;
 use crate::registry::{ScenarioError, ScenarioId};
 
@@ -100,6 +101,7 @@ pub enum AnyScenario {
     Lot4T09(Lot4Tutorial09Scenario),
     Lot4T10(Lot4Tutorial10Scenario),
     Lot5Resampling(Lot5ResamplingScenario),
+    Lot6Information(Lot6InformationScenario),
 }
 
 impl AnyScenario {
@@ -133,6 +135,9 @@ impl AnyScenario {
             ScenarioId::Lot5ResamplingTutorial => Ok(Self::Lot5Resampling(
                 Lot5ResamplingScenario::tutorial_defaults()?,
             )),
+            ScenarioId::Lot6InformationFilterTutorial => Ok(Self::Lot6Information(
+                Lot6InformationScenario::tutorial_defaults()?,
+            )),
         }
     }
 
@@ -150,6 +155,7 @@ impl AnyScenario {
             Self::Lot4T09(_) => ScenarioId::Lot4InitiatorsTutorial,
             Self::Lot4T10(_) => ScenarioId::Lot4SimulationTutorial,
             Self::Lot5Resampling(_) => ScenarioId::Lot5ResamplingTutorial,
+            Self::Lot6Information(_) => ScenarioId::Lot6InformationFilterTutorial,
         }
     }
 }
@@ -168,6 +174,7 @@ impl Scenario for AnyScenario {
             Self::Lot4T09(s) => s.reset(),
             Self::Lot4T10(s) => s.reset(),
             Self::Lot5Resampling(s) => s.reset(),
+            Self::Lot6Information(s) => s.reset(),
         }
     }
 
@@ -235,6 +242,10 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot6Information(s) => match s.step()? {
+                Lot6StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
+                Lot6StepOutcome::Finished => ScenarioStepOutcome::Finished,
+            },
         };
         Ok(outcome)
     }
@@ -279,6 +290,30 @@ impl Scenario for AnyScenario {
             Self::Lot4T09(s) => s.viewer_snapshot(),
             Self::Lot4T10(s) => s.viewer_snapshot(),
             Self::Lot5Resampling(s) => s.viewer_snapshot(),
+            Self::Lot6Information(s) => {
+                let snap = s.snapshot()?;
+                Ok(ViewerSnapshot {
+                    step: snap.step,
+                    max_steps: MAX_LOT6_STEPS,
+                    truth_xy: snap.truth_xy,
+                    estimate_xy: snap.estimate_xy,
+                    measurement_xy: snap.measurement_xy,
+                    bearing_range: None,
+                    ellipse_semi: Some(snap.ellipse_semi),
+                    ellipse_angle_rad: snap.ellipse_angle_rad,
+                    rmse: snap.rmse,
+                    finished: snap.finished,
+                    det_count: 0,
+                    det_xy: empty_det_xy(),
+                    det_is_true: empty_det_flags(),
+                    associated_xy: None,
+                    truth_b_xy: None,
+                    estimate_b_xy: None,
+                    resample_case: no_resample_view().0,
+                    resample_nparts: no_resample_view().1,
+                    resample_xy: no_resample_view().2,
+                })
+            }
         }
     }
 }

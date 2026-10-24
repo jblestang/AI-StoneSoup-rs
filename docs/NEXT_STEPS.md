@@ -10,7 +10,9 @@
 
 **Lot 5:** complete — **Resampling** tutorial (`Multinomial`, `Systematic`, `Stratified`, `Residual`, `ESS` wrappers in `stonesoup-sim`). Headless: `lot5_resampling`. WASM viewer: `?tutorial=11` (aliases `resampling`, `sample`). Parity: `parity_lot5_resampling` (per-step through all 6 resampler demos + primitive fixtures).
 
-**Next:** Lot 6+ per `PORTING_MATRIX.csv` (information filter, GM-PHD, metrics, …).
+**Lot 6:** complete — **Information filter** tutorial (information-form predict/update, parity vs Kalman-equivalent Stone Soup track). Headless: `lot6_information`. WASM viewer: `?tutorial=12`. Parity: `parity_lot6_information` (21 steps through end).
+
+**Next:** Lot 7+ per `PORTING_MATRIX.csv` (GM-PHD, metrics, …).
 
 ## Optional polish
 

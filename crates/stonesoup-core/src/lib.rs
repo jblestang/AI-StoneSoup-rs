@@ -30,6 +30,10 @@ pub use associator::{
 pub use deleter::{covariance_trace, should_delete_covariance_trace};
 pub use error::Error;
 pub use filter::ekf::ExtendedKalmanUpdater;
+pub use filter::information::{
+    InformationKalmanPredictor, InformationKalmanUpdater, InformationKalmanWorkspace,
+    InformationState,
+};
 pub use filter::kalman::{
     GaussianMeasurementPrediction, KalmanPredictor, KalmanUpdater, KalmanWorkspace,
 };

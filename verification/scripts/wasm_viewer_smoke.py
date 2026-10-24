@@ -88,6 +88,25 @@ def main() -> int:
             )
             page.close()
 
+            # Tutorial 12 (information filter): partial steps then run to end
+            for n in (3, 21):
+                page = browser.new_page(viewport={"width": 1280, "height": 800})
+                page.goto(
+                    f"{base}/?tutorial=12&steps={n}",
+                    wait_until="networkidle",
+                    timeout=120_000,
+                )
+                wait_step_title(page, n)
+                page.close()
+
+            page = browser.new_page(viewport={"width": 1280, "height": 800})
+            page.goto(f"{base}/?tutorial=12&finish=1", wait_until="networkidle", timeout=120_000)
+            page.wait_for_function(
+                f"document.title === '{READY_TITLE}'",
+                timeout=120_000,
+            )
+            page.close()
+
             browser.close()
     finally:
         server.terminate()
