@@ -4,6 +4,7 @@ use crate::lot10_single_sensor::{Lot10SensorManagerMode, Lot10SingleSensorScenar
 use crate::lot11_kdtree::Lot11KdtreeScenario;
 use crate::lot13_multi_sensor::Lot13MultiSensorScenario;
 use crate::lot14_optimised_sensor::Lot14OptimisedSensorScenario;
+use crate::lot15_network_info_arch::Lot15NetworkInfoArchScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
@@ -116,6 +117,7 @@ pub enum AnyScenario {
     Lot12Akkf(Lot9AkkfScenario),
     Lot13MultiSensor(Lot13MultiSensorScenario),
     Lot14OptimisedSensor(Lot14OptimisedSensorScenario),
+    Lot15NetworkInfoArch(Lot15NetworkInfoArchScenario),
 }
 
 impl AnyScenario {
@@ -175,6 +177,11 @@ impl AnyScenario {
                     crate::lot14_optimised_sensor::Lot14OptimisedSensorMode::OptimizeBrute,
                 )?,
             )),
+            ScenarioId::Lot15NetworkInfoArchTutorial => Ok(Self::Lot15NetworkInfoArch(
+                Lot15NetworkInfoArchScenario::tutorial_defaults(
+                    crate::lot15_network_info_arch::Lot15ArchitectureMode::Network,
+                )?,
+            )),
         }
     }
 
@@ -200,6 +207,7 @@ impl AnyScenario {
             Self::Lot12Akkf(_) => ScenarioId::Lot12AkkfTutorial,
             Self::Lot13MultiSensor(_) => ScenarioId::Lot13MultiSensorTutorial,
             Self::Lot14OptimisedSensor(_) => ScenarioId::Lot14OptimisedSensorTutorial,
+            Self::Lot15NetworkInfoArch(_) => ScenarioId::Lot15NetworkInfoArchTutorial,
         }
     }
 }
@@ -226,6 +234,7 @@ impl Scenario for AnyScenario {
             Self::Lot12Akkf(s) => s.reset(),
             Self::Lot13MultiSensor(s) => s.reset(),
             Self::Lot14OptimisedSensor(s) => s.reset(),
+            Self::Lot15NetworkInfoArch(s) => s.reset(),
         }
     }
 
@@ -331,6 +340,13 @@ impl Scenario for AnyScenario {
                 }
             }
             Self::Lot14OptimisedSensor(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot15NetworkInfoArch(s) => {
                 if s.step()? {
                     ScenarioStepOutcome::Stepped
                 } else {
@@ -458,6 +474,7 @@ impl Scenario for AnyScenario {
             }
             Self::Lot13MultiSensor(s) => s.viewer_snapshot(),
             Self::Lot14OptimisedSensor(s) => s.viewer_snapshot(),
+            Self::Lot15NetworkInfoArch(s) => s.viewer_snapshot(),
         }
     }
 }

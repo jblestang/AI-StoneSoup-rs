@@ -110,6 +110,9 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "19" | "optimised" | "optimized" | "opt-sensor" => {
             Some(ScenarioId::Lot14OptimisedSensorTutorial)
         }
+        "20" | "architecture" | "network-arch" | "info-arch" => {
+            Some(ScenarioId::Lot15NetworkInfoArchTutorial)
+        }
         _ => None,
     }
 }
@@ -352,6 +355,7 @@ impl ViewerApp {
                 | ScenarioId::Lot12AkkfTutorial
                 | ScenarioId::Lot13MultiSensorTutorial
                 | ScenarioId::Lot14OptimisedSensorTutorial
+                | ScenarioId::Lot15NetworkInfoArchTutorial
         )
     }
 
@@ -368,6 +372,7 @@ impl ViewerApp {
                 | ScenarioId::Lot11KdtreeTutorial
                 | ScenarioId::Lot13MultiSensorTutorial
                 | ScenarioId::Lot14OptimisedSensorTutorial
+                | ScenarioId::Lot15NetworkInfoArchTutorial
         )
     }
 

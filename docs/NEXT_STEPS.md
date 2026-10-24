@@ -26,9 +26,11 @@
 
 **Lot 14:** complete — **Optimised sensor management** tutorial (`03_OptimisedSensorManagement.py`: SciPy `OptimizeBrute` and `OptimizeBasinHopping` managers vs brute-force baseline; replay parity). Headless: `lot14_optimised_sensor`. WASM viewer: `?tutorial=19` (aliases `optimised`, `opt-sensor`). Parity: `parity_lot14_optimised_sensor` (three manager modes, 20 steps).
 
+**Lot 15:** complete — **Information vs network architectures** tutorial (`02_Information_and_Network_Architectures.py`: hierarchical generator, top fusion-node track replay from Stone Soup export; network/information agreement + edge-removal modes). Headless: `lot15_network_info_arch`. WASM viewer: `?tutorial=20` (aliases `architecture`, `network-arch`). Parity: `parity_lot15_network_info_arch` (fixture replay + network/information track alignment).
+
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (tutorials **01–19**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (tutorials **01–20**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
@@ -42,5 +44,5 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated catalogue tutorials at pinned SHA: **01–19** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management).
-- **Next feature lots:** architecture tutorials, etc. (`PORTING_MATRIX.csv` `todo` rows).
+- Validated catalogue tutorials at pinned SHA: **01–20** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management; **20** = network/information architectures).
+- **Next feature lots:** remaining architecture tutorials (`01_Introduction`, `03_Avoiding_Data_Incest`), etc. (`PORTING_MATRIX.csv` `todo` rows).
