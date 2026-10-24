@@ -16,6 +16,7 @@ pub enum ScenarioId {
     Lot5ResamplingTutorial,
     Lot6InformationFilterTutorial,
     Lot7GmphdTutorial,
+    Lot8AsdTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -33,7 +34,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 13] = [
+        static LIST: [ScenarioDescriptor; 14] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -125,6 +126,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot8AsdTutorial,
+                title: "14 — Accumulated state densities (ASD)",
+                upstream_path: "docs/tutorials/filters/ASDFilter.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -148,7 +156,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot4SimulationTutorial
             | ScenarioId::Lot5ResamplingTutorial
             | ScenarioId::Lot6InformationFilterTutorial
-            | ScenarioId::Lot7GmphdTutorial => {
+            | ScenarioId::Lot7GmphdTutorial
+            | ScenarioId::Lot8AsdTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -169,7 +178,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot4SimulationTutorial
             | ScenarioId::Lot5ResamplingTutorial
             | ScenarioId::Lot6InformationFilterTutorial
-            | ScenarioId::Lot7GmphdTutorial => {
+            | ScenarioId::Lot7GmphdTutorial
+            | ScenarioId::Lot8AsdTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
