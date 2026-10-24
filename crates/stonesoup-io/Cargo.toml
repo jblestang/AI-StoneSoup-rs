@@ -1,0 +1,12 @@
+[package]
+name = "stonesoup-io"
+description = "Host-side fixture loading and export (std only)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+stonesoup-core = { path = "../stonesoup-core" }
+serde = { workspace = true, features = ["std"] }
+serde_json = { workspace = true }

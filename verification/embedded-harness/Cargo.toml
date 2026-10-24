@@ -1,0 +1,13 @@
+[package]
+name = "stonesoup-embedded-harness"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+stonesoup-core = { path = "../../crates/stonesoup-core" }
+stonesoup-scenarios = { path = "../../crates/stonesoup-scenarios" }
+
+[[bin]]
+name = "stonesoup-embedded-harness"
+path = "src/main.rs"

@@ -1,0 +1,17 @@
+[package]
+name = "stonesoup-sim"
+description = "Ground truth and sensor simulation (strict no_std)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+stonesoup-core = { path = "../stonesoup-core" }
+libm = { workspace = true }
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+needless_range_loop = "allow"

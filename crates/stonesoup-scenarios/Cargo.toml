@@ -1,0 +1,18 @@
+[package]
+name = "stonesoup-scenarios"
+description = "Executable scenario definitions (strict profile)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+stonesoup-core = { path = "../stonesoup-core" }
+stonesoup-sim = { path = "../stonesoup-sim" }
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+manual_unwrap_or = "allow"
+question_mark = "allow"
