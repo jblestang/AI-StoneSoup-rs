@@ -20,7 +20,7 @@ use stonesoup_sim::{SplitMix64, TruthStepConfig};
 use crate::registry::ScenarioError;
 
 /// Maximum **target** (true) detections one radar may output per 360° rotation; clutter is extra.
-pub const TARGETS_PER_ROTATION: usize = 250;
+pub const TARGETS_PER_ROTATION: usize = 1000;
 pub const PLOTS_PER_ROTATION: usize = TARGETS_PER_ROTATION;
 pub const PLOTS_PER_RADAR: usize = TARGETS_PER_ROTATION;
 pub const CLUTTER_FRACTION_TARGET: f64 = 0.10;
@@ -36,7 +36,7 @@ pub const DT_S: f64 = 0.25;
 /// Wall-clock simulation length (plot budget resets each radar rotation).
 pub const SIM_DURATION_S: f64 = 60.0;
 /// Distinct ground-truth targets in the scenario (each may produce plots every rotation).
-pub const NUM_TRUTHS: usize = 250;
+pub const NUM_TRUTHS: usize = 1000;
 const TRUTH_MIN_RANGE_M: f64 = 50_000.0;
 const TRUTH_MAX_RANGE_M: f64 = RANGE_A_M * 0.98;
 pub const JPDA_PROB_DETECT: f64 = 0.9;
@@ -80,9 +80,9 @@ pub const PLOT_SCAN_CURSOR_STRIDE: usize = 127;
 pub const SEED: u64 = 42;
 
 /// Concurrent fused tracks; [`MAX_GNN_ASSIGN_DETS`] matches this per-step detection budget.
-pub const MAX_ACTIVE: usize = 1000;
-const MAX_HOLDING: usize = 8192;
-const MAX_TRUE_PLOT_TRACKS: usize = 512_000;
+pub const MAX_ACTIVE: usize = 4096;
+const MAX_HOLDING: usize = 65_536;
+const MAX_TRUE_PLOT_TRACKS: usize = 2_000_000;
 
 #[derive(Debug, Clone, Copy)]
 struct RadarConfig {
@@ -115,7 +115,7 @@ pub struct CompletedTrack {
     pub birth_step: usize,
     pub death_step: usize,
     pub end_xy: (f64, f64),
-    pub truth_id: Option<u8>,
+    pub truth_id: Option<u16>,
 }
 
 #[derive(Debug, Clone)]
@@ -300,7 +300,7 @@ fn init_truths(ts0: Timestamp, rng: &mut SplitMix64) -> Result<Vec<GroundTruthSt
 }
 
 fn count_unique_truth_labels(completed: &[CompletedTrack]) -> usize {
-    let mut seen = [false; NUM_TRUTHS];
+    let mut seen = alloc::vec![false; NUM_TRUTHS];
     for c in completed {
         if let Some(tid) = c.truth_id {
             let i = tid as usize;
@@ -510,7 +510,7 @@ impl DualRadarClutterSim {
             birth_step: self.step,
             death_step: self.step,
             end_xy: (state[0], state[2]),
-            truth_id: Some(truth_idx as u8),
+            truth_id: Some(truth_idx as u16),
         });
     }
 
@@ -894,7 +894,7 @@ impl DualRadarClutterSim {
                 let d = euclidean_xy(c.end_xy, (gt.state[0], gt.state[2]));
                 if d < best {
                     best = d;
-                    best_id = Some(ti as u8);
+                    best_id = Some(ti as u16);
                 }
             }
             if best <= TRUTH_ASSOC_METERS {
@@ -910,7 +910,7 @@ impl DualRadarClutterSim {
             .iter()
             .enumerate()
             .map(|(i, states)| TruthPath {
-                id: i as u8,
+                id: i as u16,
                 states: states.clone(),
             })
             .collect();
@@ -922,7 +922,7 @@ impl DualRadarClutterSim {
         let track_to_truth =
             associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config);
         let continuous_truth_tracks =
-            continuous_tracks_per_truth(&track_to_truth, NUM_TRUTHS as u8);
+            continuous_tracks_per_truth(&track_to_truth, NUM_TRUTHS as u16);
 
         for ri in 0..2 {
             let rt = &mut self.radar_rt[ri];

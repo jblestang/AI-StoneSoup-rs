@@ -20,7 +20,7 @@ use super::distance::{distance_hypotheses, MAX_DISTANCE_HYPOTHESES};
 use super::nearest_neighbour::MeasurementHypothesis;
 
 /// Upper bound on detections per GNN call (scenario replay buffers are sized to this).
-pub const MAX_GNN_ASSIGN_DETS: usize = 1000;
+pub const MAX_GNN_ASSIGN_DETS: usize = 4096;
 const INF: f64 = 1e100;
 
 #[derive(Debug, Clone, Copy)]

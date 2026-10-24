@@ -4,7 +4,7 @@
     "clutter_lambda_poisson": 0.1,
     "fov_deg": 90.0,
     "implementation": "rust",
-    "num_truths": 250,
+    "num_truths": 1000,
     "overlap_area_fraction_co_located_disks": 0.2,
     "period_a_s": 6.0,
     "period_b_s": 3.0,
@@ -12,38 +12,37 @@
     "range_b_km": 178.88543819998318,
     "seed": 42,
     "simulation_duration_s": 60.0,
-    "targets_per_rotation_per_radar": 250,
+    "targets_per_rotation_per_radar": 1000,
     "time_step_s": 0.25,
-    "truth_layout": "250 targets uniform random range 50–392 km bearing"
+    "truth_layout": "1000 targets uniform random range 50–392 km bearing"
   },
   "plots": {
-    "clutter_fraction_actual": 0.008462104488594555,
+    "clutter_fraction_actual": 0.002240409674911984,
     "max_simulation_steps": 240,
-    "radar_a_max_targets_in_one_rotation": 250,
-    "radar_a_plots_total": 2771,
+    "radar_a_max_targets_in_one_rotation": 1000,
+    "radar_a_plots_total": 11024,
     "radar_a_rotations": 10,
-    "radar_b_max_targets_in_one_rotation": 132,
-    "radar_b_plots_total": 2665,
+    "radar_b_max_targets_in_one_rotation": 546,
+    "radar_b_plots_total": 10847,
     "radar_b_rotations": 20,
     "simulation_steps": 240,
     "simulation_time_s": 60.0,
-    "total_clutter_detections": 46,
-    "total_plots": 5436,
-    "total_true_detections": 5390,
-    "true_plots_in_overlap_disk": 3080,
-    "true_plots_in_overlap_fraction": 0.5714285714285714
+    "total_clutter_detections": 49,
+    "total_plots": 21871,
+    "total_true_detections": 21822,
+    "true_plots_in_overlap_disk": 12757,
+    "true_plots_in_overlap_fraction": 0.5845935294656769
   },
   "track_to_truth": {
-    "association_count": 491,
-    "continuous_track_count": 195,
+    "association_count": 2042,
+    "continuous_track_count": 793,
     "continuous_tracks": [
       {
         "covered_duration_s": 57.5,
         "linked_filter_track_ids": [
-          245,
-          255,
-          414,
-          481
+          1013,
+          1047,
+          1069
         ],
         "truth_id": 0,
         "wall_duration_s": 57.5
@@ -51,7 +50,7 @@
       {
         "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
-          181
+          744
         ],
         "truth_id": 1,
         "wall_duration_s": 58.75
@@ -59,8 +58,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          299,
-          353
+          1272,
+          1483
         ],
         "truth_id": 2,
         "wall_duration_s": 56.25
@@ -69,8 +68,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           0,
-          72,
-          146
+          295
         ],
         "truth_id": 3,
         "wall_duration_s": 59.5
@@ -79,25 +77,26 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           1,
-          73
+          296,
+          587
         ],
         "truth_id": 4,
         "wall_duration_s": 59.5
       },
       {
-        "covered_duration_s": 55.5,
+        "covered_duration_s": 49.5,
         "linked_filter_track_ids": [
-          415,
-          508
+          1738,
+          1794
         ],
         "truth_id": 5,
-        "wall_duration_s": 55.5
+        "wall_duration_s": 49.5
       },
       {
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           2,
-          74
+          297
         ],
         "truth_id": 6,
         "wall_duration_s": 59.5
@@ -105,8 +104,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          300,
-          354
+          1273,
+          1484
         ],
         "truth_id": 8,
         "wall_duration_s": 56.25
@@ -115,7 +114,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           3,
-          75
+          298
         ],
         "truth_id": 9,
         "wall_duration_s": 59.5
@@ -124,8 +123,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           4,
-          76,
-          147
+          299,
+          588
         ],
         "truth_id": 11,
         "wall_duration_s": 59.5
@@ -133,8 +132,7 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          77,
-          148
+          300
         ],
         "truth_id": 12,
         "wall_duration_s": 59.25
@@ -142,45 +140,43 @@
       {
         "covered_duration_s": 55.75,
         "linked_filter_track_ids": [
-          394,
-          416,
-          521,
-          531
+          1586
         ],
         "truth_id": 14,
         "wall_duration_s": 55.75
       },
       {
-        "covered_duration_s": 55.5,
+        "covered_duration_s": 49.5,
         "linked_filter_track_ids": [
-          417,
-          443
+          1739,
+          1922
         ],
         "truth_id": 15,
-        "wall_duration_s": 55.5
+        "wall_duration_s": 49.5
       },
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          355,
-          395
+          1485,
+          1587
         ],
         "truth_id": 16,
         "wall_duration_s": 56.0
       },
       {
-        "covered_duration_s": 55.5,
+        "covered_duration_s": 49.5,
         "linked_filter_track_ids": [
-          418
+          1740,
+          1795
         ],
         "truth_id": 17,
-        "wall_duration_s": 55.5
+        "wall_duration_s": 49.5
       },
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          149,
-          182
+          590,
+          745
         ],
         "truth_id": 19,
         "wall_duration_s": 59.0
@@ -189,8 +185,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           5,
-          78,
-          150
+          301
         ],
         "truth_id": 21,
         "wall_duration_s": 59.5
@@ -199,9 +194,10 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           6,
-          70,
-          79,
-          145
+          294,
+          302,
+          586,
+          591
         ],
         "truth_id": 22,
         "wall_duration_s": 59.5
@@ -209,8 +205,8 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          151,
-          183
+          592,
+          746
         ],
         "truth_id": 23,
         "wall_duration_s": 59.0
@@ -218,8 +214,9 @@
       {
         "covered_duration_s": 58.5,
         "linked_filter_track_ids": [
-          216,
-          223
+          888,
+          919,
+          2036
         ],
         "truth_id": 24,
         "wall_duration_s": 58.5
@@ -227,9 +224,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          301,
-          356,
-          434
+          1274,
+          1486,
+          1833
         ],
         "truth_id": 25,
         "wall_duration_s": 56.25
@@ -238,7 +235,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           7,
-          80
+          303
         ],
         "truth_id": 26,
         "wall_duration_s": 59.5
@@ -246,8 +243,7 @@
       {
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
-          8,
-          81
+          8
         ],
         "truth_id": 27,
         "wall_duration_s": 59.5
@@ -256,8 +252,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           9,
-          82,
-          152
+          305
         ],
         "truth_id": 28,
         "wall_duration_s": 59.5
@@ -265,9 +260,9 @@
       {
         "covered_duration_s": 58.5,
         "linked_filter_track_ids": [
-          217,
-          224,
-          232
+          889,
+          920,
+          1978
         ],
         "truth_id": 29,
         "wall_duration_s": 58.5
@@ -275,8 +270,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          302,
-          357
+          1275,
+          1487,
+          1726
         ],
         "truth_id": 30,
         "wall_duration_s": 56.25
@@ -284,7 +280,7 @@
       {
         "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
-          184
+          747
         ],
         "truth_id": 31,
         "wall_duration_s": 58.75
@@ -292,8 +288,10 @@
       {
         "covered_duration_s": 58.25,
         "linked_filter_track_ids": [
-          225,
-          233
+          921,
+          953,
+          980,
+          1925
         ],
         "truth_id": 32,
         "wall_duration_s": 58.25
@@ -301,8 +299,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          303,
-          358
+          1276,
+          1488,
+          1588
         ],
         "truth_id": 33,
         "wall_duration_s": 56.25
@@ -311,7 +310,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           10,
-          83
+          306
         ],
         "truth_id": 34,
         "wall_duration_s": 59.5
@@ -319,9 +318,11 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          304,
-          359,
-          513
+          1258,
+          1277,
+          1470,
+          1489,
+          1902
         ],
         "truth_id": 35,
         "wall_duration_s": 56.25
@@ -329,9 +330,11 @@
       {
         "covered_duration_s": 57.5,
         "linked_filter_track_ids": [
-          246,
-          256,
-          473
+          1014,
+          1048,
+          1070,
+          1802,
+          1942
         ],
         "truth_id": 36,
         "wall_duration_s": 57.5
@@ -340,7 +343,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           11,
-          84
+          307
         ],
         "truth_id": 37,
         "wall_duration_s": 59.5
@@ -349,7 +352,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           12,
-          85
+          308
         ],
         "truth_id": 38,
         "wall_duration_s": 59.5
@@ -357,7 +360,8 @@
       {
         "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
-          185
+          748,
+          771
         ],
         "truth_id": 40,
         "wall_duration_s": 58.75
@@ -365,8 +369,10 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          305,
-          360
+          1278,
+          1490,
+          1830,
+          1884
         ],
         "truth_id": 41,
         "wall_duration_s": 56.25
@@ -374,8 +380,8 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          86,
-          153
+          309,
+          593
         ],
         "truth_id": 44,
         "wall_duration_s": 59.25
@@ -383,8 +389,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          306,
-          361
+          1279,
+          1491
         ],
         "truth_id": 45,
         "wall_duration_s": 56.25
@@ -398,19 +404,21 @@
         "wall_duration_s": 59.5
       },
       {
-        "covered_duration_s": 55.5,
+        "covered_duration_s": 49.5,
         "linked_filter_track_ids": [
-          419,
-          509
+          1741,
+          1796
         ],
         "truth_id": 48,
-        "wall_duration_s": 55.5
+        "wall_duration_s": 49.5
       },
       {
         "covered_duration_s": 57.25,
         "linked_filter_track_ids": [
-          257,
-          263
+          1049,
+          1071,
+          1078,
+          1899
         ],
         "truth_id": 49,
         "wall_duration_s": 57.25
@@ -418,46 +426,45 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          307,
-          362,
-          435
+          1280,
+          1492,
+          1923
         ],
         "truth_id": 51,
         "wall_duration_s": 56.25
       },
       {
-        "covered_duration_s": 59.25,
+        "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          87,
-          154
+          594
         ],
         "truth_id": 52,
-        "wall_duration_s": 59.25
+        "wall_duration_s": 59.0
       },
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          308,
-          363,
-          503
+          1281,
+          1493
         ],
         "truth_id": 54,
         "wall_duration_s": 56.25
       },
       {
-        "covered_duration_s": 55.5,
+        "covered_duration_s": 49.5,
         "linked_filter_track_ids": [
-          420,
-          532
+          1742,
+          1885
         ],
         "truth_id": 55,
-        "wall_duration_s": 55.5
+        "wall_duration_s": 49.5
       },
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          309,
-          364
+          1282,
+          1494,
+          1565
         ],
         "truth_id": 57,
         "wall_duration_s": 56.25
@@ -465,10 +472,9 @@
       {
         "covered_duration_s": 57.25,
         "linked_filter_track_ids": [
-          258,
-          264,
-          427,
-          490
+          1050,
+          1072,
+          1813
         ],
         "truth_id": 58,
         "wall_duration_s": 57.25
@@ -476,10 +482,10 @@
       {
         "covered_duration_s": 58.25,
         "linked_filter_track_ids": [
-          226,
-          234,
-          428,
-          457
+          922,
+          954,
+          1746,
+          1938
         ],
         "truth_id": 59,
         "wall_duration_s": 58.25
@@ -487,8 +493,8 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          155,
-          186
+          595,
+          749
         ],
         "truth_id": 61,
         "wall_duration_s": 59.0
@@ -504,10 +510,10 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          172,
-          199,
-          403,
-          474
+          707,
+          831,
+          1828,
+          2039
         ],
         "truth_id": 65,
         "wall_duration_s": 59.0
@@ -516,7 +522,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           15,
-          88
+          311
         ],
         "truth_id": 66,
         "wall_duration_s": 59.5
@@ -524,8 +530,8 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          89,
-          156
+          312,
+          596
         ],
         "truth_id": 68,
         "wall_duration_s": 59.25
@@ -533,8 +539,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          310,
-          365
+          1283,
+          1495
         ],
         "truth_id": 69,
         "wall_duration_s": 56.25
@@ -543,7 +549,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           16,
-          90
+          313
         ],
         "truth_id": 70,
         "wall_duration_s": 59.5
@@ -551,7 +557,7 @@
       {
         "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
-          187
+          750
         ],
         "truth_id": 71,
         "wall_duration_s": 58.75
@@ -560,7 +566,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           17,
-          91
+          314
         ],
         "truth_id": 74,
         "wall_duration_s": 59.5
@@ -569,7 +575,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           18,
-          92
+          315,
+          597
         ],
         "truth_id": 75,
         "wall_duration_s": 59.5
@@ -577,9 +584,8 @@
       {
         "covered_duration_s": 57.25,
         "linked_filter_track_ids": [
-          259,
-          265,
-          431
+          1051,
+          1073
         ],
         "truth_id": 76,
         "wall_duration_s": 57.25
@@ -595,9 +601,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          311,
-          366,
-          504
+          1284,
+          1496,
+          2030
         ],
         "truth_id": 78,
         "wall_duration_s": 56.25
@@ -605,9 +611,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          312,
-          367,
-          462
+          1285,
+          1497,
+          1784
         ],
         "truth_id": 80,
         "wall_duration_s": 56.25
@@ -615,8 +621,8 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          157,
-          188
+          598,
+          751
         ],
         "truth_id": 81,
         "wall_duration_s": 59.0
@@ -624,9 +630,8 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          368,
-          396,
-          437
+          1498,
+          1589
         ],
         "truth_id": 82,
         "wall_duration_s": 56.0
@@ -634,8 +639,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          313,
-          369
+          1286,
+          1499,
+          1590
         ],
         "truth_id": 83,
         "wall_duration_s": 56.25
@@ -644,7 +650,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           20,
-          93
+          316
         ],
         "truth_id": 84,
         "wall_duration_s": 59.5
@@ -652,8 +658,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          314,
-          370
+          1287,
+          1500
         ],
         "truth_id": 85,
         "wall_duration_s": 56.25
@@ -661,8 +667,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          315,
-          371
+          1288,
+          1501,
+          1886
         ],
         "truth_id": 87,
         "wall_duration_s": 56.25
@@ -670,8 +677,8 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          158,
-          189
+          599,
+          752
         ],
         "truth_id": 88,
         "wall_duration_s": 59.0
@@ -680,7 +687,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           21,
-          94
+          317,
+          753
         ],
         "truth_id": 89,
         "wall_duration_s": 59.5
@@ -688,8 +696,8 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          159,
-          190
+          600,
+          754
         ],
         "truth_id": 90,
         "wall_duration_s": 59.0
@@ -698,10 +706,9 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           22,
-          62,
-          95,
-          133,
-          451
+          252,
+          318,
+          535
         ],
         "truth_id": 92,
         "wall_duration_s": 59.5
@@ -710,7 +717,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           23,
-          96
+          319
         ],
         "truth_id": 94,
         "wall_duration_s": 59.5
@@ -719,10 +726,10 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           24,
-          63,
-          97,
-          134,
-          516
+          253,
+          320,
+          536,
+          1685
         ],
         "truth_id": 96,
         "wall_duration_s": 59.5
@@ -730,9 +737,8 @@
       {
         "covered_duration_s": 55.75,
         "linked_filter_track_ids": [
-          397,
-          455,
-          467
+          1591,
+          1645
         ],
         "truth_id": 97,
         "wall_duration_s": 55.75
@@ -741,10 +747,9 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           25,
-          64,
-          98,
-          135,
-          191
+          254,
+          321,
+          537
         ],
         "truth_id": 98,
         "wall_duration_s": 59.5
@@ -753,7 +758,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           26,
-          99
+          322
         ],
         "truth_id": 99,
         "wall_duration_s": 59.5
@@ -762,7 +767,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           27,
-          100
+          153,
+          323
         ],
         "truth_id": 100,
         "wall_duration_s": 59.5
@@ -770,28 +776,27 @@
       {
         "covered_duration_s": 57.75,
         "linked_filter_track_ids": [
-          237,
-          247,
-          260
+          981,
+          1015,
+          1592,
+          1855
         ],
         "truth_id": 101,
         "wall_duration_s": 57.75
       },
       {
-        "covered_duration_s": 56.25,
+        "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          316,
-          372
+          1502
         ],
         "truth_id": 102,
-        "wall_duration_s": 56.25
+        "wall_duration_s": 56.0
       },
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          317,
-          373,
-          398
+          1290,
+          1503
         ],
         "truth_id": 103,
         "wall_duration_s": 56.25
@@ -799,9 +804,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          318,
-          374,
-          399
+          1291,
+          1504
         ],
         "truth_id": 104,
         "wall_duration_s": 56.25
@@ -809,10 +813,9 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          173,
-          192,
-          200,
-          208
+          708,
+          755,
+          832
         ],
         "truth_id": 105,
         "wall_duration_s": 59.0
@@ -820,7 +823,8 @@
       {
         "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
-          193
+          756,
+          827
         ],
         "truth_id": 106,
         "wall_duration_s": 58.75
@@ -829,7 +833,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           28,
-          101
+          324,
+          757
         ],
         "truth_id": 107,
         "wall_duration_s": 59.5
@@ -837,8 +842,9 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          375,
-          400
+          1505,
+          1593,
+          1951
         ],
         "truth_id": 108,
         "wall_duration_s": 56.0
@@ -846,8 +852,8 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          160,
-          194
+          601,
+          763
         ],
         "truth_id": 109,
         "wall_duration_s": 59.0
@@ -855,9 +861,9 @@
       {
         "covered_duration_s": 58.5,
         "linked_filter_track_ids": [
-          209,
-          218,
-          518
+          863,
+          890,
+          924
         ],
         "truth_id": 110,
         "wall_duration_s": 58.5
@@ -866,7 +872,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           29,
-          102
+          325,
+          602
         ],
         "truth_id": 111,
         "wall_duration_s": 59.5
@@ -875,9 +882,10 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           30,
-          65,
-          103,
-          136
+          255,
+          326,
+          538,
+          1681
         ],
         "truth_id": 113,
         "wall_duration_s": 59.5
@@ -885,9 +893,10 @@
       {
         "covered_duration_s": 57.75,
         "linked_filter_track_ids": [
-          238,
-          248,
-          429
+          982,
+          1016,
+          1846,
+          1903
         ],
         "truth_id": 115,
         "wall_duration_s": 57.75
@@ -895,9 +904,9 @@
       {
         "covered_duration_s": 58.5,
         "linked_filter_track_ids": [
-          210,
-          219,
-          471
+          864,
+          891,
+          2041
         ],
         "truth_id": 116,
         "wall_duration_s": 58.5
@@ -906,7 +915,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           31,
-          104
+          327
         ],
         "truth_id": 117,
         "wall_duration_s": 59.5
@@ -914,8 +923,8 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          105,
-          161
+          328,
+          603
         ],
         "truth_id": 119,
         "wall_duration_s": 59.25
@@ -923,8 +932,10 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          319,
-          376
+          1292,
+          1384,
+          1506,
+          1985
         ],
         "truth_id": 120,
         "wall_duration_s": 56.25
@@ -932,9 +943,8 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          377,
-          401,
-          482
+          1507,
+          1594
         ],
         "truth_id": 121,
         "wall_duration_s": 56.0
@@ -943,7 +953,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           32,
-          106
+          329
         ],
         "truth_id": 122,
         "wall_duration_s": 59.5
@@ -952,7 +962,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           33,
-          107
+          330
         ],
         "truth_id": 123,
         "wall_duration_s": 59.5
@@ -960,8 +970,9 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          378,
-          402
+          1508,
+          1595,
+          1779
         ],
         "truth_id": 124,
         "wall_duration_s": 56.0
@@ -970,7 +981,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           34,
-          108
+          331,
+          759
         ],
         "truth_id": 125,
         "wall_duration_s": 59.5
@@ -994,8 +1006,10 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          267,
-          320
+          1080,
+          1293,
+          1702,
+          1772
         ],
         "truth_id": 128,
         "wall_duration_s": 56.25
@@ -1004,7 +1018,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           37,
-          109
+          332
         ],
         "truth_id": 129,
         "wall_duration_s": 59.5
@@ -1013,7 +1027,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           38,
-          110
+          333
         ],
         "truth_id": 130,
         "wall_duration_s": 59.5
@@ -1021,8 +1035,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          268,
-          321
+          1081,
+          1294,
+          1817
         ],
         "truth_id": 131,
         "wall_duration_s": 56.25
@@ -1030,8 +1045,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          282,
-          322
+          1082,
+          1295
         ],
         "truth_id": 132,
         "wall_duration_s": 56.25
@@ -1039,9 +1054,9 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          174,
-          201,
-          211
+          709,
+          833,
+          1876
         ],
         "truth_id": 133,
         "wall_duration_s": 59.0
@@ -1049,8 +1064,7 @@
       {
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
-          39,
-          111
+          39
         ],
         "truth_id": 134,
         "wall_duration_s": 59.5
@@ -1059,7 +1073,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           40,
-          112
+          335,
+          604
         ],
         "truth_id": 136,
         "wall_duration_s": 59.5
@@ -1067,11 +1082,10 @@
       {
         "covered_duration_s": 55.75,
         "linked_filter_track_ids": [
-          379,
-          404,
-          455,
-          469,
-          505
+          1511,
+          1598,
+          1838,
+          1913
         ],
         "truth_id": 137,
         "wall_duration_s": 55.75
@@ -1080,9 +1094,9 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           41,
-          66,
-          113,
-          137
+          256,
+          336,
+          539
         ],
         "truth_id": 138,
         "wall_duration_s": 59.5
@@ -1091,7 +1105,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           42,
-          114
+          337
         ],
         "truth_id": 139,
         "wall_duration_s": 59.5
@@ -1099,8 +1113,10 @@
       {
         "covered_duration_s": 58.25,
         "linked_filter_track_ids": [
-          220,
-          227
+          892,
+          925,
+          1719,
+          1747
         ],
         "truth_id": 143,
         "wall_duration_s": 58.25
@@ -1108,10 +1124,9 @@
       {
         "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
-          202,
-          212,
-          442,
-          533
+          834,
+          865,
+          893
         ],
         "truth_id": 144,
         "wall_duration_s": 58.75
@@ -1119,9 +1134,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          270,
-          323,
-          380
+          1083,
+          1296,
+          1798
         ],
         "truth_id": 145,
         "wall_duration_s": 56.25
@@ -1129,9 +1144,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          271,
-          324,
-          520
+          1084,
+          1297
         ],
         "truth_id": 146,
         "wall_duration_s": 56.25
@@ -1139,8 +1153,8 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          162,
-          195
+          605,
+          760
         ],
         "truth_id": 147,
         "wall_duration_s": 59.0
@@ -1149,7 +1163,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           43,
-          115
+          338
         ],
         "truth_id": 151,
         "wall_duration_s": 59.5
@@ -1157,9 +1171,11 @@
       {
         "covered_duration_s": 57.75,
         "linked_filter_track_ids": [
-          239,
-          249,
-          445
+          983,
+          1017,
+          1914,
+          1940,
+          1957
         ],
         "truth_id": 153,
         "wall_duration_s": 57.75
@@ -1167,8 +1183,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          272,
-          491
+          1085,
+          1703
         ],
         "truth_id": 154,
         "wall_duration_s": 56.25
@@ -1176,10 +1192,10 @@
       {
         "covered_duration_s": 58.5,
         "linked_filter_track_ids": [
-          213,
-          221,
-          228,
-          450
+          866,
+          894,
+          1890,
+          1895
         ],
         "truth_id": 156,
         "wall_duration_s": 58.5
@@ -1187,10 +1203,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          273,
-          325,
-          381,
-          456
+          1086,
+          1298,
+          1512
         ],
         "truth_id": 157,
         "wall_duration_s": 56.25
@@ -1199,7 +1214,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           44,
-          116
+          339
         ],
         "truth_id": 158,
         "wall_duration_s": 59.5
@@ -1207,8 +1222,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          274,
-          326
+          1087,
+          1299
         ],
         "truth_id": 160,
         "wall_duration_s": 56.25
@@ -1216,8 +1231,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          275,
-          327
+          1088,
+          1300,
+          1991
         ],
         "truth_id": 161,
         "wall_duration_s": 56.25
@@ -1226,9 +1242,9 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           45,
-          67,
-          117,
-          138
+          257,
+          340,
+          540
         ],
         "truth_id": 162,
         "wall_duration_s": 59.5
@@ -1237,9 +1253,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           46,
-          118,
-          163,
-          196
+          341
         ],
         "truth_id": 163,
         "wall_duration_s": 59.5
@@ -1247,9 +1261,9 @@
       {
         "covered_duration_s": 58.0,
         "linked_filter_track_ids": [
-          229,
-          240,
-          528
+          926,
+          984,
+          1939
         ],
         "truth_id": 164,
         "wall_duration_s": 58.0
@@ -1257,9 +1271,10 @@
       {
         "covered_duration_s": 57.5,
         "linked_filter_track_ids": [
-          250,
-          261,
-          461
+          1018,
+          1052,
+          1674,
+          1785
         ],
         "truth_id": 165,
         "wall_duration_s": 57.5
@@ -1268,7 +1283,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           47,
-          119
+          342
         ],
         "truth_id": 166,
         "wall_duration_s": 59.5
@@ -1285,7 +1300,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           49,
-          120
+          343
         ],
         "truth_id": 168,
         "wall_duration_s": 59.5
@@ -1293,9 +1308,9 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          328,
-          382,
-          405
+          1301,
+          1513,
+          1834
         ],
         "truth_id": 169,
         "wall_duration_s": 56.0
@@ -1304,7 +1319,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           50,
-          121
+          344
         ],
         "truth_id": 170,
         "wall_duration_s": 59.5
@@ -1312,8 +1327,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          276,
-          329
+          1141,
+          1302,
+          1979
         ],
         "truth_id": 171,
         "wall_duration_s": 56.25
@@ -1321,10 +1337,10 @@
       {
         "covered_duration_s": 58.0,
         "linked_filter_track_ids": [
-          230,
-          241,
-          444,
-          484
+          927,
+          985,
+          1776,
+          1935
         ],
         "truth_id": 172,
         "wall_duration_s": 58.0
@@ -1332,9 +1348,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          277,
-          330,
-          383
+          1090,
+          1303
         ],
         "truth_id": 173,
         "wall_duration_s": 56.25
@@ -1342,9 +1357,10 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          175,
-          197,
-          203
+          710,
+          761,
+          835,
+          1917
         ],
         "truth_id": 175,
         "wall_duration_s": 59.0
@@ -1352,8 +1368,8 @@
       {
         "covered_duration_s": 55.75,
         "linked_filter_track_ids": [
-          384,
-          406
+          1514,
+          1599
         ],
         "truth_id": 176,
         "wall_duration_s": 55.75
@@ -1361,8 +1377,11 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          278,
-          331
+          1091,
+          1304,
+          1319,
+          1818,
+          1915
         ],
         "truth_id": 177,
         "wall_duration_s": 56.25
@@ -1370,10 +1389,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          279,
-          332,
-          385,
-          495
+          1092,
+          1305,
+          1515
         ],
         "truth_id": 179,
         "wall_duration_s": 56.25
@@ -1382,7 +1400,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           51,
-          122
+          345
         ],
         "truth_id": 180,
         "wall_duration_s": 59.5
@@ -1390,9 +1408,10 @@
       {
         "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
-          204,
-          214,
-          421
+          836,
+          867,
+          895,
+          1843
         ],
         "truth_id": 182,
         "wall_duration_s": 58.75
@@ -1400,9 +1419,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          280,
-          333,
-          530
+          1093,
+          1306,
+          1516
         ],
         "truth_id": 183,
         "wall_duration_s": 56.25
@@ -1410,9 +1429,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          281,
-          334,
-          479
+          1094,
+          1307,
+          1713
         ],
         "truth_id": 187,
         "wall_duration_s": 56.25
@@ -1420,10 +1439,10 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          139,
-          164,
-          176,
-          439
+          541,
+          606,
+          711,
+          1684
         ],
         "truth_id": 188,
         "wall_duration_s": 59.25
@@ -1431,8 +1450,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          269,
-          335
+          1095,
+          1308
         ],
         "truth_id": 189,
         "wall_duration_s": 56.25
@@ -1440,9 +1459,9 @@
       {
         "covered_duration_s": 57.25,
         "linked_filter_track_ids": [
-          252,
-          262,
-          426
+          1019,
+          1053,
+          1677
         ],
         "truth_id": 190,
         "wall_duration_s": 57.25
@@ -1450,9 +1469,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          283,
-          336,
-          492
+          1096,
+          1309,
+          1714
         ],
         "truth_id": 191,
         "wall_duration_s": 56.25
@@ -1461,10 +1480,9 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           52,
-          68,
-          123,
-          140,
-          514
+          258,
+          346,
+          542
         ],
         "truth_id": 193,
         "wall_duration_s": 59.5
@@ -1473,8 +1491,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           53,
-          124,
-          165
+          347
         ],
         "truth_id": 194,
         "wall_duration_s": 59.5
@@ -1482,9 +1499,9 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          337,
-          386,
-          440
+          1310,
+          1517,
+          1715
         ],
         "truth_id": 195,
         "wall_duration_s": 56.0
@@ -1492,10 +1509,10 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          141,
-          166,
-          177,
-          460
+          543,
+          608,
+          712,
+          1807
         ],
         "truth_id": 196,
         "wall_duration_s": 59.25
@@ -1503,10 +1520,10 @@
       {
         "covered_duration_s": 58.5,
         "linked_filter_track_ids": [
-          215,
-          222,
-          231,
-          422
+          868,
+          896,
+          1668,
+          1758
         ],
         "truth_id": 198,
         "wall_duration_s": 58.5
@@ -1514,8 +1531,9 @@
       {
         "covered_duration_s": 55.75,
         "linked_filter_track_ids": [
-          387,
-          407
+          1518,
+          1600,
+          1727
         ],
         "truth_id": 200,
         "wall_duration_s": 55.75
@@ -1523,10 +1541,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          284,
-          338,
-          468,
-          480
+          1097,
+          1311
         ],
         "truth_id": 201,
         "wall_duration_s": 56.25
@@ -1535,7 +1551,8 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           54,
-          125
+          348,
+          609
         ],
         "truth_id": 202,
         "wall_duration_s": 59.5
@@ -1543,9 +1560,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          285,
-          339,
-          463
+          1098,
+          1312
         ],
         "truth_id": 203,
         "wall_duration_s": 56.25
@@ -1553,10 +1569,8 @@
       {
         "covered_duration_s": 57.5,
         "linked_filter_track_ids": [
-          242,
-          253,
-          430,
-          446
+          986,
+          1020
         ],
         "truth_id": 204,
         "wall_duration_s": 57.5
@@ -1564,9 +1578,8 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          340,
-          388,
-          408
+          1313,
+          1519
         ],
         "truth_id": 207,
         "wall_duration_s": 56.0
@@ -1575,7 +1588,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           55,
-          126
+          349
         ],
         "truth_id": 208,
         "wall_duration_s": 59.5
@@ -1583,8 +1596,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          286,
-          477
+          1099,
+          1862
         ],
         "truth_id": 209,
         "wall_duration_s": 56.25
@@ -1593,7 +1606,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           56,
-          127
+          350
         ],
         "truth_id": 210,
         "wall_duration_s": 59.5
@@ -1601,8 +1614,8 @@
       {
         "covered_duration_s": 55.5,
         "linked_filter_track_ids": [
-          409,
-          470
+          1601,
+          1997
         ],
         "truth_id": 212,
         "wall_duration_s": 55.5
@@ -1610,9 +1623,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          287,
-          341,
-          465
+          1100,
+          1314
         ],
         "truth_id": 213,
         "wall_duration_s": 56.25
@@ -1620,8 +1632,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          288,
-          342
+          1101,
+          1315
         ],
         "truth_id": 214,
         "wall_duration_s": 56.25
@@ -1629,8 +1641,8 @@
       {
         "covered_duration_s": 55.5,
         "linked_filter_track_ids": [
-          410,
-          507
+          1602,
+          1998
         ],
         "truth_id": 216,
         "wall_duration_s": 55.5
@@ -1638,8 +1650,8 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          343,
-          389
+          1316,
+          1520
         ],
         "truth_id": 218,
         "wall_duration_s": 56.0
@@ -1647,9 +1659,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          289,
-          344,
-          452
+          1102,
+          1317,
+          1773
         ],
         "truth_id": 219,
         "wall_duration_s": 56.25
@@ -1658,10 +1670,9 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           57,
-          69,
-          128,
-          142,
-          449
+          259,
+          351,
+          544
         ],
         "truth_id": 220,
         "wall_duration_s": 59.5
@@ -1669,8 +1680,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          290,
-          345
+          1103,
+          1318,
+          1909
         ],
         "truth_id": 221,
         "wall_duration_s": 56.25
@@ -1678,8 +1690,9 @@
       {
         "covered_duration_s": 55.75,
         "linked_filter_track_ids": [
-          390,
-          411
+          1521,
+          1603,
+          1962
         ],
         "truth_id": 222,
         "wall_duration_s": 55.75
@@ -1687,7 +1700,7 @@
       {
         "covered_duration_s": 55.5,
         "linked_filter_track_ids": [
-          412
+          1604
         ],
         "truth_id": 223,
         "wall_duration_s": 55.5
@@ -1696,7 +1709,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           58,
-          129
+          352
         ],
         "truth_id": 224,
         "wall_duration_s": 59.5
@@ -1704,8 +1717,10 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          291,
-          346
+          1104,
+          1319,
+          1816,
+          1915
         ],
         "truth_id": 225,
         "wall_duration_s": 56.25
@@ -1713,8 +1728,7 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          292,
-          436
+          1105
         ],
         "truth_id": 226,
         "wall_duration_s": 56.25
@@ -1722,9 +1736,11 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          178,
-          198,
-          205
+          713,
+          762,
+          837,
+          883,
+          2007
         ],
         "truth_id": 227,
         "wall_duration_s": 59.0
@@ -1733,7 +1749,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           59,
-          130
+          353
         ],
         "truth_id": 228,
         "wall_duration_s": 59.5
@@ -1741,10 +1757,11 @@
       {
         "covered_duration_s": 56.0,
         "linked_filter_track_ids": [
-          347,
-          391,
-          441,
-          529
+          1320,
+          1522,
+          1728,
+          1839,
+          1874
         ],
         "truth_id": 229,
         "wall_duration_s": 56.0
@@ -1752,10 +1769,11 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          143,
-          167,
-          179,
-          454
+          545,
+          611,
+          714,
+          1851,
+          1918
         ],
         "truth_id": 230,
         "wall_duration_s": 59.25
@@ -1763,8 +1781,8 @@
       {
         "covered_duration_s": 55.75,
         "linked_filter_track_ids": [
-          392,
-          413
+          1523,
+          1605
         ],
         "truth_id": 232,
         "wall_duration_s": 55.75
@@ -1772,8 +1790,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          293,
-          348
+          1106,
+          1321
         ],
         "truth_id": 234,
         "wall_duration_s": 56.25
@@ -1781,10 +1799,9 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          144,
-          168,
-          180,
-          206
+          546,
+          612,
+          715
         ],
         "truth_id": 235,
         "wall_duration_s": 59.25
@@ -1792,8 +1809,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          294,
-          349
+          1107,
+          1322,
+          1524
         ],
         "truth_id": 236,
         "wall_duration_s": 56.25
@@ -1801,9 +1819,10 @@
       {
         "covered_duration_s": 57.75,
         "linked_filter_track_ids": [
-          236,
-          243,
-          423
+          955,
+          987,
+          1021,
+          1748
         ],
         "truth_id": 237,
         "wall_duration_s": 57.75
@@ -1812,7 +1831,7 @@
         "covered_duration_s": 59.5,
         "linked_filter_track_ids": [
           60,
-          131
+          354
         ],
         "truth_id": 238,
         "wall_duration_s": 59.5
@@ -1820,7 +1839,7 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          169
+          613
         ],
         "truth_id": 239,
         "wall_duration_s": 59.0
@@ -1828,8 +1847,8 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          295,
-          453
+          1108,
+          1774
         ],
         "truth_id": 240,
         "wall_duration_s": 56.25
@@ -1837,20 +1856,34 @@
       {
         "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
-          132,
-          170
+          355,
+          614
         ],
         "truth_id": 242,
         "wall_duration_s": 59.25
       },
       {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          764
+        ],
+        "truth_id": 243,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          765
+        ],
+        "truth_id": 244,
+        "wall_duration_s": 58.75
+      },
+      {
         "covered_duration_s": 57.5,
         "linked_filter_track_ids": [
-          244,
-          254,
-          424,
-          425,
-          458
+          988,
+          1022,
+          1054
         ],
         "truth_id": 245,
         "wall_duration_s": 57.5
@@ -1858,8 +1891,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          296,
-          350
+          1109,
+          1323,
+          1704
         ],
         "truth_id": 246,
         "wall_duration_s": 56.25
@@ -1867,11 +1901,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          297,
-          351,
-          393,
-          464,
-          466
+          1110,
+          1324,
+          1729
         ],
         "truth_id": 247,
         "wall_duration_s": 56.25
@@ -1879,8 +1911,9 @@
       {
         "covered_duration_s": 56.25,
         "linked_filter_track_ids": [
-          298,
-          352
+          1111,
+          1325,
+          1606
         ],
         "truth_id": 248,
         "wall_duration_s": 56.25
@@ -1888,62 +1921,5754 @@
       {
         "covered_duration_s": 59.0,
         "linked_filter_track_ids": [
-          171
+          615,
+          766
         ],
         "truth_id": 249,
         "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          61,
+          356
+        ],
+        "truth_id": 250,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          616,
+          767
+        ],
+        "truth_id": 252,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1112,
+          1326
+        ],
+        "truth_id": 254,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1113,
+          1327,
+          1525
+        ],
+        "truth_id": 255,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1607
+        ],
+        "truth_id": 256,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1114,
+          1328,
+          1887,
+          2058
+        ],
+        "truth_id": 257,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          62
+        ],
+        "truth_id": 258,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          956,
+          989,
+          1671,
+          1693
+        ],
+        "truth_id": 259,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          357,
+          617
+        ],
+        "truth_id": 260,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          768
+        ],
+        "truth_id": 262,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1115,
+          1329,
+          1999
+        ],
+        "truth_id": 263,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          358,
+          618
+        ],
+        "truth_id": 265,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          63,
+          359
+        ],
+        "truth_id": 266,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1116,
+          1330,
+          1482,
+          1980
+        ],
+        "truth_id": 269,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          64,
+          360,
+          439
+        ],
+        "truth_id": 270,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1117,
+          1331
+        ],
+        "truth_id": 271,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1118,
+          1332
+        ],
+        "truth_id": 272,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          897,
+          928,
+          1119,
+          1888
+        ],
+        "truth_id": 273,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          619,
+          769
+        ],
+        "truth_id": 275,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          898,
+          929,
+          2006
+        ],
+        "truth_id": 276,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          65,
+          361
+        ],
+        "truth_id": 277,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          66
+        ],
+        "truth_id": 278,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          67,
+          362,
+          620
+        ],
+        "truth_id": 280,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          68,
+          363,
+          621
+        ],
+        "truth_id": 281,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1333,
+          1526
+        ],
+        "truth_id": 282,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1120,
+          1334
+        ],
+        "truth_id": 283,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1121,
+          1863
+        ],
+        "truth_id": 284,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          69,
+          364
+        ],
+        "truth_id": 286,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          70
+        ],
+        "truth_id": 287,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          622,
+          770
+        ],
+        "truth_id": 288,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          547,
+          623,
+          716
+        ],
+        "truth_id": 291,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1122,
+          1335
+        ],
+        "truth_id": 292,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          71,
+          365
+        ],
+        "truth_id": 293,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1123,
+          1336,
+          1437,
+          1724,
+          1958
+        ],
+        "truth_id": 294,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          72
+        ],
+        "truth_id": 295,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          73,
+          366,
+          624
+        ],
+        "truth_id": 296,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          838,
+          869,
+          1933
+        ],
+        "truth_id": 297,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          74,
+          367
+        ],
+        "truth_id": 298,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          717,
+          839,
+          1682
+        ],
+        "truth_id": 299,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          75,
+          368
+        ],
+        "truth_id": 300,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1527,
+          1608
+        ],
+        "truth_id": 302,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1124,
+          1337,
+          1730
+        ],
+        "truth_id": 303,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          76,
+          260,
+          369,
+          548
+        ],
+        "truth_id": 304,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          77,
+          370
+        ],
+        "truth_id": 305,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          549,
+          625,
+          718
+        ],
+        "truth_id": 306,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1609,
+          1736,
+          1840
+        ],
+        "truth_id": 308,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          626,
+          772
+        ],
+        "truth_id": 310,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1125,
+          1338,
+          1864
+        ],
+        "truth_id": 311,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          78,
+          371
+        ],
+        "truth_id": 312,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1126,
+          1339
+        ],
+        "truth_id": 313,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          79,
+          244
+        ],
+        "truth_id": 315,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1127,
+          1340,
+          1959
+        ],
+        "truth_id": 316,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          80,
+          372
+        ],
+        "truth_id": 317,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          81,
+          373,
+          610
+        ],
+        "truth_id": 319,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          82,
+          261
+        ],
+        "truth_id": 320,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1023,
+          1055,
+          1847
+        ],
+        "truth_id": 321,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          83,
+          374
+        ],
+        "truth_id": 322,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          990,
+          1024,
+          1762,
+          1803
+        ],
+        "truth_id": 323,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          375
+        ],
+        "truth_id": 324,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1128,
+          1341,
+          1946,
+          2051
+        ],
+        "truth_id": 325,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          870,
+          899,
+          1897
+        ],
+        "truth_id": 326,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1129,
+          1342
+        ],
+        "truth_id": 327,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          773
+        ],
+        "truth_id": 328,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1528,
+          1610
+        ],
+        "truth_id": 329,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1130,
+          1343,
+          1786
+        ],
+        "truth_id": 331,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          774
+        ],
+        "truth_id": 333,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          376,
+          628
+        ],
+        "truth_id": 334,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1131,
+          1344
+        ],
+        "truth_id": 335,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          871,
+          900,
+          1808
+        ],
+        "truth_id": 336,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          872,
+          901,
+          1759
+        ],
+        "truth_id": 337,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          84,
+          485
+        ],
+        "truth_id": 338,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1132,
+          1819,
+          1865
+        ],
+        "truth_id": 339,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          85,
+          334,
+          421
+        ],
+        "truth_id": 340,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          86,
+          379
+        ],
+        "truth_id": 341,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1133,
+          1345,
+          1716
+        ],
+        "truth_id": 342,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          902,
+          930,
+          1809
+        ],
+        "truth_id": 345,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1611,
+          2031
+        ],
+        "truth_id": 346,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1346,
+          1529,
+          1841
+        ],
+        "truth_id": 347,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          380,
+          629,
+          775
+        ],
+        "truth_id": 348,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1134,
+          2052
+        ],
+        "truth_id": 349,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          903,
+          931,
+          1844,
+          2042
+        ],
+        "truth_id": 350,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1612
+        ],
+        "truth_id": 351,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          776
+        ],
+        "truth_id": 352,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          719,
+          777,
+          840
+        ],
+        "truth_id": 354,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          87,
+          262,
+          381
+        ],
+        "truth_id": 355,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1135,
+          1348,
+          1873,
+          2047
+        ],
+        "truth_id": 357,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1136,
+          1349,
+          1705
+        ],
+        "truth_id": 358,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          873,
+          904,
+          1820,
+          1866,
+          2020
+        ],
+        "truth_id": 359,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          382,
+          630
+        ],
+        "truth_id": 364,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          841,
+          874,
+          1843,
+          1967,
+          2040
+        ],
+        "truth_id": 365,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1137,
+          1947,
+          2021
+        ],
+        "truth_id": 366,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1138,
+          1350,
+          1821
+        ],
+        "truth_id": 367,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          631,
+          778
+        ],
+        "truth_id": 369,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          88
+        ],
+        "truth_id": 370,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1139,
+          1351,
+          1613
+        ],
+        "truth_id": 373,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          89,
+          263,
+          383,
+          550
+        ],
+        "truth_id": 374,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1140,
+          1904
+        ],
+        "truth_id": 375,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          551,
+          632,
+          720,
+          842
+        ],
+        "truth_id": 377,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1089,
+          1352
+        ],
+        "truth_id": 378,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          90,
+          384
+        ],
+        "truth_id": 379,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          385,
+          633
+        ],
+        "truth_id": 380,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          91,
+          386,
+          634
+        ],
+        "truth_id": 382,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          92
+        ],
+        "truth_id": 384,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1142,
+          1353,
+          1530
+        ],
+        "truth_id": 385,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          387,
+          635,
+          779
+        ],
+        "truth_id": 386,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          93,
+          388
+        ],
+        "truth_id": 387,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          94,
+          264,
+          389,
+          552
+        ],
+        "truth_id": 388,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          843,
+          875
+        ],
+        "truth_id": 389,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1143,
+          1354
+        ],
+        "truth_id": 390,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          95
+        ],
+        "truth_id": 392,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          96,
+          390
+        ],
+        "truth_id": 393,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          957,
+          991,
+          1891,
+          2044
+        ],
+        "truth_id": 394,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          636,
+          780
+        ],
+        "truth_id": 395,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1144,
+          1355,
+          2022
+        ],
+        "truth_id": 396,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          844,
+          876,
+          905
+        ],
+        "truth_id": 397,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          97
+        ],
+        "truth_id": 398,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          98,
+          265,
+          391,
+          553
+        ],
+        "truth_id": 399,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          637,
+          781
+        ],
+        "truth_id": 400,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          99,
+          392
+        ],
+        "truth_id": 401,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          100
+        ],
+        "truth_id": 402,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          932,
+          958,
+          1717
+        ],
+        "truth_id": 404,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1145,
+          1356,
+          1531
+        ],
+        "truth_id": 405,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1146,
+          1357
+        ],
+        "truth_id": 406,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1147,
+          1358,
+          1782,
+          2050
+        ],
+        "truth_id": 408,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1148,
+          1359,
+          1822,
+          1867
+        ],
+        "truth_id": 409,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          101,
+          393
+        ],
+        "truth_id": 410,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          102,
+          394
+        ],
+        "truth_id": 411,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          103,
+          395
+        ],
+        "truth_id": 412,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          104
+        ],
+        "truth_id": 413,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1149,
+          1360,
+          1706,
+          1718
+        ],
+        "truth_id": 415,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          396,
+          638
+        ],
+        "truth_id": 416,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          105,
+          397,
+          1751
+        ],
+        "truth_id": 417,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1150,
+          1868
+        ],
+        "truth_id": 418,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          106,
+          266,
+          398,
+          554
+        ],
+        "truth_id": 419,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1361,
+          1532
+        ],
+        "truth_id": 421,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1151,
+          1362
+        ],
+        "truth_id": 423,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          107,
+          399,
+          639
+        ],
+        "truth_id": 424,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          906,
+          925,
+          933,
+          1936,
+          1948
+        ],
+        "truth_id": 425,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1152,
+          1363,
+          1533
+        ],
+        "truth_id": 426,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          782
+        ],
+        "truth_id": 427,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          992,
+          1025
+        ],
+        "truth_id": 429,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1153,
+          1214,
+          1364
+        ],
+        "truth_id": 430,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1534,
+          1614,
+          1720
+        ],
+        "truth_id": 431,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1154,
+          1365,
+          2000
+        ],
+        "truth_id": 433,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          783
+        ],
+        "truth_id": 434,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          108,
+          267,
+          400,
+          555
+        ],
+        "truth_id": 435,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 22.25,
+        "linked_filter_track_ids": [
+          1934
+        ],
+        "truth_id": 436,
+        "wall_duration_s": 22.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1615,
+          1731
+        ],
+        "truth_id": 437,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1155,
+          1869
+        ],
+        "truth_id": 438,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1156,
+          1764
+        ],
+        "truth_id": 439,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1157,
+          1366,
+          1825,
+          1986
+        ],
+        "truth_id": 440,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          959,
+          993,
+          1592,
+          1732,
+          1898
+        ],
+        "truth_id": 441,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1158,
+          1367,
+          1765
+        ],
+        "truth_id": 442,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          109,
+          268,
+          401,
+          1859
+        ],
+        "truth_id": 443,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          784
+        ],
+        "truth_id": 444,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1026,
+          1056,
+          1977
+        ],
+        "truth_id": 445,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          110
+        ],
+        "truth_id": 446,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1616,
+          1787
+        ],
+        "truth_id": 447,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1617,
+          1733,
+          1792
+        ],
+        "truth_id": 448,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1535,
+          1618
+        ],
+        "truth_id": 449,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          785
+        ],
+        "truth_id": 450,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          111,
+          269,
+          402,
+          556,
+          1780,
+          2017
+        ],
+        "truth_id": 451,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1159
+        ],
+        "truth_id": 452,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          112,
+          403
+        ],
+        "truth_id": 453,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1160,
+          1368,
+          1910
+        ],
+        "truth_id": 455,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          113,
+          404
+        ],
+        "truth_id": 457,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1027,
+          1057,
+          1076,
+          1857
+        ],
+        "truth_id": 458,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          114,
+          405
+        ],
+        "truth_id": 459,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          640,
+          786
+        ],
+        "truth_id": 460,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          115
+        ],
+        "truth_id": 461,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          116,
+          406
+        ],
+        "truth_id": 464,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1161,
+          1369
+        ],
+        "truth_id": 466,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1162,
+          1370,
+          1536
+        ],
+        "truth_id": 467,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1537,
+          1619
+        ],
+        "truth_id": 468,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          117,
+          407
+        ],
+        "truth_id": 469,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          118,
+          408
+        ],
+        "truth_id": 470,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          119,
+          409
+        ],
+        "truth_id": 471,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1163,
+          1905
+        ],
+        "truth_id": 472,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          934,
+          960,
+          994
+        ],
+        "truth_id": 473,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          410,
+          641
+        ],
+        "truth_id": 475,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          120,
+          411,
+          642
+        ],
+        "truth_id": 477,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1164,
+          1371
+        ],
+        "truth_id": 478,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          907,
+          935,
+          1686,
+          1689
+        ],
+        "truth_id": 479,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          995,
+          1028,
+          1763,
+          1804
+        ],
+        "truth_id": 481,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1165,
+          1372,
+          1826
+        ],
+        "truth_id": 482,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1538,
+          1620,
+          1788
+        ],
+        "truth_id": 483,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          121,
+          412
+        ],
+        "truth_id": 484,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          122,
+          413
+        ],
+        "truth_id": 485,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1166,
+          1373,
+          1827
+        ],
+        "truth_id": 487,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1167,
+          1374,
+          1952
+        ],
+        "truth_id": 488,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          414,
+          557,
+          643,
+          721
+        ],
+        "truth_id": 490,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          123
+        ],
+        "truth_id": 491,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          415,
+          644
+        ],
+        "truth_id": 492,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          124,
+          416
+        ],
+        "truth_id": 495,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1375,
+          1539,
+          1621
+        ],
+        "truth_id": 496,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          845,
+          877,
+          1669
+        ],
+        "truth_id": 497,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          125,
+          417
+        ],
+        "truth_id": 499,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          558,
+          645,
+          722,
+          1932
+        ],
+        "truth_id": 500,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1622,
+          2001
+        ],
+        "truth_id": 501,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          996,
+          1029,
+          1691,
+          1926,
+          2012
+        ],
+        "truth_id": 502,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1168,
+          1376,
+          1721
+        ],
+        "truth_id": 503,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1030,
+          1058,
+          1696
+        ],
+        "truth_id": 504,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1169,
+          1377,
+          1953
+        ],
+        "truth_id": 505,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1378,
+          1540,
+          1623
+        ],
+        "truth_id": 506,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          126,
+          418
+        ],
+        "truth_id": 508,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          787
+        ],
+        "truth_id": 509,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1170,
+          1379,
+          1777,
+          2016
+        ],
+        "truth_id": 511,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1171,
+          1380,
+          1624,
+          1722
+        ],
+        "truth_id": 512,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          127,
+          419
+        ],
+        "truth_id": 513,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1541,
+          1625,
+          1723
+        ],
+        "truth_id": 514,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1542,
+          1626,
+          1781
+        ],
+        "truth_id": 515,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          128,
+          270,
+          420,
+          559
+        ],
+        "truth_id": 517,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          85,
+          129,
+          378
+        ],
+        "truth_id": 518,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1381,
+          1543,
+          1627
+        ],
+        "truth_id": 519,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          908,
+          936,
+          1172,
+          2025
+        ],
+        "truth_id": 520,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          130,
+          422
+        ],
+        "truth_id": 522,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          560,
+          646,
+          723,
+          1879
+        ],
+        "truth_id": 523,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          561,
+          647,
+          724
+        ],
+        "truth_id": 524,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1031,
+          1059,
+          1856
+        ],
+        "truth_id": 526,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          725,
+          846,
+          1509,
+          1596
+        ],
+        "truth_id": 527,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1173,
+          1382
+        ],
+        "truth_id": 528,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          131
+        ],
+        "truth_id": 529,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          648,
+          788
+        ],
+        "truth_id": 530,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          132,
+          424
+        ],
+        "truth_id": 532,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          133,
+          425
+        ],
+        "truth_id": 534,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          134,
+          246,
+          426
+        ],
+        "truth_id": 535,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1174,
+          1383
+        ],
+        "truth_id": 536,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1175,
+          1766
+        ],
+        "truth_id": 537,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1176
+        ],
+        "truth_id": 538,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          135
+        ],
+        "truth_id": 539,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1032,
+          1060,
+          1848,
+          1927,
+          2014
+        ],
+        "truth_id": 541,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          726,
+          789,
+          847,
+          1996
+        ],
+        "truth_id": 542,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          961,
+          997,
+          1033
+        ],
+        "truth_id": 543,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          136,
+          271,
+          427,
+          562
+        ],
+        "truth_id": 544,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1177,
+          1385,
+          1707
+        ],
+        "truth_id": 545,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          137,
+          428
+        ],
+        "truth_id": 546,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          650,
+          790
+        ],
+        "truth_id": 547,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          138,
+          429,
+          651
+        ],
+        "truth_id": 548,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1178,
+          1386
+        ],
+        "truth_id": 549,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          652,
+          791
+        ],
+        "truth_id": 550,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          139
+        ],
+        "truth_id": 551,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          140,
+          430,
+          653
+        ],
+        "truth_id": 552,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          563,
+          654,
+          727
+        ],
+        "truth_id": 553,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          141,
+          431,
+          792
+        ],
+        "truth_id": 556,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          655,
+          793
+        ],
+        "truth_id": 557,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1179,
+          1387,
+          1698
+        ],
+        "truth_id": 559,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1180,
+          1388,
+          1545,
+          1628
+        ],
+        "truth_id": 560,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1181,
+          1389
+        ],
+        "truth_id": 561,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          142
+        ],
+        "truth_id": 562,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          962,
+          998
+        ],
+        "truth_id": 563,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          794
+        ],
+        "truth_id": 564,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1182,
+          1390
+        ],
+        "truth_id": 565,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          143
+        ],
+        "truth_id": 566,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          144,
+          432
+        ],
+        "truth_id": 568,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          145,
+          433
+        ],
+        "truth_id": 569,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          146,
+          434
+        ],
+        "truth_id": 570,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          147,
+          272,
+          435,
+          1678
+        ],
+        "truth_id": 571,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          909,
+          937,
+          1854
+        ],
+        "truth_id": 572,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          148,
+          273,
+          436,
+          564
+        ],
+        "truth_id": 573,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1183,
+          1391,
+          1875
+        ],
+        "truth_id": 575,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          728,
+          848,
+          1969
+        ],
+        "truth_id": 576,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1184
+        ],
+        "truth_id": 577,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1392,
+          1546,
+          1712
+        ],
+        "truth_id": 578,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          149,
+          437
+        ],
+        "truth_id": 579,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1185,
+          1393,
+          1544
+        ],
+        "truth_id": 580,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          878,
+          910,
+          1800
+        ],
+        "truth_id": 581,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          438,
+          533
+        ],
+        "truth_id": 582,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1394,
+          1547
+        ],
+        "truth_id": 583,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1186,
+          1395,
+          1767
+        ],
+        "truth_id": 584,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          999,
+          1034,
+          1061,
+          1811
+        ],
+        "truth_id": 585,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1629,
+          1963
+        ],
+        "truth_id": 586,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1630
+        ],
+        "truth_id": 587,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          151,
+          439
+        ],
+        "truth_id": 589,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1187,
+          1396
+        ],
+        "truth_id": 590,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1188,
+          1397
+        ],
+        "truth_id": 591,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          795
+        ],
+        "truth_id": 592,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          152,
+          304,
+          440
+        ],
+        "truth_id": 593,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          441,
+          627,
+          656
+        ],
+        "truth_id": 594,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          442,
+          657
+        ],
+        "truth_id": 595,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          154,
+          443
+        ],
+        "truth_id": 597,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          729,
+          796,
+          849
+        ],
+        "truth_id": 598,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          444,
+          658
+        ],
+        "truth_id": 599,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          659,
+          797
+        ],
+        "truth_id": 602,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          155,
+          179,
+          445
+        ],
+        "truth_id": 603,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          156,
+          446
+        ],
+        "truth_id": 604,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          938,
+          963,
+          1189,
+          1992
+        ],
+        "truth_id": 606,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          730,
+          850,
+          1842
+        ],
+        "truth_id": 607,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1190
+        ],
+        "truth_id": 608,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          798
+        ],
+        "truth_id": 609,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          660,
+          799
+        ],
+        "truth_id": 610,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1191,
+          1398,
+          1548,
+          1631
+        ],
+        "truth_id": 613,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1463,
+          1549,
+          1993,
+          2024
+        ],
+        "truth_id": 617,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          964,
+          1000,
+          1672
+        ],
+        "truth_id": 618,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          157,
+          447
+        ],
+        "truth_id": 619,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          158,
+          448
+        ],
+        "truth_id": 620,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1192,
+          1400,
+          1987
+        ],
+        "truth_id": 621,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1035,
+          1062,
+          1679
+        ],
+        "truth_id": 622,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          159,
+          449
+        ],
+        "truth_id": 623,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1632
+        ],
+        "truth_id": 624,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1193,
+          1981
+        ],
+        "truth_id": 625,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          160
+        ],
+        "truth_id": 626,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          161,
+          450
+        ],
+        "truth_id": 628,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1401,
+          1550
+        ],
+        "truth_id": 629,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1551,
+          1633,
+          1964
+        ],
+        "truth_id": 630,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1194,
+          1402
+        ],
+        "truth_id": 631,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1195
+        ],
+        "truth_id": 633,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          162,
+          274,
+          451,
+          565
+        ],
+        "truth_id": 634,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          452,
+          566,
+          661,
+          731,
+          1597
+        ],
+        "truth_id": 635,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1196,
+          1403
+        ],
+        "truth_id": 636,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          662,
+          758,
+          800
+        ],
+        "truth_id": 637,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1197,
+          1404,
+          1835
+        ],
+        "truth_id": 638,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1634,
+          1836
+        ],
+        "truth_id": 640,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          663
+        ],
+        "truth_id": 641,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1198,
+          1815
+        ],
+        "truth_id": 643,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          163,
+          275,
+          454,
+          567
+        ],
+        "truth_id": 644,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1199,
+          1405,
+          1775
+        ],
+        "truth_id": 645,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          664,
+          801
+        ],
+        "truth_id": 646,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1200,
+          1406,
+          1552
+        ],
+        "truth_id": 647,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1201,
+          1407,
+          1635
+        ],
+        "truth_id": 648,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          164
+        ],
+        "truth_id": 649,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          165
+        ],
+        "truth_id": 651,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          166,
+          276,
+          455,
+          568
+        ],
+        "truth_id": 652,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          456,
+          665
+        ],
+        "truth_id": 653,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          911,
+          939,
+          965
+        ],
+        "truth_id": 654,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1202,
+          1347,
+          1408
+        ],
+        "truth_id": 655,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          851,
+          879,
+          1852
+        ],
+        "truth_id": 656,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1203
+        ],
+        "truth_id": 657,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          167
+        ],
+        "truth_id": 658,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          852,
+          880,
+          2035
+        ],
+        "truth_id": 660,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          168,
+          457
+        ],
+        "truth_id": 661,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1553,
+          1636
+        ],
+        "truth_id": 662,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          1001,
+          1036,
+          1063,
+          1752,
+          1892
+        ],
+        "truth_id": 663,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          458,
+          666
+        ],
+        "truth_id": 664,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1204,
+          1409,
+          2023
+        ],
+        "truth_id": 665,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          732,
+          853
+        ],
+        "truth_id": 666,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          169,
+          459
+        ],
+        "truth_id": 668,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          802,
+          1688
+        ],
+        "truth_id": 669,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          170,
+          460
+        ],
+        "truth_id": 670,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1205,
+          1410,
+          1554
+        ],
+        "truth_id": 671,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          171,
+          461,
+          803
+        ],
+        "truth_id": 672,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1411,
+          1555,
+          1637
+        ],
+        "truth_id": 673,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          172,
+          462,
+          667
+        ],
+        "truth_id": 674,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          173,
+          463
+        ],
+        "truth_id": 678,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          174,
+          464
+        ],
+        "truth_id": 679,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          175,
+          277,
+          465,
+          569,
+          1755
+        ],
+        "truth_id": 681,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1638,
+          2059
+        ],
+        "truth_id": 682,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          668,
+          804
+        ],
+        "truth_id": 683,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          176,
+          278,
+          466
+        ],
+        "truth_id": 684,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1206,
+          1412,
+          1954
+        ],
+        "truth_id": 685,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          966,
+          1002,
+          1837
+        ],
+        "truth_id": 686,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          177,
+          279,
+          467,
+          570,
+          1680
+        ],
+        "truth_id": 687,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1207,
+          1413,
+          1708
+        ],
+        "truth_id": 689,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          669,
+          805
+        ],
+        "truth_id": 690,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          670,
+          806
+        ],
+        "truth_id": 691,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          178,
+          468
+        ],
+        "truth_id": 692,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1037,
+          1064
+        ],
+        "truth_id": 693,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          469,
+          671
+        ],
+        "truth_id": 694,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          180,
+          280,
+          470,
+          571
+        ],
+        "truth_id": 695,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1208,
+          1414,
+          1829
+        ],
+        "truth_id": 696,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          672,
+          807
+        ],
+        "truth_id": 697,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          181,
+          471
+        ],
+        "truth_id": 698,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          472,
+          673
+        ],
+        "truth_id": 699,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1209,
+          1415,
+          1860
+        ],
+        "truth_id": 701,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          674,
+          808
+        ],
+        "truth_id": 703,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          182,
+          473
+        ],
+        "truth_id": 704,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1210,
+          1768,
+          1982
+        ],
+        "truth_id": 705,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          183
+        ],
+        "truth_id": 706,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 19.25,
+        "linked_filter_track_ids": [
+          1966
+        ],
+        "truth_id": 707,
+        "wall_duration_s": 19.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          184,
+          474
+        ],
+        "truth_id": 708,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          185,
+          281,
+          2018
+        ],
+        "truth_id": 709,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          912,
+          940,
+          1769,
+          1870
+        ],
+        "truth_id": 710,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          941,
+          967,
+          1692,
+          1749
+        ],
+        "truth_id": 712,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          186,
+          282,
+          475,
+          1858
+        ],
+        "truth_id": 713,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          942,
+          968,
+          1556
+        ],
+        "truth_id": 714,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1211,
+          1416,
+          1454
+        ],
+        "truth_id": 715,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1417,
+          1558,
+          1734,
+          1797
+        ],
+        "truth_id": 716,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1212,
+          1418,
+          1699,
+          1823
+        ],
+        "truth_id": 717,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          187,
+          476
+        ],
+        "truth_id": 718,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          733,
+          809,
+          854,
+          1756,
+          1972
+        ],
+        "truth_id": 720,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1213,
+          1289,
+          1419
+        ],
+        "truth_id": 721,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1420
+        ],
+        "truth_id": 724,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1559,
+          1571,
+          1639
+        ],
+        "truth_id": 725,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          188,
+          283,
+          1753
+        ],
+        "truth_id": 727,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1215,
+          1421,
+          1988,
+          1995
+        ],
+        "truth_id": 729,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          675,
+          810
+        ],
+        "truth_id": 730,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          676,
+          811
+        ],
+        "truth_id": 731,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1216,
+          1422
+        ],
+        "truth_id": 732,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1518,
+          1560,
+          1640
+        ],
+        "truth_id": 733,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1561,
+          1641,
+          1960,
+          2004
+        ],
+        "truth_id": 735,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          189,
+          284,
+          477,
+          572,
+          1984
+        ],
+        "truth_id": 736,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1217,
+          1423,
+          1642,
+          1906
+        ],
+        "truth_id": 737,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          881,
+          913,
+          1218
+        ],
+        "truth_id": 739,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          190,
+          478,
+          677
+        ],
+        "truth_id": 740,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1219,
+          1424,
+          1562
+        ],
+        "truth_id": 741,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          191,
+          479
+        ],
+        "truth_id": 742,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1425,
+          1563,
+          1709
+        ],
+        "truth_id": 743,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          192,
+          480,
+          678,
+          812
+        ],
+        "truth_id": 744,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          193,
+          285,
+          481,
+          573,
+          1079
+        ],
+        "truth_id": 745,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          194,
+          482
+        ],
+        "truth_id": 747,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          969,
+          1003,
+          1937
+        ],
+        "truth_id": 749,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          882,
+          914
+        ],
+        "truth_id": 750,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1564,
+          1643
+        ],
+        "truth_id": 753,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1220,
+          1426,
+          1949,
+          2054
+        ],
+        "truth_id": 754,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          943,
+          970,
+          1735
+        ],
+        "truth_id": 756,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          915,
+          944,
+          1924,
+          1974
+        ],
+        "truth_id": 757,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          195
+        ],
+        "truth_id": 758,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          196,
+          286,
+          483,
+          574
+        ],
+        "truth_id": 759,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          679,
+          813
+        ],
+        "truth_id": 760,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1221,
+          1427
+        ],
+        "truth_id": 761,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          197,
+          484
+        ],
+        "truth_id": 763,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 26.25,
+        "linked_filter_track_ids": [
+          1900,
+          1983,
+          2048
+        ],
+        "truth_id": 765,
+        "wall_duration_s": 26.25
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          1004,
+          1038
+        ],
+        "truth_id": 767,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          198,
+          377
+        ],
+        "truth_id": 768,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          199
+        ],
+        "truth_id": 769,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1223,
+          1428
+        ],
+        "truth_id": 770,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1039,
+          1065,
+          1077
+        ],
+        "truth_id": 771,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1224,
+          1429,
+          1778,
+          1901
+        ],
+        "truth_id": 772,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          200
+        ],
+        "truth_id": 773,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          201,
+          486,
+          680
+        ],
+        "truth_id": 774,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          202,
+          487
+        ],
+        "truth_id": 775,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          203,
+          488
+        ],
+        "truth_id": 776,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1225,
+          1430,
+          1831
+        ],
+        "truth_id": 777,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1566,
+          1644,
+          1877
+        ],
+        "truth_id": 778,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1567,
+          2060
+        ],
+        "truth_id": 779,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1568,
+          1646
+        ],
+        "truth_id": 780,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          204,
+          489,
+          607,
+          681
+        ],
+        "truth_id": 781,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          205,
+          287,
+          490,
+          575,
+          1929,
+          1990
+        ],
+        "truth_id": 783,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1431,
+          1569
+        ],
+        "truth_id": 785,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          682,
+          814
+        ],
+        "truth_id": 786,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1226,
+          1432,
+          1789,
+          2005
+        ],
+        "truth_id": 787,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1040,
+          1066
+        ],
+        "truth_id": 788,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1227,
+          1433
+        ],
+        "truth_id": 789,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          1005,
+          1041,
+          1805,
+          1941
+        ],
+        "truth_id": 790,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          206,
+          491
+        ],
+        "truth_id": 791,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          683,
+          815
+        ],
+        "truth_id": 792,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1228,
+          1434,
+          1700,
+          1710
+        ],
+        "truth_id": 794,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          945,
+          971,
+          1745,
+          1801
+        ],
+        "truth_id": 795,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          207,
+          492
+        ],
+        "truth_id": 796,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          208
+        ],
+        "truth_id": 797,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          209
+        ],
+        "truth_id": 798,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1229,
+          1435,
+          1570,
+          2026
+        ],
+        "truth_id": 799,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1230,
+          1436,
+          1920
+        ],
+        "truth_id": 800,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          734,
+          816,
+          855,
+          883
+        ],
+        "truth_id": 801,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          210,
+          493
+        ],
+        "truth_id": 802,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1231,
+          1437,
+          1711
+        ],
+        "truth_id": 804,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          211
+        ],
+        "truth_id": 805,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          212,
+          494,
+          684
+        ],
+        "truth_id": 806,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1232,
+          1438
+        ],
+        "truth_id": 807,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          495,
+          576,
+          685,
+          735,
+          1757
+        ],
+        "truth_id": 808,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          946,
+          972,
+          1006
+        ],
+        "truth_id": 809,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          589,
+          686,
+          817
+        ],
+        "truth_id": 810,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1233,
+          1439,
+          1783
+        ],
+        "truth_id": 811,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          213,
+          496
+        ],
+        "truth_id": 812,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          736,
+          856
+        ],
+        "truth_id": 813,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          214
+        ],
+        "truth_id": 814,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          215,
+          423,
+          497
+        ],
+        "truth_id": 815,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1647,
+          1881
+        ],
+        "truth_id": 816,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          216,
+          498,
+          818
+        ],
+        "truth_id": 817,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          310,
+          499,
+          687
+        ],
+        "truth_id": 818,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          217,
+          500
+        ],
+        "truth_id": 819,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          819
+        ],
+        "truth_id": 820,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          857,
+          884
+        ],
+        "truth_id": 821,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1571,
+          1648
+        ],
+        "truth_id": 822,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          218,
+          501
+        ],
+        "truth_id": 824,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1440,
+          1572
+        ],
+        "truth_id": 825,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1649
+        ],
+        "truth_id": 826,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          219,
+          288,
+          502,
+          577,
+          688
+        ],
+        "truth_id": 827,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          220
+        ],
+        "truth_id": 828,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          820
+        ],
+        "truth_id": 829,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          821
+        ],
+        "truth_id": 830,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1234,
+          1441,
+          1480,
+          1584,
+          1650
+        ],
+        "truth_id": 831,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1235,
+          1442
+        ],
+        "truth_id": 833,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          221,
+          503
+        ],
+        "truth_id": 834,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          222
+        ],
+        "truth_id": 835,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          223,
+          504
+        ],
+        "truth_id": 837,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          505,
+          689
+        ],
+        "truth_id": 838,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1236,
+          1443,
+          1945
+        ],
+        "truth_id": 839,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1237,
+          1444
+        ],
+        "truth_id": 840,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1651,
+          2002
+        ],
+        "truth_id": 841,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          690,
+          822
+        ],
+        "truth_id": 842,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          224,
+          289,
+          506,
+          578
+        ],
+        "truth_id": 843,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          947,
+          973,
+          1238,
+          1652,
+          1889
+        ],
+        "truth_id": 844,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1239,
+          1445
+        ],
+        "truth_id": 845,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          823
+        ],
+        "truth_id": 846,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          225,
+          290,
+          507,
+          579
+        ],
+        "truth_id": 847,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          974,
+          1007,
+          1446,
+          2027
+        ],
+        "truth_id": 848,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1240,
+          1447
+        ],
+        "truth_id": 849,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          824
+        ],
+        "truth_id": 850,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          226,
+          508,
+          691
+        ],
+        "truth_id": 852,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          227,
+          509
+        ],
+        "truth_id": 854,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          228
+        ],
+        "truth_id": 855,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          825
+        ],
+        "truth_id": 856,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1241,
+          1448
+        ],
+        "truth_id": 857,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          1008,
+          1042
+        ],
+        "truth_id": 858,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1449,
+          1573,
+          1955
+        ],
+        "truth_id": 860,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1242,
+          1450,
+          1871
+        ],
+        "truth_id": 861,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1574,
+          1653
+        ],
+        "truth_id": 862,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1043,
+          1067,
+          2045,
+          2046
+        ],
+        "truth_id": 863,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          229,
+          511
+        ],
+        "truth_id": 864,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          453,
+          512,
+          692
+        ],
+        "truth_id": 866,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1451,
+          1575,
+          2032
+        ],
+        "truth_id": 868,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1452,
+          1576,
+          1832
+        ],
+        "truth_id": 871,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          513,
+          693
+        ],
+        "truth_id": 872,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          230
+        ],
+        "truth_id": 873,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          916,
+          948,
+          1845,
+          1861
+        ],
+        "truth_id": 874,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 58.5,
+        "linked_filter_track_ids": [
+          885,
+          917,
+          1965
+        ],
+        "truth_id": 875,
+        "wall_duration_s": 58.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1243,
+          1453,
+          1921
+        ],
+        "truth_id": 876,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          826
+        ],
+        "truth_id": 878,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1244,
+          1557
+        ],
+        "truth_id": 880,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1245,
+          1455
+        ],
+        "truth_id": 881,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          580,
+          694,
+          737,
+          1850,
+          1950
+        ],
+        "truth_id": 884,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          231,
+          514,
+          695
+        ],
+        "truth_id": 888,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          232,
+          291,
+          515,
+          581
+        ],
+        "truth_id": 889,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          738,
+          828,
+          858,
+          1931
+        ],
+        "truth_id": 890,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          696,
+          829
+        ],
+        "truth_id": 891,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1246,
+          1456
+        ],
+        "truth_id": 892,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1654
+        ],
+        "truth_id": 893,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          516,
+          582,
+          697,
+          739
+        ],
+        "truth_id": 896,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1457,
+          1577,
+          2055
+        ],
+        "truth_id": 897,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          698,
+          830
+        ],
+        "truth_id": 900,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1458,
+          1578
+        ],
+        "truth_id": 901,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          233,
+          517
+        ],
+        "truth_id": 903,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1247,
+          1459
+        ],
+        "truth_id": 904,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          234,
+          518
+        ],
+        "truth_id": 905,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1248,
+          1460
+        ],
+        "truth_id": 907,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1655,
+          2033
+        ],
+        "truth_id": 908,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1656,
+          1790
+        ],
+        "truth_id": 909,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1249,
+          1461,
+          1994,
+          2056
+        ],
+        "truth_id": 910,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          235,
+          519,
+          649
+        ],
+        "truth_id": 911,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          236,
+          520
+        ],
+        "truth_id": 912,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          237,
+          521
+        ],
+        "truth_id": 914,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          238
+        ],
+        "truth_id": 915,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          740,
+          859,
+          1930,
+          2010,
+          2038
+        ],
+        "truth_id": 917,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          741,
+          860
+        ],
+        "truth_id": 918,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1657,
+          1791
+        ],
+        "truth_id": 919,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          949,
+          975,
+          1690,
+          1961
+        ],
+        "truth_id": 920,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1250,
+          1462,
+          1872
+        ],
+        "truth_id": 921,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1658,
+          2003
+        ],
+        "truth_id": 923,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1222,
+          1251,
+          2049
+        ],
+        "truth_id": 924,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1659,
+          1733
+        ],
+        "truth_id": 925,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1399,
+          1463,
+          1579,
+          2028
+        ],
+        "truth_id": 926,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1580,
+          1660,
+          1911
+        ],
+        "truth_id": 927,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          239
+        ],
+        "truth_id": 929,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          699
+        ],
+        "truth_id": 930,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          700
+        ],
+        "truth_id": 931,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1252,
+          1464,
+          1581
+        ],
+        "truth_id": 933,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1661
+        ],
+        "truth_id": 934,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 58.25,
+        "linked_filter_track_ids": [
+          918,
+          950,
+          1687,
+          1824
+        ],
+        "truth_id": 935,
+        "wall_duration_s": 58.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1253,
+          1465
+        ],
+        "truth_id": 937,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          701
+        ],
+        "truth_id": 939,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1254,
+          1466
+        ],
+        "truth_id": 940,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1255,
+          1467,
+          2057
+        ],
+        "truth_id": 941,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1256,
+          1468
+        ],
+        "truth_id": 942,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1257,
+          1469
+        ],
+        "truth_id": 943,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1489,
+          1701,
+          1989
+        ],
+        "truth_id": 944,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1259,
+          1471,
+          1770
+        ],
+        "truth_id": 945,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1260,
+          1472,
+          1662,
+          1697,
+          1908
+        ],
+        "truth_id": 947,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          240,
+          522,
+          702
+        ],
+        "truth_id": 948,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          241
+        ],
+        "truth_id": 949,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          523,
+          703
+        ],
+        "truth_id": 950,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 55.5,
+        "linked_filter_track_ids": [
+          1663
+        ],
+        "truth_id": 952,
+        "wall_duration_s": 55.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          524,
+          704
+        ],
+        "truth_id": 953,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1582,
+          1664,
+          1878
+        ],
+        "truth_id": 954,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1261,
+          1944
+        ],
+        "truth_id": 955,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          976,
+          1009,
+          1670,
+          1676
+        ],
+        "truth_id": 957,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 59.0,
+        "linked_filter_track_ids": [
+          742,
+          861,
+          886,
+          1510
+        ],
+        "truth_id": 959,
+        "wall_duration_s": 59.0
+      },
+      {
+        "covered_duration_s": 57.75,
+        "linked_filter_track_ids": [
+          977,
+          1010,
+          1665,
+          1849
+        ],
+        "truth_id": 961,
+        "wall_duration_s": 57.75
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          242,
+          525
+        ],
+        "truth_id": 962,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 55.75,
+        "linked_filter_track_ids": [
+          1583,
+          1666,
+          1956
+        ],
+        "truth_id": 963,
+        "wall_duration_s": 55.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1262,
+          1473
+        ],
+        "truth_id": 964,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1263,
+          1474
+        ],
+        "truth_id": 966,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          243,
+          292,
+          526,
+          583
+        ],
+        "truth_id": 967,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          527,
+          584,
+          705,
+          743
+        ],
+        "truth_id": 968,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1264,
+          1771
+        ],
+        "truth_id": 971,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          528,
+          706
+        ],
+        "truth_id": 973,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          245,
+          529
+        ],
+        "truth_id": 975,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 59.25,
+        "linked_filter_track_ids": [
+          530
+        ],
+        "truth_id": 976,
+        "wall_duration_s": 59.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          247,
+          293,
+          531,
+          585
+        ],
+        "truth_id": 977,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          951,
+          978,
+          2011
+        ],
+        "truth_id": 978,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1265,
+          1475,
+          1667,
+          2053
+        ],
+        "truth_id": 979,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1266,
+          1476,
+          1725
+        ],
+        "truth_id": 980,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          1011,
+          1044
+        ],
+        "truth_id": 981,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 58.75,
+        "linked_filter_track_ids": [
+          862,
+          887,
+          1683,
+          1744
+        ],
+        "truth_id": 982,
+        "wall_duration_s": 58.75
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1267,
+          1477
+        ],
+        "truth_id": 983,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1268,
+          1478,
+          1737
+        ],
+        "truth_id": 984,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          248,
+          532
+        ],
+        "truth_id": 985,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          1045,
+          1068,
+          1750
+        ],
+        "truth_id": 986,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 58.0,
+        "linked_filter_track_ids": [
+          952,
+          979,
+          1673,
+          2029
+        ],
+        "truth_id": 987,
+        "wall_duration_s": 58.0
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          150,
+          249
+        ],
+        "truth_id": 988,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1269,
+          1479
+        ],
+        "truth_id": 991,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          250,
+          510,
+          534
+        ],
+        "truth_id": 994,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1234,
+          1270
+        ],
+        "truth_id": 995,
+        "wall_duration_s": 56.25
+      },
+      {
+        "covered_duration_s": 57.5,
+        "linked_filter_track_ids": [
+          1012,
+          1046,
+          1882
+        ],
+        "truth_id": 996,
+        "wall_duration_s": 57.5
+      },
+      {
+        "covered_duration_s": 59.5,
+        "linked_filter_track_ids": [
+          251
+        ],
+        "truth_id": 997,
+        "wall_duration_s": 59.5
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          1481,
+          1585,
+          1883
+        ],
+        "truth_id": 998,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 56.25,
+        "linked_filter_track_ids": [
+          1271,
+          1793
+        ],
+        "truth_id": 999,
+        "wall_duration_s": 56.25
       }
     ]
   },
   "tracks": {
     "description": "total_unique_tracks = one fused-network row per true plot. fused_lifecycle_tracks = long-coast JPDA+EKF segments (sequential per-sensor).",
     "durations_s_false": [
-      59.75,
-      59.75,
-      59.0,
-      58.0,
-      57.75,
-      56.75,
-      51.25,
-      50.75,
-      50.25,
-      48.25,
-      47.5,
-      42.25,
-      36.75,
-      33.0,
-      32.75,
-      32.5,
-      31.5,
-      29.5,
-      29.25,
-      28.5,
-      27.75,
-      27.5,
-      26.25,
+      58.25,
+      57.25,
+      57.25,
+      54.75,
+      51.5,
+      51.5,
+      49.5,
+      48.0,
+      46.25,
+      45.5,
+      43.75,
+      42.0,
+      39.75,
+      39.5,
+      38.75,
+      34.5,
+      32.0,
+      29.75,
+      29.0,
+      28.75,
+      26.5,
       26.0,
-      23.5,
-      23.5,
-      23.5,
-      23.0,
-      22.0,
-      21.5,
+      26.0,
+      26.0,
+      24.25,
       20.75,
-      20.0,
-      19.0,
-      18.25,
-      15.0,
-      11.75,
-      11.0,
-      10.0,
-      6.5,
-      5.5,
-      5.5,
-      5.25,
-      3.5,
-      2.75,
-      0.25,
-      0.25
+      19.25,
+      17.0,
+      17.0,
+      16.75,
+      15.75,
+      15.25,
+      11.25,
+      11.25,
+      9.75,
+      9.0,
+      8.75,
+      7.75,
+      7.0,
+      4.25
     ],
     "durations_s_true": [
       59.75,
@@ -2016,6 +7741,231 @@
       59.75,
       59.75,
       59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
+      59.75,
       59.5,
       59.5,
       59.5,
@@ -2090,6 +8040,346 @@
       59.5,
       59.5,
       59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.5,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
+      59.25,
       59.25,
       59.25,
       59.25,
@@ -2151,6 +8441,116 @@
       59.0,
       59.0,
       59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      59.0,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
+      58.75,
       58.75,
       58.75,
       58.75,
@@ -2170,6 +8570,53 @@
       58.5,
       58.5,
       58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.5,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
+      58.25,
       58.25,
       58.25,
       58.25,
@@ -2184,6 +8631,31 @@
       58.0,
       58.0,
       58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
+      58.0,
       57.75,
       57.75,
       57.75,
@@ -2193,6 +8665,54 @@
       57.75,
       57.75,
       57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.75,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
+      57.5,
       57.5,
       57.5,
       57.5,
@@ -2207,6 +8727,27 @@
       57.25,
       57.25,
       57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.25,
+      57.0,
+      57.0,
+      57.0,
+      56.75,
       56.5,
       56.5,
       56.5,
@@ -2260,6 +8801,166 @@
       56.5,
       56.5,
       56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
+      56.5,
       56.25,
       56.25,
       56.25,
@@ -2319,6 +9020,227 @@
       56.25,
       56.25,
       56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.25,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
+      56.0,
       56.0,
       56.0,
       56.0,
@@ -2362,96 +9284,430 @@
       55.75,
       55.75,
       55.75,
-      55.5,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.75,
+      55.0,
       55.0,
       54.75,
+      54.75,
+      54.75,
       54.5,
-      54.25,
+      54.5,
       54.0,
+      54.0,
+      53.75,
+      53.75,
+      53.25,
+      53.0,
+      53.0,
+      52.75,
       52.5,
+      52.5,
+      52.25,
+      52.25,
       52.0,
       51.75,
-      51.25,
+      51.75,
+      51.75,
+      51.0,
+      50.5,
+      50.5,
+      50.5,
+      50.5,
+      50.5,
       50.5,
       50.5,
       50.5,
       50.25,
       50.25,
+      50.25,
+      50.25,
+      50.25,
+      50.25,
+      50.25,
+      50.25,
+      50.25,
+      50.25,
+      50.25,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
       50.0,
       50.0,
       50.0,
       49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.75,
+      49.5,
+      49.25,
+      49.0,
+      49.0,
+      49.0,
       48.75,
       48.5,
-      48.5,
+      48.25,
+      48.25,
+      48.0,
       47.25,
-      46.25,
-      44.75,
+      47.25,
+      47.25,
+      46.75,
+      46.5,
+      45.5,
+      45.25,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
+      44.5,
       44.5,
       44.5,
       44.25,
+      44.25,
+      44.25,
+      44.25,
       44.0,
       44.0,
-      43.5,
+      44.0,
+      44.0,
+      44.0,
+      44.0,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.75,
+      43.0,
+      42.75,
       42.5,
-      41.0,
+      42.5,
+      42.25,
+      41.25,
+      40.75,
+      40.5,
+      39.75,
       39.5,
       38.5,
       38.5,
       38.5,
+      38.5,
+      38.5,
+      38.5,
+      38.5,
+      38.5,
+      38.25,
+      38.25,
+      38.25,
+      38.25,
       38.25,
       38.25,
       38.0,
       38.0,
+      38.0,
+      38.0,
+      38.0,
+      38.0,
       37.75,
       37.75,
-      37.25,
+      37.75,
+      37.75,
+      37.75,
+      37.75,
+      37.75,
+      37.75,
+      37.5,
+      37.5,
+      37.0,
       36.5,
-      35.0,
+      36.5,
+      36.5,
+      36.5,
+      35.5,
+      35.25,
+      34.75,
+      34.0,
+      33.75,
+      33.5,
+      33.0,
+      33.0,
+      32.75,
       32.5,
+      32.5,
+      32.5,
+      32.5,
+      32.5,
+      32.5,
+      32.5,
+      32.5,
+      32.5,
+      32.5,
+      32.25,
+      32.25,
+      32.25,
+      32.25,
+      32.25,
+      32.25,
       32.25,
       32.0,
       32.0,
       32.0,
+      31.75,
+      31.75,
+      31.75,
+      31.75,
+      31.75,
+      31.75,
+      31.75,
+      31.5,
       31.25,
-      27.0,
+      31.25,
+      30.75,
+      30.75,
+      28.75,
+      28.5,
+      28.0,
+      27.5,
       26.5,
       26.5,
+      26.5,
+      26.5,
+      26.5,
+      26.5,
+      26.5,
+      26.25,
+      26.25,
+      26.25,
+      26.0,
+      26.0,
+      26.0,
+      26.0,
+      26.0,
+      26.0,
       25.75,
+      25.75,
+      25.75,
+      25.75,
+      25.25,
+      25.25,
+      24.75,
+      24.25,
+      23.5,
+      23.25,
+      23.0,
+      23.0,
+      22.75,
+      22.5,
+      22.25,
+      22.25,
+      22.0,
+      22.0,
+      22.0,
+      21.75,
+      21.25,
+      21.25,
       20.5,
+      20.5,
+      20.5,
+      20.5,
+      20.5,
+      20.5,
+      20.5,
+      20.25,
+      20.25,
+      20.25,
+      20.25,
+      20.25,
       20.0,
       20.0,
+      20.0,
+      20.0,
+      20.0,
       19.75,
       19.75,
       19.75,
+      19.75,
+      19.75,
+      19.5,
+      19.5,
+      17.25,
+      17.0,
+      16.5,
+      15.0,
       14.5,
-      12.0,
-      11.5,
-      10.5,
+      14.5,
+      14.5,
+      14.5,
+      14.5,
+      14.5,
+      14.5,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.0,
+      14.0,
+      14.0,
+      14.0,
+      14.0,
+      14.0,
+      13.75,
+      13.75,
+      13.75,
+      13.75,
+      13.75,
+      13.75,
+      13.75,
+      13.75,
+      13.75,
+      13.5,
+      11.25,
+      11.0,
+      10.0,
+      9.75,
+      9.5,
+      8.75,
+      8.75,
+      8.75,
       8.5,
+      8.5,
+      8.5,
+      8.25,
+      8.25,
       8.0,
+      8.0,
+      8.0,
+      8.0,
+      8.0,
+      8.0,
+      7.75,
+      7.75,
+      7.75,
+      7.75,
+      7.5,
+      5.0,
+      5.0,
+      4.75,
+      4.75,
+      4.25,
+      3.75,
+      3.5,
+      3.0,
+      2.5,
+      2.5,
       2.5,
       2.25,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
       2.0,
       2.0,
       1.75,
       1.75
     ],
-    "false_tracks": 46,
-    "fused_false_tracks": 46,
-    "fused_lifecycle_tracks": 536,
-    "fused_truth_associated_tracks": 490,
-    "mean_duration_s_false": 28.14673913043478,
-    "mean_duration_s_true": 54.6280612244898,
-    "median_duration_s_false": 26.25,
+    "false_tracks": 40,
+    "fused_false_tracks": 40,
+    "fused_lifecycle_tracks": 2061,
+    "fused_truth_associated_tracks": 2021,
+    "mean_duration_s_false": 29.925,
+    "mean_duration_s_true": 53.56048985650668,
+    "median_duration_s_false": 28.75,
     "median_duration_s_true": 57.75,
-    "total_unique_tracks": 5390,
-    "true_plot_tracks": 5390
+    "total_unique_tracks": 21822,
+    "true_plot_tracks": 21822
   },
   "truths": {
-    "simulated": 250,
-    "with_any_plot": 195,
-    "with_continuous_track_to_truth": 195,
-    "with_labeled_fused_track": 195
+    "simulated": 1000,
+    "with_any_plot": 794,
+    "with_continuous_track_to_truth": 793,
+    "with_labeled_fused_track": 793
   }
 }

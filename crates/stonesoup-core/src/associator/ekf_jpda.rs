@@ -24,7 +24,7 @@ use super::pda::{
     PDA_GATE_CHI2_2D,
 };
 
-pub const MAX_JPDA_EKF_TRACKS: usize = 1000;
+pub const MAX_JPDA_EKF_TRACKS: usize = 4096;
 const MAX_JPDA_COMPONENT: usize = 8;
 const MAX_JPDA_JOINTS: usize = 512;
 

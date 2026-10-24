@@ -14,7 +14,7 @@ pub struct TrackPath {
 
 #[derive(Debug, Clone)]
 pub struct TruthPath {
-    pub id: u8,
+    pub id: u16,
     pub states: Vec<(Timestamp, [f64; 4])>,
 }
 
@@ -27,7 +27,7 @@ pub struct TimeRange {
 #[derive(Debug, Clone)]
 pub struct TrackTruthAssociation {
     pub track_id: u32,
-    pub truth_id: u8,
+    pub truth_id: u16,
     pub range: TimeRange,
 }
 
@@ -73,8 +73,8 @@ pub fn associate_track_to_truths(
         return out;
     }
 
-    let mut current_truth: Option<u8> = None;
-    let mut potential_truth: Option<u8> = None;
+    let mut current_truth: Option<u16> = None;
+    let mut potential_truth: Option<u16> = None;
     let mut n_potential_successes = 0u8;
     let mut n_failures = 0u8;
     let mut potential_start: Option<Timestamp> = None;
@@ -83,7 +83,7 @@ pub fn associate_track_to_truths(
 
     for (ts, track_state) in &track.states {
         let mut min_dist = config.association_threshold_m;
-        let mut min_truth: Option<u8> = None;
+        let mut min_truth: Option<u16> = None;
 
         for truth in truths {
             if truth.states.is_empty() {
@@ -189,7 +189,7 @@ pub fn associate_tracks_to_truths(
 
 #[derive(Debug, Clone)]
 pub struct ContinuousTruthTrack {
-    pub truth_id: u8,
+    pub truth_id: u16,
     pub wall_start: Timestamp,
     pub wall_end: Timestamp,
     pub covered: Duration,
@@ -219,7 +219,7 @@ fn merge_ranges(ranges: &mut Vec<TimeRange>) {
 /// One logical target: merge all ``TrackToTruth`` intervals that reference the same truth id.
 pub fn continuous_tracks_per_truth(
     associations: &[TrackTruthAssociation],
-    num_truths: u8,
+    num_truths: u16,
 ) -> Vec<ContinuousTruthTrack> {
     let mut out = Vec::new();
     for tid in 0..num_truths {

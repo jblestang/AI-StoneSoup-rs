@@ -70,7 +70,9 @@ fn run() -> Result<String, ScenarioError> {
             "period_b_s": PERIOD_B_S,
             "fov_deg": FOV_DEG,
             "num_truths": NUM_TRUTHS,
-            "truth_layout": "250 targets uniform random range 50–392 km bearing",
+            "truth_layout": format!(
+                "{NUM_TRUTHS} targets uniform random range 50–392 km bearing"
+            ),
             "seed": SEED,
             "simulation_duration_s": SIM_DURATION_S,
             "time_step_s": DT_S,

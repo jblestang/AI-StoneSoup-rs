@@ -46,9 +46,9 @@ fn dual_radar_runs_full_duration_with_per_rotation_target_cap() {
         "fused lifecycle count {}",
         stats.fused_completed.len()
     );
-    assert_eq!(NUM_TRUTHS, 250);
+    assert_eq!(NUM_TRUTHS, 1000);
     assert!(
-        stats.truths_with_any_plot > 100,
+        stats.truths_with_any_plot > 400,
         "most simulated targets should get at least one plot: {}",
         stats.truths_with_any_plot
     );
