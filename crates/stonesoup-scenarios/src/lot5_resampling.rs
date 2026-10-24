@@ -132,6 +132,19 @@ impl Lot5ResamplingScenario {
         self.nparts
     }
 
+    /// Number of resampler demo steps completed (0 before the first [`step`]).
+    pub fn completed_steps(&self) -> usize {
+        self.step
+    }
+
+    pub fn resample_state(&self, index: usize) -> f64 {
+        self.particles[index][0]
+    }
+
+    pub fn resample_log_weight(&self, index: usize) -> f64 {
+        self.log_w[index]
+    }
+
     pub fn is_finished(&self) -> bool {
         self.finished
     }
