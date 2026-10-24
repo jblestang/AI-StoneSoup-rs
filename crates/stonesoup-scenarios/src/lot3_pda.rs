@@ -118,4 +118,8 @@ impl Lot3PdaScenario {
     pub fn step_index(&self) -> usize {
         self.step
     }
+
+    pub fn rmse_value(&self) -> f64 {
+        self.rmse.rmse().unwrap_or(0.0)
+    }
 }

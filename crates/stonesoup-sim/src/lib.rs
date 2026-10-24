@@ -5,6 +5,7 @@ mod lot1_tutorial;
 mod lot2_tutorial;
 mod mvn;
 mod numpy_random;
+mod resampler;
 mod rng;
 mod sensor;
 mod truth;
@@ -18,6 +19,7 @@ pub use lot2_tutorial::{
     Lot2TutorialData, LOT2_NUMPY_SEED, LOT2_NUM_STEPS,
 };
 pub use numpy_random::NumpyRng;
+pub use resampler::{effective_sample_size, systematic_resample, MAX_RESAMPLE_PARTICLES};
 pub use rng::{Rng, SplitMix64};
 pub use sensor::{LinearPositionSensor, SensorSim};
 pub use truth::{GroundTruthPath, TruthStepConfig};

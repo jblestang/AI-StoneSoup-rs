@@ -96,6 +96,21 @@ fn main() -> ExitCode {
             "lot1",
         ],
     ));
+    if std::env::var("NO_COLOR").is_err() {
+        ok &= run({
+            let mut c = Command::new("bash");
+            c.arg("-lc");
+            c.arg("cd apps/stonesoup-viewer && unset NO_COLOR && trunk build --release");
+            c
+        });
+        ok &= run({
+            let mut c = Command::new("bash");
+            c.arg("verification/scripts/wasm_viewer_smoke.sh");
+            c
+        });
+    } else {
+        eprintln!("xtask verify: skipping Trunk/WASM smoke (NO_COLOR is set)");
+    }
     if ok {
         eprintln!("xtask verify: all executed checks passed");
         ExitCode::SUCCESS
