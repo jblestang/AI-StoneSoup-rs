@@ -159,5 +159,4 @@ impl Lot8AsdScenario {
     pub fn act_mean(&self) -> [f64; 4] {
         self.act_state_mean
     }
-
 }

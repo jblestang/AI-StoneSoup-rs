@@ -1,5 +1,13 @@
 //! Accumulated state densities (ASD) Kalman predict/update (Stone Soup v1.9.1).
 
+#![allow(
+    clippy::indexing_slicing,
+    clippy::arithmetic_side_effects,
+    clippy::too_many_arguments,
+    clippy::needless_pass_by_value,
+    clippy::similar_names
+)]
+
 extern crate alloc;
 
 use alloc::vec;
@@ -7,9 +15,7 @@ use alloc::vec::Vec;
 
 use crate::error::Error;
 use crate::filter::kalman::{KalmanPredictor, KalmanUpdater, KalmanWorkspace};
-use crate::linalg::fixed::{
-    add4x4, add_vec4, inv4, mat4_vec4, mul4x4, sub_vec2, transpose4,
-};
+use crate::linalg::fixed::{add4x4, add_vec4, inv4, mat4_vec4, mul4x4, sub_vec2, transpose4};
 use crate::linalg::{Mat, VecN};
 use crate::models::measurement::LinearGaussianMeasurement;
 use crate::models::transition::ConstantVelocity2d;
@@ -38,7 +44,6 @@ impl CorrelationEntry {
             pfp: None,
         }
     }
-
 }
 
 /// ASD multi-state (newest timestamp first in [`Self::timestamps`]).
@@ -232,8 +237,7 @@ impl AsdKalmanPredictor {
             let p_pred_m = x_pred_m.cov;
             let transition_matrix = ws.f;
 
-            let combined =
-                Self::generate_c_matrices(&correlation_matrices)?;
+            let combined = Self::generate_c_matrices(&correlation_matrices)?;
             let col_rows = combined.len() * ndim;
             let mut wp_col = vec![0.0; col_rows * ndim];
             for (i, c) in combined.iter().enumerate() {
@@ -247,8 +251,6 @@ impl AsdKalmanPredictor {
                 ndim,
                 ndim,
                 &wp_col,
-                ndim,
-                ndim,
                 &transition_matrix_to_flat(f_t),
                 &mut correlated_column,
             )?;
@@ -325,8 +327,7 @@ impl AsdKalmanPredictor {
             let x_m_plus_1_given_k = array4(&prior.multi_state[off_m1..off_m1 + ndim]);
             let x_diff = sub_vec4_n(x_m_plus_1_given_k, x_pred_m_plus_1.mean);
 
-            let p_m_plus_1_given_k =
-                block4(&prior.multi_covar, stride, off_m1, off_m1)?;
+            let p_m_plus_1_given_k = block4(&prior.multi_covar, stride, off_m1, off_m1)?;
             let p_diff = mat4_sub(p_m_plus_1_given_k, p_pred_m_plus_1)?;
 
             let w = mul4x4(
@@ -334,10 +335,7 @@ impl AsdKalmanPredictor {
                 inv4(p_pred_m_plus_1)?,
             )?;
             let x_pred_m_given_k_mean = add_vec4(x_pred_m.mean, mat4_vec4(w, x_diff)?)?;
-            let p_pred_m_given_k = add4x4(
-                p_pred_m,
-                mul4x4(mul4x4(w, p_diff)?, transpose4(w)?)?,
-            )?;
+            let p_pred_m_given_k = add4x4(p_pred_m, mul4x4(mul4x4(w, p_diff)?, transpose4(w)?)?)?;
 
             let mut x_pred = Vec::with_capacity(prior.multi_state.len() + ndim);
             x_pred.extend_from_slice(&prior.multi_state[..t_index * ndim]);
@@ -364,15 +362,18 @@ impl AsdKalmanPredictor {
                 e.pfp = Some(pfp);
                 e
             };
-            correlation_matrices.insert(t_index, CorrelationEntry {
-                p: p_pred_m,
-                p_pred: Some(p_pred_m_plus_1),
-                f: Some(transition_matrix_m_plus_1),
-                pfp: Some(mul4x4(
-                    mul4x4(p_pred_m, transpose4(transition_matrix_m_plus_1)?)?,
-                    inv4(p_pred_m_plus_1)?,
-                )?),
-            });
+            correlation_matrices.insert(
+                t_index,
+                CorrelationEntry {
+                    p: p_pred_m,
+                    p_pred: Some(p_pred_m_plus_1),
+                    f: Some(transition_matrix_m_plus_1),
+                    pfp: Some(mul4x4(
+                        mul4x4(p_pred_m, transpose4(transition_matrix_m_plus_1)?)?,
+                        inv4(p_pred_m_plus_1)?,
+                    )?),
+                },
+            );
 
             let new_stride = (nstep + 1) * ndim;
             let mut p_pred = vec![0.0; new_stride * new_stride];
@@ -551,8 +552,6 @@ impl AsdKalmanUpdater {
             2,
             2,
             &mp.cross_covar,
-            2,
-            2,
             &flat2(&innov_cov_inv),
             &mut kalman_gain,
         )?;
@@ -570,16 +569,7 @@ impl AsdKalmanUpdater {
         }
 
         let mut k_s = vec![0.0; stride * 2];
-        mat_mul(
-            stride,
-            2,
-            2,
-            &kalman_gain,
-            2,
-            2,
-            &flat2(&innov_cov),
-            &mut k_s,
-        )?;
+        mat_mul(stride, 2, 2, &kalman_gain, &flat2(&innov_cov), &mut k_s)?;
         let mut posterior_cov = predicted.state.multi_covar.clone();
         for r in 0..stride {
             for c in 0..stride {
@@ -596,8 +586,7 @@ impl AsdKalmanUpdater {
             .index_of_timestamp(predicted.act_timestamp)?;
         let mut correlation_matrices = predicted.state.correlation_matrices.clone();
         let off = t_index * ASD_NDIM;
-        correlation_matrices[t_index].p =
-            block4(&posterior_cov, stride, off, off)?;
+        correlation_matrices[t_index].p = block4(&posterior_cov, stride, off, off)?;
         if let (Some(f), Some(p_pred)) = (
             correlation_matrices[t_index].f,
             correlation_matrices[t_index].p_pred,
@@ -722,8 +711,6 @@ fn mat_mul(
     a_cols: usize,
     b_cols: usize,
     a: &[f64],
-    _b_rows: usize,
-    _b_cols: usize,
     b: &[f64],
     out: &mut [f64],
 ) -> Result<(), Error> {

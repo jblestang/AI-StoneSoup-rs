@@ -286,11 +286,7 @@ fn main() -> ExitCode {
             let snap = scenario.snapshot().expect("snapshot");
             println!(
                 "scenario=lot8_asd steps={} finished={} rmse={:.6} estimate_xy=({:.3}, {:.3})",
-                MAX_LOT8_STEPS,
-                snap.finished,
-                snap.rmse,
-                snap.estimate_xy.0,
-                snap.estimate_xy.1
+                MAX_LOT8_STEPS, snap.finished, snap.rmse, snap.estimate_xy.0, snap.estimate_xy.1
             );
         }
         ScenarioKind::Lot6Information => {

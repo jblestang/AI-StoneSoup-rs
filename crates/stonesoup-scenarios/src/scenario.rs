@@ -145,9 +145,7 @@ impl AnyScenario {
             ScenarioId::Lot7GmphdTutorial => {
                 Ok(Self::Lot7Gmphd(Lot7GmPhdScenario::tutorial_defaults()?))
             }
-            ScenarioId::Lot8AsdTutorial => {
-                Ok(Self::Lot8Asd(Lot8AsdScenario::tutorial_defaults()?))
-            }
+            ScenarioId::Lot8AsdTutorial => Ok(Self::Lot8Asd(Lot8AsdScenario::tutorial_defaults()?)),
         }
     }
 
