@@ -1,5 +1,6 @@
 mod distance;
 mod ekf_gnn;
+mod ekf_jpda;
 mod global_neighbour;
 mod gnn_assignment;
 mod jpda;
@@ -11,6 +12,10 @@ mod track_to_truth;
 
 pub use distance::{distance_hypotheses, squared_mahalanobis};
 pub use ekf_gnn::{associate_gnn_2d_ekf, associate_gnn_2d_ekf_det_models};
+pub use ekf_jpda::{
+    ekf_pda_hypotheses, ekf_pda_merged_update, jpda_associate_ekf_det_models,
+    jpda_detection_weights, MAX_JPDA_EKF_TRACKS,
+};
 pub use global_neighbour::{
     associate_global_nearest_neighbour, GnnTrackAssignment, MAX_GNN_TRACKS,
 };

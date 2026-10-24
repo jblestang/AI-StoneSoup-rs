@@ -6,11 +6,12 @@ use alloc::vec::Vec;
 
 use stonesoup_core::linalg::Mat;
 use stonesoup_core::{
-    associate_gnn_2d_ekf_det_models, associate_tracks_to_truths, continuous_tracks_per_truth,
-    mod_bearing, CartesianToBearingRange, ConstantVelocity2d, ContinuousTruthTrack, Detection,
-    Duration, Error, ExtendedKalmanUpdater, GaussianState, GnnAssignment, KalmanPredictor,
-    KalmanWorkspace, MeasurementHypothesis, SensorId, Timestamp, TrackPath, TrackToTruthConfig,
-    TrackTruthAssociation, TruthPath, MAX_GNN_ASSIGN_DETS,
+    associate_tracks_to_truths, continuous_tracks_per_truth, mod_bearing, CartesianToBearingRange,
+    ConstantVelocity2d, ContinuousTruthTrack, Detection, Duration, Error, ExtendedKalmanUpdater,
+    GaussianState, JpdaHypothesisSet, KalmanPredictor, KalmanWorkspace, ProbabilityHypothesis,
+    SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
+    MAX_GNN_ASSIGN_DETS, MAX_JPDA_EKF_TRACKS, MAX_PDA_HYPOTHESES,
+    jpda_associate_ekf_det_models, jpda_detection_weights, ekf_pda_merged_update,
 };
 use stonesoup_core::GroundTruthState;
 use stonesoup_sim::{SplitMix64, TruthStepConfig};
@@ -37,7 +38,11 @@ pub const SIM_DURATION_S: f64 = 60.0;
 pub const NUM_TRUTHS: usize = 250;
 const TRUTH_MIN_RANGE_M: f64 = 50_000.0;
 const TRUTH_MAX_RANGE_M: f64 = RANGE_A_M * 0.98;
-pub const GATE: f64 = 6.0;
+pub const JPDA_PROB_DETECT: f64 = 0.9;
+/// Bearing–range clutter spatial density (approx. uniform disk, λ≈0.1 per dwell).
+pub const JPDA_CLUTTER_DENSITY: f64 = 5e-12;
+const JPDA_DET_ASSOCIATED_THRESH: f64 = 0.35;
+const JPDA_MEAS_UPDATE_THRESH: f64 = 0.45;
 pub const MIN_POINTS: u8 = 3;
 pub const COAST_SECONDS: f64 = 30.0;
 pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
@@ -600,49 +605,76 @@ impl DualRadarClutterSim {
         Ok(())
     }
 
+    fn empty_jpda_set(template: GaussianState) -> JpdaHypothesisSet {
+        JpdaHypothesisSet {
+            hypotheses: [ProbabilityHypothesis {
+                prediction: template,
+                detection_index: None,
+                probability: 0.0,
+            }; MAX_PDA_HYPOTHESES],
+            count: 0,
+        }
+    }
+
+    fn jpda_apply_sets(
+        &mut self,
+        tails: &mut [GaussianState],
+        sets: &[JpdaHypothesisSet],
+        detections: &[Detection],
+        det_models: &[CartesianToBearingRange],
+    ) -> Result<(), ScenarioError> {
+        for (tail, set) in tails.iter_mut().zip(sets.iter()) {
+            *tail = ekf_pda_merged_update(
+                &set.hypotheses,
+                set.count,
+                detections,
+                det_models,
+                &mut self.updater,
+                &mut self.ws,
+            )
+            .map_err(ScenarioError::Core)?;
+        }
+        Ok(())
+    }
+
+    fn meas_association_prob(set: &JpdaHypothesisSet) -> f64 {
+        set.hypotheses
+            .iter()
+            .take(set.count)
+            .filter(|h| h.detection_index.is_some())
+            .map(|h| h.probability)
+            .sum()
+    }
+
     fn multi_initiate(
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
     ) -> Result<(), ScenarioError> {
         let ts = self.ts();
-        let mut det_used = alloc::vec![false; detections.len()];
         let n_hold = self.holding.len();
-        if n_hold > 0 && !detections.is_empty() {
-            let hold_tails: Vec<GaussianState> = self.holding.iter().map(|h| h.tail).collect();
-            let mut assigns = alloc::vec![GnnAssignment {
-                hypothesis: MeasurementHypothesis {
-                    prediction: hold_tails[0],
-                    detection_index: None,
-                    distance: GATE,
-                },
-            }; n_hold];
-            associate_gnn_2d_ekf_det_models(
+        if n_hold > 0 && !detections.is_empty() && n_hold <= MAX_JPDA_EKF_TRACKS {
+            let mut hold_tails: Vec<GaussianState> =
+                self.holding.iter().map(|h| h.tail).collect();
+            let template = hold_tails[0];
+            let mut sets = alloc::vec![Self::empty_jpda_set(template); n_hold];
+            jpda_associate_ekf_det_models(
                 &hold_tails,
                 ts,
                 detections,
-                GATE,
+                JPDA_PROB_DETECT,
+                JPDA_CLUTTER_DENSITY,
                 &self.predictor,
                 &self.updater,
-                Some(det_models),
+                det_models,
                 &mut self.ws,
-                &mut assigns,
+                &mut sets,
             )
             .map_err(ScenarioError::Core)?;
-            for (slot, assign) in self.holding.iter_mut().zip(assigns.iter()) {
-                let h = &assign.hypothesis;
-                if let Some(di) = h.detection_index {
-                    self.updater.measurement = det_models[di];
-                    let post = self
-                        .updater
-                        .update(&h.prediction, &detections[di], &mut self.ws)
-                        .map_err(ScenarioError::Core)?;
-                    slot.tail = post;
-                    slot.updates = slot.updates.saturating_add(1);
-                    det_used[di] = true;
-                } else {
-                    slot.tail = h.prediction;
-                }
+            self.jpda_apply_sets(&mut hold_tails, &sets, detections, det_models)?;
+            for (slot, tail) in self.holding.iter_mut().zip(hold_tails.iter()) {
+                slot.tail = *tail;
+                slot.updates = slot.updates.saturating_add(1);
             }
             let mut promote = Vec::new();
             self.holding.retain(|ht| {
@@ -658,65 +690,55 @@ impl DualRadarClutterSim {
             }
         }
         for (i, det) in detections.iter().enumerate() {
-            if det_used[i] {
-                continue;
-            }
             let init = initiate_bearing_range(&self.prior, det, det_models[i])?;
             let _ = self.insert_holding(init);
         }
         Ok(())
     }
 
-    /// GNN + EKF on the current active set for one sensor's detections (no initiation).
+    /// JPDA + EKF on the current active set for one sensor's detections (no initiation).
     fn associate_update_actives(
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
     ) -> Result<(Vec<Detection>, Vec<CartesianToBearingRange>), ScenarioError> {
         let ts = self.ts();
-        let mut det_used = alloc::vec![false; detections.len()];
+        let n_dets = detections.len();
+        let mut det_weights = alloc::vec![0.0; n_dets];
         let n_act = self.active.len();
-        if n_act > 0 && !detections.is_empty() {
-            let act_tails: Vec<GaussianState> = self.active.iter().map(|t| t.tail).collect();
-            let mut assigns = alloc::vec![GnnAssignment {
-                hypothesis: MeasurementHypothesis {
-                    prediction: act_tails[0],
-                    detection_index: None,
-                    distance: GATE,
-                },
-            }; n_act];
-            associate_gnn_2d_ekf_det_models(
+        if n_act > 0 && !detections.is_empty() && n_act <= MAX_JPDA_EKF_TRACKS {
+            let mut act_tails: Vec<GaussianState> = self.active.iter().map(|t| t.tail).collect();
+            let template = act_tails[0];
+            let mut sets = alloc::vec![Self::empty_jpda_set(template); n_act];
+            jpda_associate_ekf_det_models(
                 &act_tails,
                 ts,
                 detections,
-                GATE,
+                JPDA_PROB_DETECT,
+                JPDA_CLUTTER_DENSITY,
                 &self.predictor,
                 &self.updater,
-                Some(det_models),
+                det_models,
                 &mut self.ws,
-                &mut assigns,
+                &mut sets,
             )
             .map_err(ScenarioError::Core)?;
-            for (track, assign) in self.active.iter_mut().zip(assigns.iter()) {
-                let h = &assign.hypothesis;
-                if let Some(di) = h.detection_index {
-                    self.updater.measurement = det_models[di];
-                    let post = self
-                        .updater
-                        .update(&h.prediction, &detections[di], &mut self.ws)
-                        .map_err(ScenarioError::Core)?;
-                    track.tail = post;
+            for (track, set) in self.active.iter_mut().zip(sets.iter()) {
+                let meas_p = Self::meas_association_prob(set);
+                if meas_p >= JPDA_MEAS_UPDATE_THRESH {
                     track.last_meas_step = self.step;
-                    det_used[di] = true;
-                } else {
-                    track.tail = h.prediction;
                 }
             }
+            self.jpda_apply_sets(&mut act_tails, &sets, detections, det_models)?;
+            for (track, tail) in self.active.iter_mut().zip(act_tails.iter()) {
+                track.tail = *tail;
+            }
+            det_weights = jpda_detection_weights(&sets, n_dets);
         }
         let mut unassoc = Vec::new();
         let mut un_models = Vec::new();
         for (i, det) in detections.iter().enumerate() {
-            if !det_used[i] {
+            if det_weights.get(i).copied().unwrap_or(0.0) < JPDA_DET_ASSOCIATED_THRESH {
                 unassoc.push(*det);
                 un_models.push(det_models[i]);
             }

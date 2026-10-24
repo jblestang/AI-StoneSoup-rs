@@ -99,7 +99,7 @@ fn run() -> Result<String, ScenarioError> {
             "with_continuous_track_to_truth": stats.continuous_truth_track_count,
         },
         "tracks": {
-            "description": "total_unique_tracks = one fused-network row per true plot (~450). fused_lifecycle_tracks = long-coast GNN+EKF segments.",
+            "description": "total_unique_tracks = one fused-network row per true plot. fused_lifecycle_tracks = long-coast JPDA+EKF segments (sequential per-sensor).",
             "total_unique_tracks": stats.total_unique_tracks(),
             "true_plot_tracks": stats.true_plot_tracks.len(),
             "fused_lifecycle_tracks": stats.fused_completed.len(),
