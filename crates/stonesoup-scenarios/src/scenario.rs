@@ -15,6 +15,9 @@ use crate::lot3_multitarget::Lot3MultiTargetScenario;
 use crate::lot3_multitarget::MAX_LOT3_MT_STEPS;
 use crate::lot3_pda::Lot3PdaScenario;
 use crate::lot3_pda::MAX_LOT3_PDA_STEPS;
+use crate::lot4_tutorial09::Lot4Tutorial09Scenario;
+use crate::lot4_tutorial10::Lot4Tutorial10Scenario;
+use crate::lot4_tracker::MAX_LOT4_ACTIVE_TRACKS;
 use crate::particle_lot2::Lot2ParticleScenario;
 use crate::registry::{ScenarioError, ScenarioId};
 
@@ -78,6 +81,8 @@ pub enum AnyScenario {
     Lot3Pda(Lot3PdaScenario),
     Lot3Mt(Lot3MultiTargetScenario),
     Lot3Jpda(Lot3JpdaScenario),
+    Lot4T09(Lot4Tutorial09Scenario),
+    Lot4T10(Lot4Tutorial10Scenario),
 }
 
 impl AnyScenario {
@@ -102,6 +107,12 @@ impl AnyScenario {
             ScenarioId::Lot3JpdaTutorial => {
                 Ok(Self::Lot3Jpda(Lot3JpdaScenario::tutorial_defaults()?))
             }
+            ScenarioId::Lot4InitiatorsTutorial => {
+                Ok(Self::Lot4T09(Lot4Tutorial09Scenario::tutorial_defaults()?))
+            }
+            ScenarioId::Lot4SimulationTutorial => {
+                Ok(Self::Lot4T10(Lot4Tutorial10Scenario::tutorial_defaults()?))
+            }
         }
     }
 
@@ -116,6 +127,8 @@ impl AnyScenario {
             Self::Lot3Pda(_) => ScenarioId::Lot3PdaTutorial,
             Self::Lot3Mt(_) => ScenarioId::Lot3MultiTargetTutorial,
             Self::Lot3Jpda(_) => ScenarioId::Lot3JpdaTutorial,
+            Self::Lot4T09(_) => ScenarioId::Lot4InitiatorsTutorial,
+            Self::Lot4T10(_) => ScenarioId::Lot4SimulationTutorial,
         }
     }
 }
@@ -131,6 +144,8 @@ impl Scenario for AnyScenario {
             Self::Lot3Pda(s) => s.reset(),
             Self::Lot3Mt(s) => s.reset(),
             Self::Lot3Jpda(s) => s.reset(),
+            Self::Lot4T09(s) => s.reset(),
+            Self::Lot4T10(s) => s.reset(),
         }
     }
 
@@ -177,6 +192,20 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot4T09(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot4T10(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -215,6 +244,8 @@ impl Scenario for AnyScenario {
             Self::Lot3Pda(s) => lot3_pda_viewer_snapshot(s),
             Self::Lot3Mt(s) => lot3_mt_viewer_snapshot(s),
             Self::Lot3Jpda(s) => lot3_jpda_viewer_snapshot(s),
+            Self::Lot4T09(s) => s.viewer_snapshot(),
+            Self::Lot4T10(s) => s.viewer_snapshot(),
         }
     }
 }
@@ -376,6 +407,74 @@ fn lot3_mt_viewer_snapshot(s: &Lot3MultiTargetScenario) -> Result<ViewerSnapshot
         truth_b_xy: Some((tb[0], tb[2])),
         estimate_b_xy: Some((b.mean.0[0], b.mean.0[2])),
     })
+}
+
+pub(crate) fn lot4_viewer_from(
+    step: usize,
+    max_steps: usize,
+    s: &impl Lot4ViewerTracks,
+    meas_offsets: &[usize],
+    meas_xy: &[[f64; 2]],
+) -> Result<ViewerSnapshot, ScenarioError> {
+    let idx = if step == 0 { 0 } else { step.saturating_sub(1) };
+    let mut det_xy = empty_det_xy();
+    let mut det_is_true = empty_det_flags();
+    let det_count = if step == 0 {
+        0
+    } else {
+        fill_step_detection_view(meas_offsets, meas_xy, &[], idx, &mut det_xy, &mut det_is_true, MAX_DETS_PER_STEP)?
+    };
+    let mut means = [[0.0; 4]; MAX_LOT4_ACTIVE_TRACKS];
+    let n = s.snapshot_track_means(&mut means);
+    let estimate_xy = if n > 0 {
+        (means[0][0], means[0][2])
+    } else {
+        (0.0, 0.0)
+    };
+    let estimate_b_xy = if n > 1 {
+        Some((means[1][0], means[1][2]))
+    } else {
+        None
+    };
+    let measurement_xy = if det_count > 0 {
+        (det_xy[0][0], det_xy[0][1])
+    } else {
+        estimate_xy
+    };
+    Ok(ViewerSnapshot {
+        step,
+        max_steps,
+        truth_xy: estimate_xy,
+        estimate_xy,
+        measurement_xy,
+        bearing_range: None,
+        ellipse_semi: None,
+        ellipse_angle_rad: 0.0,
+        rmse: 0.0,
+        finished: step >= max_steps,
+        det_count: det_count as u8,
+        det_xy,
+        det_is_true,
+        associated_xy: None,
+        truth_b_xy: estimate_b_xy,
+        estimate_b_xy,
+    })
+}
+
+pub(crate) trait Lot4ViewerTracks {
+    fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize;
+}
+
+impl Lot4ViewerTracks for Lot4Tutorial09Scenario {
+    fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize {
+        Lot4Tutorial09Scenario::snapshot_track_means(self, out)
+    }
+}
+
+impl Lot4ViewerTracks for Lot4Tutorial10Scenario {
+    fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize {
+        Lot4Tutorial10Scenario::snapshot_track_means(self, out)
+    }
 }
 
 fn lot3_jpda_viewer_snapshot(s: &Lot3JpdaScenario) -> Result<ViewerSnapshot, ScenarioError> {

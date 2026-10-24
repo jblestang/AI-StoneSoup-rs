@@ -1,11 +1,15 @@
 mod distance;
 mod global_neighbour;
+mod gnn_assignment;
 mod jpda;
 mod nearest_neighbour;
 mod pda;
 
 pub use global_neighbour::{
     associate_global_nearest_neighbour, GnnTrackAssignment, MAX_GNN_TRACKS,
+};
+pub use gnn_assignment::{
+    associate_gnn_2d, GnnAssignment, MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS,
 };
 pub use jpda::{jpda_associate, JpdaHypothesisSet};
 pub use nearest_neighbour::{

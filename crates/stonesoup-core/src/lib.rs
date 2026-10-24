@@ -5,8 +5,11 @@
 //!
 //! State vector order for Lot 1 (2D nearly-constant velocity): `[x, vx, y, vy]` (SI: m, m/s).
 
+mod assign;
 mod associator;
+mod deleter;
 mod error;
+mod initiator;
 mod filter;
 pub mod linalg;
 mod metric;
@@ -16,12 +19,16 @@ mod state;
 mod time;
 mod types;
 
+pub use assign::linear_sum_assignment_min;
 pub use associator::{
-    associate_global_nearest_neighbour, associate_nearest_neighbour, gm_reduce_single,
-    jpda_associate, pda_hypotheses, pda_merged_update, AssociationOutcome, GnnTrackAssignment,
-    JpdaHypothesisSet, MeasurementHypothesis, ProbabilityHypothesis, MAX_GNN_TRACKS,
+    associate_global_nearest_neighbour, associate_gnn_2d, associate_nearest_neighbour,
+    gm_reduce_single, jpda_associate, pda_hypotheses, pda_merged_update, AssociationOutcome,
+    GnnAssignment, GnnTrackAssignment, JpdaHypothesisSet, MeasurementHypothesis,
+    ProbabilityHypothesis, MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS, MAX_GNN_TRACKS,
     MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
 };
+pub use deleter::{covariance_trace, should_delete_covariance_trace};
+pub use initiator::{initiate_from_detection, tutorial09_prior, tutorial10_prior};
 pub use error::Error;
 pub use filter::ekf::ExtendedKalmanUpdater;
 pub use filter::kalman::{

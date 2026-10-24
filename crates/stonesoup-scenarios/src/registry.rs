@@ -11,6 +11,8 @@ pub enum ScenarioId {
     Lot3MultiTargetTutorial,
     Lot3PdaTutorial,
     Lot3JpdaTutorial,
+    Lot4InitiatorsTutorial,
+    Lot4SimulationTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -28,7 +30,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 8] = [
+        static LIST: [ScenarioDescriptor; 10] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -85,6 +87,20 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot4InitiatorsTutorial,
+                title: "09 — Initiators & deleters",
+                upstream_path: "docs/tutorials/09_Initiators_&_Deleters.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot4SimulationTutorial,
+                title: "10 — Simulation & tracking stack",
+                upstream_path: "docs/tutorials/10_Simulation_&_Tracking_Components.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -103,7 +119,9 @@ impl ScenarioRegistry {
             | ScenarioId::Lot3ClutterTutorial
             | ScenarioId::Lot3MultiTargetTutorial
             | ScenarioId::Lot3PdaTutorial
-            | ScenarioId::Lot3JpdaTutorial => {
+            | ScenarioId::Lot3JpdaTutorial
+            | ScenarioId::Lot4InitiatorsTutorial
+            | ScenarioId::Lot4SimulationTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -119,7 +137,9 @@ impl ScenarioRegistry {
             | ScenarioId::Lot3ClutterTutorial
             | ScenarioId::Lot3MultiTargetTutorial
             | ScenarioId::Lot3PdaTutorial
-            | ScenarioId::Lot3JpdaTutorial => {
+            | ScenarioId::Lot3JpdaTutorial
+            | ScenarioId::Lot4InitiatorsTutorial
+            | ScenarioId::Lot4SimulationTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

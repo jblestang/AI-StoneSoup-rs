@@ -5,8 +5,9 @@ use std::process::ExitCode;
 use stonesoup_scenarios::scenario::{AnyScenario, Scenario};
 use stonesoup_scenarios::{
     Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario,
-    Lot3MultiTargetScenario, Lot3PdaScenario, ScenarioId, ScenarioRegistry, MAX_LOT3_JPDA_STEPS,
-    MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS,
+    Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario,
+    ScenarioId, ScenarioRegistry, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS,
+    MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -19,6 +20,8 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot3_gnn") => ScenarioKind::Lot3Gnn,
         Some("lot3_pda") => ScenarioKind::Lot3Pda,
         Some("lot3_jpda") => ScenarioKind::Lot3Jpda,
+        Some("lot4_initiators") => ScenarioKind::Lot4Initiators,
+        Some("lot4_simulation") => ScenarioKind::Lot4Simulation,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -32,6 +35,8 @@ enum ScenarioKind {
     Lot3Gnn,
     Lot3Pda,
     Lot3Jpda,
+    Lot4Initiators,
+    Lot4Simulation,
 }
 
 fn main() -> ExitCode {
@@ -183,6 +188,54 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot3_jpda steps={} finished=true track_a_xy=({:.3}, {:.3})",
                 MAX_LOT3_JPDA_STEPS, a.mean.0[0], a.mean.0[2]
+            );
+        }
+        ScenarioKind::Lot4Initiators => {
+            let mut scenario = match Lot4Tutorial09Scenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 16];
+            let n = scenario.snapshot_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot4_initiators steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT4_T09_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot4Simulation => {
+            let mut scenario = match Lot4Tutorial10Scenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 16];
+            let n = scenario.snapshot_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot4_simulation steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT4_T10_STEPS, n, xy.0, xy.1
             );
         }
         ScenarioKind::Lot2Particle => {
