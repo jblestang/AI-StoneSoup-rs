@@ -7,11 +7,11 @@ mod lot1_tutorial;
 mod lot2_tutorial;
 mod lot9_tutorial;
 mod mvn;
-mod sym4;
 mod numpy_random;
 mod resampler;
 mod rng;
 mod sensor;
+mod sym4;
 mod truth;
 
 pub use lot1_tutorial::{
@@ -27,7 +27,6 @@ pub use lot9_tutorial::{
     LOT9_NUMPY_SEED, LOT9_NUM_PARTICLES, LOT9_NUM_STEPS, LOT9_PRIOR_MEAN,
 };
 pub use mvn::multivariate_normal4_batch;
-pub use sym4::mvn_factor_a;
 pub use numpy_random::NumpyRng;
 pub use resampler::{
     effective_sample_size, ess_resample_if_needed, ess_resample_if_needed_with,
@@ -37,4 +36,5 @@ pub use resampler::{
 };
 pub use rng::{Rng, SplitMix64};
 pub use sensor::{LinearPositionSensor, SensorSim};
+pub use sym4::mvn_factor_a;
 pub use truth::{GroundTruthPath, TruthStepConfig};

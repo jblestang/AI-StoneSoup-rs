@@ -2,6 +2,7 @@
 pub const LOT9_NUM_PARTICLES: usize = 30;
 pub const LOT9_NUM_STEPS: usize = 30;
 pub const LOT9_Q: f64 = 0.0001;
+#[allow(dead_code)]
 pub const LOT9_BEARING_NOISE_VAR: f64 = 2.5e-05;
 pub const LOT9_TRUTH_XY: [[f64; 2]; LOT9_NUM_STEPS] = [
     [-0.3, 0.7],

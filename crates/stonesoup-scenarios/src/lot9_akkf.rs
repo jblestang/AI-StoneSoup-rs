@@ -49,12 +49,13 @@ pub struct Lot9AkkfScenario {
 impl Lot9AkkfScenario {
     pub fn tutorial_defaults() -> Result<Self, ScenarioError> {
         let transition = ConstantVelocity2d::new(LOT9_Q, LOT9_Q).map_err(ScenarioError::Core)?;
-        let predictor = AdaptiveKernelKalmanPredictor::tutorial_akkf().map_err(ScenarioError::Core)?;
+        let predictor =
+            AdaptiveKernelKalmanPredictor::tutorial_akkf().map_err(ScenarioError::Core)?;
         let updater = AdaptiveKernelKalmanUpdater::tutorial_akkf().map_err(ScenarioError::Core)?;
-        let (rng, particles) =
-            initialise_lot9_filter_rng().map_err(ScenarioError::Core)?;
-        let prior = KernelParticleState::new_uniform(&array_from_particles(&particles), Timestamp::ZERO)
-            .map_err(ScenarioError::Core)?;
+        let (rng, particles) = initialise_lot9_filter_rng().map_err(ScenarioError::Core)?;
+        let prior =
+            KernelParticleState::new_uniform(&array_from_particles(&particles), Timestamp::ZERO)
+                .map_err(ScenarioError::Core)?;
         Ok(Self {
             predictor,
             updater,
@@ -95,14 +96,8 @@ impl Lot9AkkfScenario {
         let proposal = Self::proposal_cols(&self.prior)?;
         // Stone Soup `predict` applies `F @ proposal` with `noise=False`.
         let zero_noise = vec![[0.0; 4]; n];
-        let new_state = transition_particles(
-            &self.transition,
-            dt,
-            &proposal,
-            n,
-            &zero_noise,
-        )
-        .map_err(ScenarioError::Core)?;
+        let new_state = transition_particles(&self.transition, dt, &proposal, n, &zero_noise)
+            .map_err(ScenarioError::Core)?;
         let predicted = self
             .predictor
             .predict(&self.prior, ts, &proposal, &new_state)
@@ -121,13 +116,8 @@ impl Lot9AkkfScenario {
             &updated_covariance,
         )
         .map_err(ScenarioError::Core)?;
-        let proposals = multivariate_normal4_batch(
-            &mut self.rng,
-            prop_mean,
-            &prop_cov,
-            n,
-        )
-        .map_err(ScenarioError::Core)?;
+        let proposals = multivariate_normal4_batch(&mut self.rng, prop_mean, &prop_cov, n)
+            .map_err(ScenarioError::Core)?;
         let mut proposal_cols = vec![0.0; 4 * n];
         for i in 0..n {
             for d in 0..4 {
@@ -186,17 +176,33 @@ impl Lot9AkkfScenario {
         let n = prior.n_particles;
         let mut cov = Mat::<2, 2>::zeros();
         for i in 0..n {
-            let dx = prior.state_cols[0 * n + i] - mean[0];
+            let dx = prior.state_cols[i] - mean[0];
             let dy = prior.state_cols[2 * n + i] - mean[2];
             let w = prior.weights[i];
-            cov.set(0, 0, cov.get(0, 0).map_err(ScenarioError::Core)? + w * dx * dx)
-                .map_err(ScenarioError::Core)?;
-            cov.set(0, 1, cov.get(0, 1).map_err(ScenarioError::Core)? + w * dx * dy)
-                .map_err(ScenarioError::Core)?;
-            cov.set(1, 0, cov.get(1, 0).map_err(ScenarioError::Core)? + w * dy * dx)
-                .map_err(ScenarioError::Core)?;
-            cov.set(1, 1, cov.get(1, 1).map_err(ScenarioError::Core)? + w * dy * dy)
-                .map_err(ScenarioError::Core)?;
+            cov.set(
+                0,
+                0,
+                cov.get(0, 0).map_err(ScenarioError::Core)? + w * dx * dx,
+            )
+            .map_err(ScenarioError::Core)?;
+            cov.set(
+                0,
+                1,
+                cov.get(0, 1).map_err(ScenarioError::Core)? + w * dx * dy,
+            )
+            .map_err(ScenarioError::Core)?;
+            cov.set(
+                1,
+                0,
+                cov.get(1, 0).map_err(ScenarioError::Core)? + w * dy * dx,
+            )
+            .map_err(ScenarioError::Core)?;
+            cov.set(
+                1,
+                1,
+                cov.get(1, 1).map_err(ScenarioError::Core)? + w * dy * dy,
+            )
+            .map_err(ScenarioError::Core)?;
         }
         let (c00, c01, c11) = (
             cov.get(0, 0).map_err(ScenarioError::Core)?,

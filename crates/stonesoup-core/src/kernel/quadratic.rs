@@ -1,5 +1,11 @@
 //! Quadratic polynomial kernel Gram matrices (Stone Soup `QuadraticKernel`, `p=2`).
 
+#![allow(
+    clippy::indexing_slicing,
+    clippy::arithmetic_side_effects,
+    clippy::erasing_op
+)]
+
 extern crate alloc;
 
 use alloc::vec;
@@ -17,7 +23,10 @@ pub struct QuadraticKernel {
 
 impl QuadraticKernel {
     pub const fn tutorial_akkf() -> Self {
-        Self { c: 1.0, ialpha: 1.0 }
+        Self {
+            c: 1.0,
+            ialpha: 1.0,
+        }
     }
 
     fn pair(&self, a: &[f64], b: &[f64]) -> Result<f64, Error> {

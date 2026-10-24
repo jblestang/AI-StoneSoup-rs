@@ -47,6 +47,7 @@ pub fn initialise_lot9_filter_rng() -> Result<(NumpyRng, alloc::vec::Vec<[f64; 4
     advance_lot9_preamble(&mut rng)?;
     let mut rng = NumpyRng::seed(LOT9_NUMPY_SEED);
     let cov = prior_covariance()?;
-    let particles = multivariate_normal4_batch(&mut rng, LOT9_PRIOR_MEAN, &cov, LOT9_NUM_PARTICLES)?;
+    let particles =
+        multivariate_normal4_batch(&mut rng, LOT9_PRIOR_MEAN, &cov, LOT9_NUM_PARTICLES)?;
     Ok((rng, particles))
 }
