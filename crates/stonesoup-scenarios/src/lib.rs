@@ -3,6 +3,7 @@
 
 extern crate alloc;
 
+mod dual_radar_clutter;
 mod lot10_single_sensor;
 mod lot11_kdtree;
 mod lot13_multi_sensor;
@@ -77,6 +78,10 @@ pub use lot23_multi_tracker::{
     Lot23MultiTrackerMode, Lot23MultiTrackerScenario, MAX_LOT23_STEPS, MAX_LOT23_TRACKS,
 };
 pub use lot24_ensemble_filter::{Lot24EnsembleFilterScenario, MAX_LOT24_STEPS};
+pub use dual_radar_clutter::{
+    CompletedTrack, DualRadarClutterSim, DualRadarStats, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA,
+    FOV_DEG, PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED,
+};
 pub use lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
     TUTORIAL02_SENSOR_XY,

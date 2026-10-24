@@ -1,0 +1,112 @@
+//! Dual rotating radar network — plot and track statistics (JSON report).
+
+use std::fs;
+use std::io;
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use stonesoup_scenarios::{
+    DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, FOV_DEG, PLOTS_PER_RADAR,
+    PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED, ScenarioError,
+};
+
+const NUM_TRUTHS: usize = 4;
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(path) => {
+            eprintln!("wrote {path}");
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("dual_radar_clutter_stats: {e:?}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run() -> Result<String, ScenarioError> {
+    let mut sim = DualRadarClutterSim::new()?;
+    let stats = sim.run()?;
+    let overlap_area = (RANGE_B_M / RANGE_A_M).powi(2);
+    let total = stats.total_true + stats.total_clutter;
+    let mut dur_true = Vec::new();
+    let mut dur_false = Vec::new();
+    for t in &stats.completed {
+        let d = stats.duration_s(t);
+        if t.truth_id.is_some() {
+            dur_true.push(d);
+        } else {
+            dur_false.push(d);
+        }
+    }
+    let mean = |v: &[f64]| {
+        if v.is_empty() {
+            0.0
+        } else {
+            v.iter().sum::<f64>() / v.len() as f64
+        }
+    };
+    let median = |v: &mut [f64]| {
+        if v.is_empty() {
+            0.0
+        } else {
+            v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal));
+            v[v.len() / 2]
+        }
+    };
+    let mut dur_true_sorted = dur_true.clone();
+    let mut dur_false_sorted = dur_false.clone();
+    let payload = serde_json::json!({
+        "parameters": {
+            "implementation": "rust",
+            "plots_per_radar": PLOTS_PER_RADAR,
+            "clutter_fraction_target": CLUTTER_FRACTION_TARGET,
+            "clutter_lambda_poisson": CLUTTER_LAMBDA,
+            "overlap_area_fraction_co_located_disks": overlap_area,
+            "range_a_km": RANGE_A_M / 1e3,
+            "range_b_km": RANGE_B_M / 1e3,
+            "period_a_s": PERIOD_A_S,
+            "period_b_s": PERIOD_B_S,
+            "fov_deg": FOV_DEG,
+            "num_truths": NUM_TRUTHS,
+            "truth_layout": "four targets at 80 km on cardinal bearings",
+            "seed": SEED,
+        },
+        "plots": {
+            "radar_a_plots": stats.radar_a_plots,
+            "radar_b_plots": stats.radar_b_plots,
+            "total_true_detections": stats.total_true,
+            "total_clutter_detections": stats.total_clutter,
+            "clutter_fraction_actual": if total == 0 { 0.0 } else { stats.total_clutter as f64 / total as f64 },
+            "simulation_steps": stats.simulation_steps,
+        },
+        "truths": {
+            "simulated": NUM_TRUTHS,
+            "with_any_plot": stats.truths_with_plot_count(),
+            "with_confirmed_track": stats.truths_with_track_count(),
+        },
+        "tracks": {
+            "total_unique_tracks": stats.completed.len(),
+            "truth_associated_tracks": stats.true_tracks(),
+            "false_tracks": stats.false_tracks(),
+            "mean_duration_s_true": mean(&dur_true),
+            "mean_duration_s_false": mean(&dur_false),
+            "median_duration_s_true": median(&mut dur_true_sorted),
+            "median_duration_s_false": median(&mut dur_false_sorted),
+            "durations_s_true": dur_true,
+            "durations_s_false": dur_false,
+        },
+    });
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../verification/reports");
+    fs::create_dir_all(&root).map_err(scenario_io)?;
+    let path = root.join("dual_radar_clutter_stats.json");
+    let text = serde_json::to_string_pretty(&payload).map_err(|_| scenario_io(io::Error::other("json")))?;
+    fs::write(&path, text).map_err(scenario_io)?;
+    Ok(path.display().to_string())
+}
+
+fn scenario_io(_e: io::Error) -> ScenarioError {
+    ScenarioError::Core(stonesoup_core::Error::InvalidParameter)
+}

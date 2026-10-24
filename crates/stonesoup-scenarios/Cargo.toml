@@ -20,6 +20,10 @@ serde_json = { workspace = true }
 name = "dump_viewer_trail"
 path = "src/bin/dump_viewer_trail.rs"
 
+[[bin]]
+name = "dual_radar_clutter_stats"
+path = "src/bin/dual_radar_clutter_stats.rs"
+
 [dev-dependencies]
 serde_json = { workspace = true }
 
