@@ -1,6 +1,8 @@
 # Next steps
 
-**Lot 1:** complete (Kalman tutorial vertical slice, viewer, WASM, parity, no-panic harness). **Next:** Lot 2 — EKF, UKF, particle filter.
+**Lot 1:** complete (Kalman tutorial vertical slice, viewer, WASM, parity, no-panic harness).
+
+**Lot 2:** in progress — Tutorial **02 EKF** (bearing–range, `mod_bearing`, analytic Jacobian, parity vs Stone Soup v1.9.1). **Next within Lot 2:** UKF (03), particle filter (04), viewer/headless catalogue entries.
 
 ## Lot 2 outline
 
