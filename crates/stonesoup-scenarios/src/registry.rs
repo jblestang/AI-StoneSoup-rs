@@ -19,6 +19,7 @@ pub enum ScenarioId {
     Lot8AsdTutorial,
     Lot10SingleSensorTutorial,
     Lot11KdtreeTutorial,
+    Lot13MultiSensorTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -36,7 +37,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 16] = [
+        static LIST: [ScenarioDescriptor; 17] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -149,6 +150,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot13MultiSensorTutorial,
+                title: "17 — Multi-sensor management",
+                upstream_path: "docs/tutorials/sensormanagement/02_MultiSensorManagement.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -175,7 +183,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot7GmphdTutorial
             | ScenarioId::Lot8AsdTutorial
             | ScenarioId::Lot10SingleSensorTutorial
-            | ScenarioId::Lot11KdtreeTutorial => {
+            | ScenarioId::Lot11KdtreeTutorial
+            | ScenarioId::Lot13MultiSensorTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -199,7 +208,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot7GmphdTutorial
             | ScenarioId::Lot8AsdTutorial
             | ScenarioId::Lot10SingleSensorTutorial
-            | ScenarioId::Lot11KdtreeTutorial => {
+            | ScenarioId::Lot11KdtreeTutorial
+            | ScenarioId::Lot13MultiSensorTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

@@ -9,7 +9,7 @@ mod nearest_neighbour;
 mod pda;
 
 pub use distance::{distance_hypotheses, squared_mahalanobis};
-pub use ekf_gnn::associate_gnn_2d_ekf;
+pub use ekf_gnn::{associate_gnn_2d_ekf, associate_gnn_2d_ekf_det_models};
 pub use global_neighbour::{
     associate_global_nearest_neighbour, GnnTrackAssignment, MAX_GNN_TRACKS,
 };

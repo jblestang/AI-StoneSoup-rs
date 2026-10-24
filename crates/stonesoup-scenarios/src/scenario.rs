@@ -2,6 +2,7 @@
 
 use crate::lot10_single_sensor::{Lot10SensorManagerMode, Lot10SingleSensorScenario};
 use crate::lot11_kdtree::Lot11KdtreeScenario;
+use crate::lot13_multi_sensor::Lot13MultiSensorScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
@@ -110,6 +111,7 @@ pub enum AnyScenario {
     Lot8Asd(Lot8AsdScenario),
     Lot10SingleSensor(Lot10SingleSensorScenario),
     Lot11Kdtree(Lot11KdtreeScenario),
+    Lot13MultiSensor(Lot13MultiSensorScenario),
 }
 
 impl AnyScenario {
@@ -156,6 +158,11 @@ impl AnyScenario {
             ScenarioId::Lot10SingleSensorTutorial => Ok(Self::Lot10SingleSensor(
                 Lot10SingleSensorScenario::tutorial_defaults(Lot10SensorManagerMode::BruteForce)?,
             )),
+            ScenarioId::Lot13MultiSensorTutorial => Ok(Self::Lot13MultiSensor(
+                Lot13MultiSensorScenario::tutorial_defaults(
+                    crate::lot13_multi_sensor::Lot13SensorManagerMode::BruteForce,
+                )?,
+            )),
         }
     }
 
@@ -178,6 +185,7 @@ impl AnyScenario {
             Self::Lot8Asd(_) => ScenarioId::Lot8AsdTutorial,
             Self::Lot10SingleSensor(_) => ScenarioId::Lot10SingleSensorTutorial,
             Self::Lot11Kdtree(_) => ScenarioId::Lot11KdtreeTutorial,
+            Self::Lot13MultiSensor(_) => ScenarioId::Lot13MultiSensorTutorial,
         }
     }
 }
@@ -201,6 +209,7 @@ impl Scenario for AnyScenario {
             Self::Lot8Asd(s) => s.reset(),
             Self::Lot10SingleSensor(s) => s.reset(),
             Self::Lot11Kdtree(s) => s.reset(),
+            Self::Lot13MultiSensor(s) => s.reset(),
         }
     }
 
@@ -288,6 +297,13 @@ impl Scenario for AnyScenario {
                 }
             }
             Self::Lot11Kdtree(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot13MultiSensor(s) => {
                 if s.step()? {
                     ScenarioStepOutcome::Stepped
                 } else {
@@ -389,6 +405,7 @@ impl Scenario for AnyScenario {
             }
             Self::Lot10SingleSensor(s) => s.viewer_snapshot(),
             Self::Lot11Kdtree(s) => s.viewer_snapshot(),
+            Self::Lot13MultiSensor(s) => s.viewer_snapshot(),
         }
     }
 }

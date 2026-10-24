@@ -4,13 +4,14 @@ use std::process::ExitCode;
 
 use stonesoup_scenarios::scenario::{AnyScenario, Scenario};
 use stonesoup_scenarios::{
-    Lot10SensorManagerMode, Lot10SingleSensorScenario, Lot11KdtreeScenario, Lot2EkfScenario,
-    Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario, Lot3MultiTargetScenario,
-    Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario, Lot5ResamplingScenario,
+    Lot10SensorManagerMode, Lot10SingleSensorScenario, Lot11KdtreeScenario,
+    Lot13MultiSensorScenario, Lot13SensorManagerMode, Lot2EkfScenario, Lot2ParticleScenario,
+    Lot2UkfScenario, Lot3JpdaScenario, Lot3MultiTargetScenario, Lot3PdaScenario,
+    Lot4Tutorial09Scenario, Lot4Tutorial10Scenario, Lot5ResamplingScenario,
     Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario, ScenarioId, ScenarioRegistry,
-    MAX_LOT10_STEPS, MAX_LOT11_KDTREE_STEPS, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
-    MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS,
-    MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS,
+    MAX_LOT10_STEPS, MAX_LOT11_KDTREE_STEPS, MAX_LOT13_STEPS, MAX_LOT3_JPDA_STEPS,
+    MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS,
+    MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -31,6 +32,7 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot8_asd") => ScenarioKind::Lot8Asd,
         Some("lot11_kdtree") => ScenarioKind::Lot11Kdtree,
         Some("lot10_single_sensor") => ScenarioKind::Lot10SingleSensor,
+        Some("lot13_multi_sensor") => ScenarioKind::Lot13MultiSensor,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -52,6 +54,7 @@ enum ScenarioKind {
     Lot8Asd,
     Lot10SingleSensor,
     Lot11Kdtree,
+    Lot13MultiSensor,
 }
 
 fn main() -> ExitCode {
@@ -301,6 +304,32 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot11_kdtree steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
                 MAX_LOT11_KDTREE_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot13MultiSensor => {
+            let mut scenario = match Lot13MultiSensorScenario::tutorial_defaults(
+                Lot13SensorManagerMode::BruteForce,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 3];
+            let n = scenario.sorted_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot13_multi_sensor steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT13_STEPS, n, xy.0, xy.1
             );
         }
         ScenarioKind::Lot7Gmphd => {
