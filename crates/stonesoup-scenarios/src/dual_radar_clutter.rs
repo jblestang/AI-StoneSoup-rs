@@ -19,22 +19,26 @@ use crate::registry::ScenarioError;
 pub const PLOTS_PER_RADAR: usize = 250;
 pub const CLUTTER_FRACTION_TARGET: f64 = 0.10;
 pub const CLUTTER_LAMBDA: f64 = 0.10;
+pub const OVERLAP_AREA_FRACTION: f64 = 0.20;
 pub const RANGE_A_M: f64 = 400_000.0;
-pub const RANGE_B_M: f64 = 200_000.0;
+/// Co-located disks: overlap area fraction = (R_B / R_A)² ⇒ R_B = R_A √0.2.
+pub const RANGE_B_M: f64 = RANGE_A_M * 0.447_213_595_499_957_9;
 pub const PERIOD_A_S: f64 = 6.0;
 pub const PERIOD_B_S: f64 = 3.0;
 pub const FOV_DEG: f64 = 90.0;
 pub const DT_S: f64 = 0.25;
 pub const NUM_TRUTHS: usize = 4;
 pub const GATE: f64 = 6.0;
-pub const MIN_POINTS: u8 = 3;
-pub const COAST_SECONDS: f64 = 8.0;
+/// One-point initiation so each plot can spawn its own short track (plot-driven STT).
+pub const MIN_POINTS: u8 = 1;
+/// Drop tracks quickly after a missed plot so ~one completed segment per plot is possible.
+pub const COAST_SECONDS: f64 = 0.25;
 pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
 pub const SEED: u64 = 42;
 
 const MAX_ACTIVE: usize = 32;
 const MAX_HOLDING: usize = 256;
-const MAX_COMPLETED: usize = 128;
+const MAX_COMPLETED: usize = 768;
 
 #[derive(Debug, Clone, Copy)]
 struct RadarConfig {
@@ -80,6 +84,9 @@ pub struct DualRadarStats {
     pub truths_with_plot: u8,
     pub truths_with_track: u8,
     pub completed: Vec<CompletedTrack>,
+    /// True plots whose range falls inside radar B max range (both sensors’ overlap disk).
+    pub true_plots_in_overlap: usize,
+    pub track_initiations: usize,
 }
 
 fn half_fov_rad() -> f64 {
@@ -303,6 +310,9 @@ pub struct DualRadarClutterSim {
     n_completed: usize,
     coast_steps: usize,
     rng: SplitMix64,
+    true_plots_in_overlap: usize,
+    track_initiations: usize,
+    truth_scan_idx: [usize; 2],
 }
 
 impl DualRadarClutterSim {
@@ -369,6 +379,9 @@ impl DualRadarClutterSim {
             n_completed: 0,
             coast_steps,
             rng: SplitMix64::new(SEED.wrapping_add(1)),
+            true_plots_in_overlap: 0,
+            track_initiations: 0,
+            truth_scan_idx: [0, 0],
         })
     }
 
@@ -383,42 +396,46 @@ impl DualRadarClutterSim {
         Ok(())
     }
 
-    fn generate_sensor_dets(
+    /// Exactly one plot (detection) for this radar, if budget remains.
+    fn generate_next_plot(
         &mut self,
         radar_idx: usize,
         ts: Timestamp,
-        out: &mut [Detection],
-    ) -> Result<usize, ScenarioError> {
+    ) -> Result<Option<(Detection, CartesianToBearingRange)>, ScenarioError> {
         if self.plot_counts[radar_idx] >= PLOTS_PER_RADAR {
-            return Ok(0);
+            return Ok(None);
         }
         let cfg = self.radars[radar_idx];
         let dwell = advance_dwell(cfg, &mut self.radar_rt[radar_idx], ts)?;
         let model = radar_model(dwell)?;
-        let mut n = 0usize;
-        for (ti, gt) in self.truths.iter().enumerate() {
+
+        for _ in 0..NUM_TRUTHS {
+            let ti = self.truth_scan_idx[radar_idx] % NUM_TRUTHS;
+            self.truth_scan_idx[radar_idx] = self.truth_scan_idx[radar_idx].wrapping_add(1);
+            let gt = self.truths[ti];
             if is_in_fov(&model, gt.state, cfg.max_range_m)? {
-                let det = measure_truth(&model, *gt, cfg.sensor, &mut self.rng)?;
-                if n < out.len() && self.plot_counts[radar_idx] < PLOTS_PER_RADAR {
-                    out[n] = det;
-                    n += 1;
-                    self.plot_counts[radar_idx] += 1;
-                    self.total_true += 1;
-                    self.truths_detected |= 1 << ti;
+                let det = measure_truth(&model, gt, cfg.sensor, &mut self.rng)?;
+                self.plot_counts[radar_idx] += 1;
+                self.total_true += 1;
+                self.truths_detected |= 1 << ti;
+                let range = det.vector.0[1];
+                if range <= RANGE_B_M {
+                    self.true_plots_in_overlap += 1;
                 }
+                return Ok(Some((det, model)));
             }
         }
+
         let n_clutter = poisson(CLUTTER_LAMBDA, &mut self.rng)?;
-        for _ in 0..n_clutter {
-            if n >= out.len() || self.plot_counts[radar_idx] >= PLOTS_PER_RADAR {
-                break;
-            }
-            out[n] = clutter_detection(cfg.max_range_m, ts, cfg.sensor, &mut self.rng)?;
-            n += 1;
+        if n_clutter > 0 {
+            let det = clutter_detection(cfg.max_range_m, ts, cfg.sensor, &mut self.rng)?;
             self.plot_counts[radar_idx] += 1;
             self.total_clutter += 1;
+            return Ok(Some((det, model)));
         }
-        Ok(n)
+
+        // No truth in FOV and no clutter this slot — advance time and retry on next step.
+        Ok(None)
     }
 
     fn insert_active(&mut self, tail: GaussianState, step: usize) -> Result<(), ScenarioError> {
@@ -457,6 +474,35 @@ impl DualRadarClutterSim {
             truth_id: None,
         });
         self.n_completed += 1;
+        Ok(())
+    }
+
+    fn promote_holding(&mut self) -> Result<(), ScenarioError> {
+        for slot in 0..MAX_HOLDING {
+            if let Some(ht) = self.holding[slot].as_ref() {
+                if ht.updates >= MIN_POINTS {
+                    let tail = self
+                        .holding[slot]
+                        .take()
+                        .ok_or(ScenarioError::Core(Error::InvalidDimension))?
+                        .tail;
+                    self.insert_active(tail, self.step)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Plot-driven STT: each plot closes open track segments (≈ one report per plot).
+    fn flush_active_tracks(&mut self) -> Result<(), ScenarioError> {
+        let step = self.step;
+        let snapshot = self.active;
+        for t in snapshot.into_iter().flatten() {
+            if self.finish_track(t, step).is_err() {
+                break;
+            }
+        }
+        self.active = [None; MAX_ACTIVE];
         Ok(())
     }
 
@@ -544,6 +590,7 @@ impl DualRadarClutterSim {
                             .map(|h| h.tail)
                             .ok_or(ScenarioError::Core(Error::InvalidDimension))?;
                         self.insert_active(tail, self.step)?;
+                        self.track_initiations += 1;
                     }
                 }
             }
@@ -553,8 +600,8 @@ impl DualRadarClutterSim {
                 continue;
             }
             let init = initiate_bearing_range(&self.prior, det, det_models[i])?;
-            if self.insert_holding(init).is_err() {
-                // Drop initiations when holding pool is full (clutter-heavy steps).
+            if self.insert_holding(init).is_ok() {
+                self.track_initiations += 1;
             }
         }
         Ok(())
@@ -645,42 +692,30 @@ impl DualRadarClutterSim {
     }
 
     pub fn run(&mut self) -> Result<DualRadarStats, ScenarioError> {
+        // Plot-driven loop: up to 500 tracker updates (250 per radar), one plot at a time.
         while self.plot_counts[0] < PLOTS_PER_RADAR || self.plot_counts[1] < PLOTS_PER_RADAR {
             if self.step > 0 {
                 self.advance_truths()?;
             }
             let ts = self.ts();
             self.prior.timestamp = ts;
-            let mut det_buf = [Detection {
-                vector: stonesoup_core::VecN([0.0, 0.0]),
-                timestamp: ts,
-                sensor: SensorId(0),
-            }; MAX_GNN_ASSIGN_DETS];
-            let mut det_models = [radar_model(0.0)?; MAX_GNN_ASSIGN_DETS];
-            let mut n_dets = 0usize;
+            let mut plot_this_step = false;
             for ri in 0..2 {
-                let mut chunk = [Detection {
-                    vector: stonesoup_core::VecN([0.0, 0.0]),
-                    timestamp: ts,
-                    sensor: SensorId(0),
-                }; MAX_GNN_ASSIGN_DETS];
-                let got = self.generate_sensor_dets(ri, ts, &mut chunk)?;
-                let dwell = self.radar_rt[ri].dwell_rad;
-                let model = radar_model(dwell)?;
-                for chunk_det in chunk.iter().take(got) {
-                    if n_dets >= MAX_GNN_ASSIGN_DETS {
-                        break;
-                    }
-                    det_buf[n_dets] = *chunk_det;
-                    det_models[n_dets] = model;
-                    n_dets += 1;
+                if self.plot_counts[ri] >= PLOTS_PER_RADAR {
+                    continue;
+                }
+                if let Some((det, model)) = self.generate_next_plot(ri, ts)? {
+                    self.tracker_update(core::slice::from_ref(&det), core::slice::from_ref(&model))?;
+                    self.promote_holding()?;
+                    self.flush_active_tracks()?;
+                    plot_this_step = true;
                 }
             }
-            if n_dets > 0 {
-                self.tracker_update(&det_buf[..n_dets], &det_models[..n_dets])?;
-            }
             self.step += 1;
-            if self.step > 10_000 {
+            if self.step > 20_000 {
+                break;
+            }
+            if !plot_this_step && self.plot_counts[0] >= PLOTS_PER_RADAR && self.plot_counts[1] >= PLOTS_PER_RADAR {
                 break;
             }
         }
@@ -721,6 +756,8 @@ impl DualRadarClutterSim {
             truths_with_plot: self.truths_detected,
             truths_with_track,
             completed,
+            true_plots_in_overlap: self.true_plots_in_overlap,
+            track_initiations: self.track_initiations,
         })
     }
 }

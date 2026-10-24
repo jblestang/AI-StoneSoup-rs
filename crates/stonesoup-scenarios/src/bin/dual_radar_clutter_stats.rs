@@ -6,8 +6,8 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use stonesoup_scenarios::{
-    DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, FOV_DEG, PLOTS_PER_RADAR,
-    PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED, ScenarioError,
+    DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, FOV_DEG, OVERLAP_AREA_FRACTION,
+    PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED, ScenarioError,
 };
 
 const NUM_TRUTHS: usize = 4;
@@ -28,8 +28,9 @@ fn main() -> ExitCode {
 fn run() -> Result<String, ScenarioError> {
     let mut sim = DualRadarClutterSim::new()?;
     let stats = sim.run()?;
-    let overlap_area = (RANGE_B_M / RANGE_A_M).powi(2);
     let total = stats.total_true + stats.total_clutter;
+    let overlap_fraction_of_true =
+        stats.true_plots_in_overlap as f64 / stats.total_true.max(1) as f64;
     let mut dur_true = Vec::new();
     let mut dur_false = Vec::new();
     for t in &stats.completed {
@@ -63,7 +64,7 @@ fn run() -> Result<String, ScenarioError> {
             "plots_per_radar": PLOTS_PER_RADAR,
             "clutter_fraction_target": CLUTTER_FRACTION_TARGET,
             "clutter_lambda_poisson": CLUTTER_LAMBDA,
-            "overlap_area_fraction_co_located_disks": overlap_area,
+            "overlap_area_fraction_co_located_disks": OVERLAP_AREA_FRACTION,
             "range_a_km": RANGE_A_M / 1e3,
             "range_b_km": RANGE_B_M / 1e3,
             "period_a_s": PERIOD_A_S,
@@ -74,10 +75,13 @@ fn run() -> Result<String, ScenarioError> {
             "seed": SEED,
         },
         "plots": {
+            "total_plots": total,
             "radar_a_plots": stats.radar_a_plots,
             "radar_b_plots": stats.radar_b_plots,
             "total_true_detections": stats.total_true,
             "total_clutter_detections": stats.total_clutter,
+            "true_plots_in_overlap_disk": stats.true_plots_in_overlap,
+            "true_plots_in_overlap_fraction": overlap_fraction_of_true,
             "clutter_fraction_actual": if total == 0 { 0.0 } else { stats.total_clutter as f64 / total as f64 },
             "simulation_steps": stats.simulation_steps,
         },
@@ -87,6 +91,9 @@ fn run() -> Result<String, ScenarioError> {
             "with_confirmed_track": stats.truths_with_track_count(),
         },
         "tracks": {
+            "description": "Completed track segments after plot-driven GNN+EKF (not the 500 plot budget itself).",
+            "track_initiations": stats.track_initiations,
+            "total_completed_tracks": stats.completed.len(),
             "total_unique_tracks": stats.completed.len(),
             "truth_associated_tracks": stats.true_tracks(),
             "false_tracks": stats.false_tracks(),

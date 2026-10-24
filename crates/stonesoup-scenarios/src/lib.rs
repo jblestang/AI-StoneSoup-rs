@@ -80,7 +80,8 @@ pub use lot23_multi_tracker::{
 pub use lot24_ensemble_filter::{Lot24EnsembleFilterScenario, MAX_LOT24_STEPS};
 pub use dual_radar_clutter::{
     CompletedTrack, DualRadarClutterSim, DualRadarStats, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA,
-    FOV_DEG, PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED,
+    FOV_DEG, OVERLAP_AREA_FRACTION, PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M,
+    SEED,
 };
 pub use lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,

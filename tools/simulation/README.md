@@ -1,23 +1,30 @@
 # Dual rotating radar clutter experiment (Rust)
 
-Native port of the two-radar, 10% clutter, 250-plots-per-radar scenario.
-
 ## Run
 
 ```bash
 cargo run -p stonesoup-scenarios --release --bin dual_radar_clutter_stats
 ```
 
-Writes `verification/reports/dual_radar_clutter_stats.json` with plot counts, clutter fraction, truth coverage, track / false-track counts, and track durations.
+Writes `verification/reports/dual_radar_clutter_stats.json`.
 
 ## Scenario
 
 | Radar | Rotation | Range |
 |-------|----------|-------|
 | A | 6 s | 400 km |
-| B | 3 s | 200 km |
+| B | 3 s | **178.9 km** (√0.2 × 400 km) |
 
-Co-located **90° FOV** rotating bearing–range sensors, fused **GNN + EKF** multi-target tracker (3-point confirmation, 8 s coast delete). Four truths at **80 km** on cardinal bearings. Poisson clutter (`CLUTTER_LAMBDA = 0.52`) tuned for ~**10%** clutter among plots.
+Co-located sensors with **20% area overlap** between coverage disks: (R_B/R_A)² = 0.2.
+
+- **500 plots** total (250 per radar), ~10% clutter, plot-driven tracker steps.
+- **20% overlap** also reported as the fraction of **true** plots whose range falls inside B’s disk (targets at 80 km are always in overlap).
+
+## Plots vs tracks
+
+The JSON field **`plots.total_plots`** is the **500** measurement budget (250×2).
+
+**`tracks.total_completed_tracks`** counts **finished track segments** from the multi-target filter (GNN + EKF), not plots. With 1-point initiation and short coast, this count is typically **on the order of hundreds**—one segment per plot that is not merged into an existing track.
 
 Implementation: `crates/stonesoup-scenarios/src/dual_radar_clutter.rs`.
 
