@@ -10,5 +10,15 @@ fn dual_radar_runs_to_plot_budget() {
         stats.radar_a_plots + stats.radar_b_plots,
         stonesoup_scenarios::PLOTS_PER_RADAR * 2
     );
-    assert!(stats.completed.len() >= stonesoup_scenarios::PLOTS_PER_RADAR);
+    let total = stats.total_true + stats.total_clutter;
+    let clutter_frac = stats.total_clutter as f64 / total as f64;
+    assert!(
+        (0.07..=0.13).contains(&clutter_frac),
+        "clutter fraction {clutter_frac}"
+    );
+    assert!(
+        stats.completed.len() < 64,
+        "fused track count {}",
+        stats.completed.len()
+    );
 }

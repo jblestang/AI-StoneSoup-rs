@@ -91,9 +91,8 @@ fn run() -> Result<String, ScenarioError> {
             "with_confirmed_track": stats.truths_with_track_count(),
         },
         "tracks": {
-            "description": "Completed track segments after plot-driven GNN+EKF (not the 500 plot budget itself).",
-            "track_initiations": stats.track_initiations,
-            "total_completed_tracks": stats.completed.len(),
+            "description": "Fused multi-target (GNN+EKF) completed track segments after 8 s coast.",
+            "fused_unique_tracks": stats.completed.len(),
             "total_unique_tracks": stats.completed.len(),
             "truth_associated_tracks": stats.true_tracks(),
             "false_tracks": stats.false_tracks(),
