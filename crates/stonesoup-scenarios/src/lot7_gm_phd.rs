@@ -40,6 +40,10 @@ pub struct Lot7GmPhdScenario {
     birth: PhdComponent,
     step: usize,
     finished: bool,
+    /// Next `PhdTag::Track` id (Stone Soup uuid mapping starts at 2 in fixtures).
+    next_track_tag: u32,
+    /// Last step's component count before prune/merge (for parity tooling).
+    pub last_pre_reduce_n: usize,
     /// Reused each step; large arrays are heap-backed for WASM stack limits.
     step_bufs: Box<Lot7GmPhdStepBuffers>,
 }
@@ -126,6 +130,8 @@ impl Lot7GmPhdScenario {
             birth,
             step: 0,
             finished: false,
+            next_track_tag: 2,
+            last_pre_reduce_n: 0,
             step_bufs: Box::new(Lot7GmPhdStepBuffers {
                 current: [placeholder; MAX_GMPHD_COMPONENTS],
                 missed: [PhdHypothesis {
@@ -269,11 +275,13 @@ impl Lot7GmPhdScenario {
         .map_err(ScenarioError::Core)?;
 
         let mut n_reduced = n_updated;
+        self.last_pre_reduce_n = n_updated;
         gm_phd_reduce(
             &mut bufs.updated,
             &mut n_reduced,
             &self.config,
             &mut bufs.merge_pool,
+            &mut self.next_track_tag,
         )
         .map_err(ScenarioError::Core)?;
         if n_reduced > MAX_GMPHD_COMPONENTS {

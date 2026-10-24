@@ -1,12 +1,16 @@
-//! GM-PHD tutorial parity (seed 42): step-0 mixture size and strong-mode positions.
+//! GM-PHD tutorial parity (seed 42): reduced mixture vs Stone Soup export.
 
 use stonesoup_scenarios::{Lot7GmPhdScenario, LOT7_REDUCED, MAX_LOT7_STEPS};
 
-const XY_TOL: f64 = 1.5;
-const TOP_WEIGHT_MIN: f64 = 0.2;
+const WTOL: f64 = 1e-5;
+const MTOL: f64 = 1e-4;
 
-fn mean_xy(m: &[f64; 4]) -> (f64, f64) {
-    (m[0], m[2])
+fn sort_key(weight: f64, mean: &[f64; 4]) -> (i64, i64, i64) {
+    (
+        -(weight * 1e12) as i64,
+        (mean[0] * 1e6) as i64,
+        (mean[2] * 1e6) as i64,
+    )
 }
 
 #[test]
@@ -15,34 +19,28 @@ fn gm_phd_reduced_mixture_matches_stonesoup_through_end() {
     for step in 0..MAX_LOT7_STEPS {
         let _ = sc.step().expect("step");
         let (comps, n) = sc.snapshot_components();
-        assert!(n > 0, "step {step}: empty mixture");
-        if step == 0 {
-            let expected = &LOT7_REDUCED[0];
-            assert_eq!(
-                n, expected.n,
-                "step 0: component count mismatch (got {n}, expected {})",
-                expected.n
+        let expected = &LOT7_REDUCED[step];
+        assert_eq!(
+            n, expected.n,
+            "step {step}: component count (got {n}, expected {})",
+            expected.n
+        );
+        let mut got_sorted: Vec<_> = comps.iter().take(n).collect();
+        let mut exp_sorted: Vec<_> = expected.components.iter().take(expected.n).collect();
+        got_sorted.sort_by_key(|c| sort_key(c.weight, &c.state.mean.0));
+        exp_sorted.sort_by_key(|c| sort_key(c.weight, &c.mean));
+        for (got, exp) in got_sorted.iter().zip(exp_sorted.iter()) {
+            assert!(
+                (got.weight - exp.weight).abs() <= WTOL,
+                "step {step}: weight delta {} (got {}, exp {})",
+                (got.weight - exp.weight).abs(),
+                got.weight,
+                exp.weight
             );
-            for exp in expected.components.iter().take(expected.n) {
-                if exp.weight < TOP_WEIGHT_MIN {
-                    continue;
-                }
-                let (ex, ey) = mean_xy(&exp.mean);
-                let mut ok = false;
-                for got in comps.iter().take(n) {
-                    if got.weight < TOP_WEIGHT_MIN {
-                        continue;
-                    }
-                    let (gx, gy) = mean_xy(&got.state.mean.0);
-                    let d = ((gx - ex).powi(2) + (gy - ey).powi(2)).sqrt();
-                    if d <= XY_TOL {
-                        ok = true;
-                        break;
-                    }
-                }
+            for i in 0..4 {
                 assert!(
-                    ok,
-                    "step 0: no strong component near expected xy=({ex:.2}, {ey:.2})"
+                    (got.state.mean.0[i] - exp.mean[i]).abs() <= MTOL,
+                    "step {step}: mean[{i}] delta",
                 );
             }
         }

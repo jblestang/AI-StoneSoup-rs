@@ -6,9 +6,7 @@
     clippy::too_many_arguments
 )]
 
-use crate::associator::{
-    distance_hypotheses, gm_reduce_single, squared_mahalanobis, MeasurementHypothesis,
-};
+use crate::associator::{distance_hypotheses, squared_mahalanobis, MeasurementHypothesis};
 use crate::error::Error;
 use crate::filter::kalman::{KalmanPredictor, KalmanUpdater, KalmanWorkspace};
 use crate::linalg::fixed::{inv4, mat4_vec4};
@@ -68,7 +66,7 @@ fn logpdf2(z: VecN<2>, mean: VecN<2>, cov: Mat<2, 2>) -> Result<f64, Error> {
 }
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-fn squared_mahalanobis_state(a: &GaussianState, b: &GaussianState) -> Result<f64, Error> {
+pub fn squared_mahalanobis_state(a: &GaussianState, b: &GaussianState) -> Result<f64, Error> {
     let inv = inv4(a.cov)?;
     let mut delta = VecN([0.0; 4]);
     for i in 0..4 {
@@ -87,30 +85,43 @@ fn squared_mahalanobis_state(a: &GaussianState, b: &GaussianState) -> Result<f64
 }
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-fn merge_two(a: PhdComponent, b: PhdComponent) -> Result<PhdComponent, Error> {
+pub fn gm_phd_merge_pair(a: PhdComponent, b: PhdComponent) -> Result<PhdComponent, Error> {
     let wsum = a.weight + b.weight;
     if wsum <= 0.0 {
         return Err(Error::NumericalFailure);
     }
-    let (mean, cov) = gm_reduce_single(
-        &[a.state.mean, b.state.mean],
-        &[a.state.cov, b.state.cov],
-        &[a.weight, b.weight],
-    )?;
+    let w1 = a.weight / wsum;
+    let w2 = b.weight / wsum;
+    let mut mean = VecN([0.0; 4]);
+    for d in 0..4 {
+        mean.0[d] = a.state.mean.0[d] * w1 + b.state.mean.0[d] * w2;
+    }
+    let mut cov = Mat::<4, 4>::zeros();
+    for r in 0..4 {
+        for c in 0..4 {
+            let v = a.state.cov.0[r][c] * w1 + b.state.cov.0[r][c] * w2;
+            cov.set(r, c, v)?;
+        }
+    }
+    let mut delta = VecN([0.0; 4]);
+    for d in 0..4 {
+        delta.0[d] = a.state.mean.0[d] - b.state.mean.0[d];
+    }
+    let spread = w1 * w2;
+    for r in 0..4 {
+        for c in 0..4 {
+            let v = cov.get(r, c)? + spread * delta.0[r] * delta.0[c];
+            cov.set(r, c, v)?;
+        }
+    }
     let mut weight = wsum;
     if weight > 1.0 {
         weight = 1.0;
     }
-    let tag = if a.weight >= b.weight { a.tag } else { b.tag };
-    let ts = if a.weight >= b.weight {
-        a.state.timestamp
-    } else {
-        b.state.timestamp
-    };
     Ok(PhdComponent {
-        state: GaussianState::new(mean, cov, ts)?,
+        state: GaussianState::new(mean, cov, a.state.timestamp)?,
         weight,
-        tag,
+        tag: a.tag,
     })
 }
 
@@ -172,12 +183,16 @@ pub fn gm_phd_merge(
         len -= 1;
         let mut i = 0usize;
         while i < len {
-            let dist = squared_mahalanobis_state(&best.state, &pool[i].state)?;
+            let dist = squared_mahalanobis_state(&pool[i].state, &best.state)?;
             if dist < threshold_sq {
                 let other = pool[i];
                 len -= 1;
-                pool[i] = pool[len];
-                best = merge_two(best, other)?;
+                // Shift left (Stone Soup iterates ascending weight; swap-remove would
+                // pull the highest-weight tail element next and change merge results).
+                for k in i..len {
+                    pool[k] = pool[k + 1];
+                }
+                best = gm_phd_merge_pair(best, other)?;
             } else {
                 i += 1;
             }
@@ -192,12 +207,78 @@ pub fn gm_phd_merge(
     Ok(())
 }
 
+/// Stone Soup `GaussianMixtureReducer.merge` duplicate-tag pass (lower-weight copies get new tags).
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+pub fn gm_phd_deduplicate_tags(
+    components: &mut [PhdComponent],
+    n: &mut usize,
+    scratch: &mut [PhdComponent],
+    next_track_tag: &mut u32,
+) {
+    if *n <= 1 {
+        return;
+    }
+    if scratch.len() < *n {
+        return;
+    }
+    scratch[..*n].copy_from_slice(&components[..*n]);
+    let mut out = 0usize;
+    for i in 0..*n {
+        let tag = scratch[i].tag;
+        let mut seen = false;
+        for k in 0..i {
+            if scratch[k].tag == tag {
+                seen = true;
+                break;
+            }
+        }
+        if seen {
+            continue;
+        }
+        let mut matches = 0usize;
+        for s in scratch.iter().take(*n) {
+            if s.tag == tag {
+                matches += 1;
+            }
+        }
+        if matches == 1 {
+            components[out] = scratch[i];
+            out += 1;
+            continue;
+        }
+        let mut best_j = None;
+        let mut best_w = f64::NEG_INFINITY;
+        for (j, s) in scratch.iter().enumerate().take(*n) {
+            if s.tag == tag && s.weight > best_w {
+                best_w = s.weight;
+                best_j = Some(j);
+            }
+        }
+        let Some(bj) = best_j else {
+            continue;
+        };
+        components[out] = scratch[bj];
+        out += 1;
+        for (j, s) in scratch.iter().enumerate().take(*n) {
+            if s.tag == tag && j != bj {
+                let mut c = *s;
+                c.tag = PhdTag::Track(*next_track_tag);
+                *next_track_tag += 1;
+                components[out] = c;
+                out += 1;
+            }
+        }
+    }
+    *n = out;
+}
+
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn gm_phd_reduce(
     components: &mut [PhdComponent],
     n: &mut usize,
     config: &GmPhdConfig,
     merge_pool: &mut [PhdComponent],
+    next_track_tag: &mut u32,
 ) -> Result<(), Error> {
     if *n == 0 {
         return Ok(());
@@ -206,6 +287,7 @@ pub fn gm_phd_reduce(
     if *n > 1 {
         gm_phd_merge(components, n, config.merge_threshold_sq, merge_pool)?;
     }
+    gm_phd_deduplicate_tags(components, n, merge_pool, next_track_tag);
     Ok(())
 }
 
@@ -372,10 +454,15 @@ pub fn gm_phd_append_detection_update(
         if *out_n >= out.len() {
             return Err(Error::CapacityExceeded);
         }
+        let tag = if hyp.component.tag == PhdTag::Birth {
+            PhdTag::Untagged
+        } else {
+            hyp.component.tag
+        };
         out[*out_n] = PhdComponent {
             state: post,
             weight: new_weight,
-            tag: hyp.component.tag,
+            tag,
         };
         *out_n += 1;
     }

@@ -150,7 +150,6 @@ def main() -> int:
 
     truths = OrderedSet()
     current_truths = set()
-    start_truths = set()
     initial_truths = []
     for _i in range(3):
         x, y = np.random.uniform(-30, 30, 2)
@@ -159,8 +158,31 @@ def main() -> int:
         truth = GroundTruthPath([state])
         current_truths.add(truth)
         truths.add(truth)
-        start_truths.add(truth)
         initial_truths.append(truth)
+
+    covar = CovarianceMatrix(np.diag([10, 5, 10, 5]))
+    tracks = []
+    for truth in initial_truths:
+        tracks.append(
+            Track(
+                TaggedWeightedGaussianState(
+                    state_vector=truth[0].state_vector,
+                    covar=covar**2,
+                    weight=0.25,
+                    tag=TaggedWeightedGaussianState.BIRTH,
+                    timestamp=start_time,
+                )
+            )
+        )
+    reduced_states = [track[-1] for track in tracks]
+    birth_covar = CovarianceMatrix(np.diag([1000, 2, 1000, 2]))
+    birth_component = TaggedWeightedGaussianState(
+        state_vector=[0, 0, 0, 0],
+        covar=birth_covar**2,
+        weight=0.25,
+        tag="birth",
+        timestamp=start_time,
+    )
 
     for k in range(number_steps):
         for truth in current_truths.copy():
@@ -193,7 +215,7 @@ def main() -> int:
     clutter_rate = 3.0
     all_measurements = []
     for k in range(number_steps):
-        measurement_set = set()
+        measurement_list = []
         timestamp = start_time + timedelta(seconds=k)
         for truth in truths:
             try:
@@ -202,7 +224,7 @@ def main() -> int:
                 continue
             if np.random.rand() <= probability_detection:
                 measurement = measurement_model.function(truth_state, noise=True)
-                measurement_set.add(
+                measurement_list.append(
                     TrueDetection(
                         state_vector=measurement,
                         groundtruth_path=truth,
@@ -213,14 +235,14 @@ def main() -> int:
         for _ in range(np.random.poisson(clutter_rate)):
             x = uniform.rvs(-200, 400)
             y = uniform.rvs(-200, 400)
-            measurement_set.add(
+            measurement_list.append(
                 Clutter(
                     np.array([[x], [y]]),
                     timestamp=timestamp,
                     measurement_model=measurement_model,
                 )
             )
-        all_measurements.append(measurement_set)
+        all_measurements.append(measurement_list)
 
     kalman_updater = KalmanUpdater(measurement_model)
     meas_range = np.array([[-1, 1], [-1, 1]]) * 200
@@ -246,28 +268,10 @@ def main() -> int:
         merge_threshold=merge_threshold,
         merging=True,
     )
-    covar = CovarianceMatrix(np.diag([10, 5, 10, 5]))
-    tracks = set()
-    for truth in start_truths:
-        new_track = TaggedWeightedGaussianState(
-            state_vector=truth.state_vector,
-            covar=covar**2,
-            weight=0.25,
-            tag=TaggedWeightedGaussianState.BIRTH,
-            timestamp=start_time,
-        )
-        tracks.add(Track(new_track))
-    reduced_states = set([track[-1] for track in tracks])
-    birth_covar = CovarianceMatrix(np.diag([1000, 2, 1000, 2]))
-    birth_component = TaggedWeightedGaussianState(
-        state_vector=[0, 0, 0, 0],
-        covar=birth_covar**2,
-        weight=0.25,
-        tag="birth",
-        timestamp=start_time,
-    )
     state_threshold = 0.25
     reduced_by_step = []
+    pre_reduce_by_step = []
+    pre_reduce_snapshots = []
     tag_map = {}
 
     def tag_key(t):
@@ -277,23 +281,36 @@ def main() -> int:
             return "birth"
         return str(t)
 
+    def sort_components(states):
+        return sorted(states, key=lambda s: (-s.weight, sv(s)[0], sv(s)[2]))
+
     for n, measurements in enumerate(all_measurements):
-        current_state = reduced_states
+        current_state = list(reduced_states)
         if measurements:
-            time = list(measurements)[0].timestamp
+            time = measurements[0].timestamp
         else:
             time = start_time + timedelta(seconds=n)
         birth_component.timestamp = time
-        current_state.add(birth_component)
+        current_state.append(birth_component)
         hypotheses = hypothesiser.hypothesise(
             current_state, measurements, timestamp=time, order_by_detection=True
         )
         updated_states = updater.update(hypotheses)
-        reduced_states = set(reducer.reduce(updated_states))
+        pre_reduce_by_step.append(len(updated_states.components))
+        if n == 1:
+            snap = []
+            for c in updated_states.components:
+                snap.append(
+                    {
+                        "weight": float(c.weight),
+                        "mean": sv(c),
+                        "cov": [[float(x) for x in row] for row in c.covar.tolist()],
+                    }
+                )
+            pre_reduce_snapshots = snap
+        reduced_states = sort_components(reducer.reduce(updated_states))
         step_comps = []
-        for reduced_state in sorted(
-            reduced_states, key=lambda s: (-s.weight, sv(s)[0], sv(s)[2])
-        ):
+        for reduced_state in reduced_states:
             tk = tag_key(reduced_state.tag)
             if tk not in ("birth", "null") and tk not in tag_map:
                 tag_map[tk] = len(tag_map) + 2
@@ -326,13 +343,12 @@ def main() -> int:
         "start_truths": [sv(t[0]) for t in initial_truths],
         # Preserve set insertion order — GM-PHD `order_by_detection` is order-sensitive.
         "measurements": [
-            [
-                [float(d.state_vector[0, 0]), float(d.state_vector[1, 0])]
-                for d in ms
-            ]
+            [[float(d.state_vector[0, 0]), float(d.state_vector[1, 0])] for d in ms]
             for ms in all_measurements
         ],
         "reduced_by_step": reduced_by_step,
+        "pre_reduce_by_step": pre_reduce_by_step,
+        "pre_reduce_snapshot_step1": pre_reduce_snapshots,
     }
     OUT.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     write_rust(payload)
