@@ -1,10 +1,10 @@
 //! Multi-target tracker with ``MultiMeasurementInitiator`` (Tutorials 09–10).
 
 use stonesoup_core::{
-    associate_gnn_2d, initiate_from_detection, should_delete_covariance_trace,
-    ConstantVelocity2d, Detection, Duration, GaussianState, GnnAssignment, KalmanPredictor,
-    KalmanUpdater, KalmanWorkspace, LinearGaussianMeasurement, Mat, MeasurementHypothesis,
-    Timestamp, MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS,
+    associate_gnn_2d, initiate_from_detection, should_delete_covariance_trace, ConstantVelocity2d,
+    Detection, Duration, GaussianState, GnnAssignment, KalmanPredictor, KalmanUpdater,
+    KalmanWorkspace, LinearGaussianMeasurement, Mat, MeasurementHypothesis, Timestamp,
+    MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS,
 };
 
 use crate::lot3_meas::push_measurements;
@@ -49,15 +49,13 @@ impl Lot4MultiTargetTracker {
         meas_offsets: &'static [usize],
         meas_xy: &'static [[f64; 2]],
     ) -> Result<Self, ScenarioError> {
-        let transition =
-            ConstantVelocity2d::new(params.process_noise, params.process_noise)
-                .map_err(ScenarioError::Core)?;
+        let transition = ConstantVelocity2d::new(params.process_noise, params.process_noise)
+            .map_err(ScenarioError::Core)?;
         let predictor = KalmanPredictor::new(transition);
         let mut r = Mat::<2, 2>::zeros();
         r.set(0, 0, params.meas_var).map_err(ScenarioError::Core)?;
         r.set(1, 1, params.meas_var).map_err(ScenarioError::Core)?;
-        let measurement =
-            LinearGaussianMeasurement::position_2d(r).map_err(ScenarioError::Core)?;
+        let measurement = LinearGaussianMeasurement::position_2d(r).map_err(ScenarioError::Core)?;
         let updater = KalmanUpdater::new(measurement);
         Ok(Self {
             params,
@@ -211,7 +209,9 @@ impl Lot4MultiTargetTracker {
                             sure[n_sure] = Some(tail);
                             n_sure += 1;
                         } else {
-                            return Err(ScenarioError::Core(stonesoup_core::Error::CapacityExceeded));
+                            return Err(ScenarioError::Core(
+                                stonesoup_core::Error::CapacityExceeded,
+                            ));
                         }
                     }
                 }
@@ -223,13 +223,9 @@ impl Lot4MultiTargetTracker {
             if det_used[i] {
                 continue;
             }
-            let init = initiate_from_detection(
-                &self.params.prior,
-                det,
-                &self.updater,
-                &mut self.ws,
-            )
-            .map_err(ScenarioError::Core)?;
+            let init =
+                initiate_from_detection(&self.params.prior, det, &self.updater, &mut self.ws)
+                    .map_err(ScenarioError::Core)?;
             self.insert_holding(init)?;
         }
 
@@ -248,13 +244,8 @@ impl Lot4MultiTargetTracker {
             timestamp: ts,
             sensor: stonesoup_core::SensorId(0),
         }; MAX_GNN_ASSIGN_DETS];
-        let count = push_measurements(
-            self.meas_offsets,
-            self.meas_xy,
-            self.step,
-            ts,
-            &mut det_buf,
-        )?;
+        let count =
+            push_measurements(self.meas_offsets, self.meas_xy, self.step, ts, &mut det_buf)?;
         let detections = &det_buf[..count];
         let mut det_used = [false; MAX_GNN_ASSIGN_DETS];
 
@@ -352,8 +343,7 @@ impl Lot4MultiTargetTracker {
                     .partial_cmp(&b[0])
                     .unwrap_or(core::cmp::Ordering::Equal)
                     .then(
-                        a[2]
-                            .partial_cmp(&b[2])
+                        a[2].partial_cmp(&b[2])
                             .unwrap_or(core::cmp::Ordering::Equal),
                     );
                 if ord == core::cmp::Ordering::Less {

@@ -6,7 +6,11 @@ fn matches_python_snapshot_track_means() {
     let mut sc = Lot4Tutorial09Scenario::tutorial_defaults().expect("defaults");
     for step in 0..MAX_LOT4_T09_STEPS {
         let more = sc.step().expect("step");
-        assert_eq!(more, step + 1 < MAX_LOT4_T09_STEPS, "early finish at {step}");
+        assert_eq!(
+            more,
+            step + 1 < MAX_LOT4_T09_STEPS,
+            "early finish at {step}"
+        );
         let ref_means = Lot4Tutorial09Scenario::reference_track_means_at(step).expect("ref");
         let mut got_means = [[0.0; 4]; 16];
         let n_got = sc.snapshot_track_means(&mut got_means);

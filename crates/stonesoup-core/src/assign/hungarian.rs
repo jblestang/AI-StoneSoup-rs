@@ -1,9 +1,6 @@
 //! Minimal assignment (Hungarian) for GNN — mirrors ``scipy.optimize.linear_sum_assignment``.
 
-#![allow(
-    clippy::indexing_slicing,
-    clippy::arithmetic_side_effects
-)]
+#![allow(clippy::indexing_slicing, clippy::arithmetic_side_effects)]
 
 use crate::Error;
 

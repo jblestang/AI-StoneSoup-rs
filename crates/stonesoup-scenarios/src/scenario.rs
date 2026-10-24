@@ -15,9 +15,9 @@ use crate::lot3_multitarget::Lot3MultiTargetScenario;
 use crate::lot3_multitarget::MAX_LOT3_MT_STEPS;
 use crate::lot3_pda::Lot3PdaScenario;
 use crate::lot3_pda::MAX_LOT3_PDA_STEPS;
+use crate::lot4_tracker::MAX_LOT4_ACTIVE_TRACKS;
 use crate::lot4_tutorial09::Lot4Tutorial09Scenario;
 use crate::lot4_tutorial10::Lot4Tutorial10Scenario;
-use crate::lot4_tracker::MAX_LOT4_ACTIVE_TRACKS;
 use crate::particle_lot2::Lot2ParticleScenario;
 use crate::registry::{ScenarioError, ScenarioId};
 
@@ -422,7 +422,15 @@ pub(crate) fn lot4_viewer_from(
     let det_count = if step == 0 {
         0
     } else {
-        fill_step_detection_view(meas_offsets, meas_xy, &[], idx, &mut det_xy, &mut det_is_true, MAX_DETS_PER_STEP)?
+        fill_step_detection_view(
+            meas_offsets,
+            meas_xy,
+            &[],
+            idx,
+            &mut det_xy,
+            &mut det_is_true,
+            MAX_DETS_PER_STEP,
+        )?
     };
     let mut means = [[0.0; 4]; MAX_LOT4_ACTIVE_TRACKS];
     let n = s.snapshot_track_means(&mut means);

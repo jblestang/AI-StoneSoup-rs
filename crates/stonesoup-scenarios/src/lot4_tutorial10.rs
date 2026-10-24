@@ -62,10 +62,7 @@ impl Lot4Tutorial10Scenario {
             .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))
     }
 
-    pub fn snapshot_track_means(
-        &self,
-        out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS],
-    ) -> usize {
+    pub fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize {
         self.inner.sorted_track_means(out)
     }
 

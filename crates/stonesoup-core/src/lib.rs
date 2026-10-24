@@ -9,8 +9,8 @@ mod assign;
 mod associator;
 mod deleter;
 mod error;
-mod initiator;
 mod filter;
+mod initiator;
 pub mod linalg;
 mod metric;
 mod models;
@@ -28,13 +28,13 @@ pub use associator::{
     MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
 };
 pub use deleter::{covariance_trace, should_delete_covariance_trace};
-pub use initiator::{initiate_from_detection, tutorial09_prior, tutorial10_prior};
 pub use error::Error;
 pub use filter::ekf::ExtendedKalmanUpdater;
 pub use filter::kalman::{
     GaussianMeasurementPrediction, KalmanPredictor, KalmanUpdater, KalmanWorkspace,
 };
 pub use filter::ukf::{UnscentedKalmanPredictor, UnscentedKalmanUpdater};
+pub use initiator::{initiate_from_detection, tutorial09_prior, tutorial10_prior};
 pub use linalg::{Mat, VecN};
 pub use metric::rmse::RmseAccumulator;
 pub use models::bearing_range::CartesianToBearingRange;

@@ -14,6 +14,9 @@ pub fn covariance_trace(state: &GaussianState) -> Result<f64, crate::Error> {
 
 /// Returns true when track should be deleted (trace strictly above threshold).
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-pub fn should_delete_covariance_trace(state: &GaussianState, threshold: f64) -> Result<bool, crate::Error> {
+pub fn should_delete_covariance_trace(
+    state: &GaussianState,
+    threshold: f64,
+) -> Result<bool, crate::Error> {
     Ok(covariance_trace(state)? > threshold)
 }
