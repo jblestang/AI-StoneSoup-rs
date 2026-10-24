@@ -14,7 +14,11 @@ const LOT1_A_Q: [[f64; 4]; 4] = [
 #[allow(clippy::excessive_precision)] // literals copied from NumPy reference output
 const LOT1_A_R: [[f64; 2]; 2] = [[2.2360679774997898, 0.0], [0.0, 2.2360679774997898]];
 
-fn z_dot_a_col<const N: usize>(z: [f64; N], a: [[f64; N]; N], col: usize) -> Result<f64, Error> {
+pub(crate) fn z_dot_a_col<const N: usize>(
+    z: [f64; N],
+    a: [[f64; N]; N],
+    col: usize,
+) -> Result<f64, Error> {
     let mut s = 0.0;
     for j in 0..N {
         s += z[j] * a[j][col];
