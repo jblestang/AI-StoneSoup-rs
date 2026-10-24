@@ -3,10 +3,14 @@
 
 include!("lot2_pf_fixtures.rs");
 
-use stonesoup_core::{mod_bearing, CartesianToBearingRange, ConstantVelocity2d, Duration};
+use stonesoup_core::{
+    mod_bearing, CartesianToBearingRange, ConstantVelocity2d, Duration, RmseAccumulator,
+};
 use stonesoup_sim::{mvn4_lot2_q, sample_lot2_pf_prior_particle, NumpyRng, LOT2_NUMPY_SEED};
 
-use crate::lot2_ekf::{fixture_row, Lot2EkfScenario, MEASUREMENTS, NUM_STEPS};
+use crate::lot2_ekf::{
+    fixture_row, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MEASUREMENTS, NUM_STEPS, TRUTH,
+};
 use crate::registry::ScenarioError;
 
 pub const LOT2_PF_PARTICLES: usize = 1000;
@@ -18,6 +22,7 @@ pub struct Lot2ParticleScenario {
     transition: ConstantVelocity2d,
     measurement: CartesianToBearingRange,
     step: usize,
+    rmse: RmseAccumulator,
 }
 
 impl Lot2ParticleScenario {
@@ -42,7 +47,14 @@ impl Lot2ParticleScenario {
             transition,
             measurement,
             step: 0,
+            rmse: RmseAccumulator::new(),
         })
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn reset(&mut self) -> Result<(), ScenarioError> {
+        *self = Self::tutorial_defaults()?;
+        Ok(())
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
@@ -71,9 +83,9 @@ impl Lot2ParticleScenario {
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-    pub fn step(&mut self) -> Result<(), ScenarioError> {
+    pub fn step(&mut self) -> Result<Lot2StepOutcome, ScenarioError> {
         if self.step >= NUM_STEPS {
-            return Ok(());
+            return Ok(Lot2StepOutcome::Finished);
         }
         let ts = Lot2EkfScenario::timestamp_for(self.step);
         let predict_dt = if self.step == 0 {
@@ -118,10 +130,18 @@ impl Lot2ParticleScenario {
             self.log_w[i] += ll;
         }
         self.normalize_log_weights()?;
-        // Tutorial 04 uses ESSResampler; reference fixtures omit resampling for Rust parity.
+        let truth = fixture_row(&TRUTH, self.step)?;
+        let mean = self.weighted_mean();
+        self.rmse
+            .push(mean[0] - truth[0], mean[2] - truth[2])
+            .map_err(ScenarioError::Core)?;
         let _ = ts;
         self.step += 1;
-        Ok(())
+        Ok(if self.step >= NUM_STEPS {
+            Lot2StepOutcome::Finished
+        } else {
+            Lot2StepOutcome::Stepped
+        })
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
@@ -146,9 +166,30 @@ impl Lot2ParticleScenario {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn run_to_end(&mut self) -> Result<(), ScenarioError> {
         while self.step < NUM_STEPS {
-            self.step()?;
+            match self.step()? {
+                Lot2StepOutcome::Stepped => {}
+                Lot2StepOutcome::Finished => break,
+            }
         }
         Ok(())
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn snapshot(&self) -> Result<Lot2Snapshot, ScenarioError> {
+        let idx = if self.step == 0 { 0 } else { self.step - 1 };
+        let truth = fixture_row(&TRUTH, idx)?;
+        let m = fixture_row(&MEASUREMENTS, idx)?;
+        let mean = self.weighted_mean();
+        Ok(Lot2Snapshot {
+            step: self.step,
+            truth_xy: (truth[0], truth[2]),
+            measurement_br: (m[0], m[1]),
+            estimate_xy: (mean[0], mean[2]),
+            ellipse_semi: (0.0, 0.0),
+            ellipse_angle_rad: 0.0,
+            rmse: self.rmse.rmse().unwrap_or(0.0),
+            finished: self.step >= NUM_STEPS,
+        })
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]

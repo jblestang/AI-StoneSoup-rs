@@ -11,6 +11,18 @@ use crate::registry::ScenarioError;
 
 pub const MAX_LOT2_STEPS: usize = NUM_STEPS;
 
+/// Tutorial 02 sensor platform (bearing–range).
+pub const TUTORIAL02_SENSOR_XY: (f64, f64) = (50.0, 0.0);
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+pub fn bearing_range_to_xy(bearing: f64, range: f64) -> (f64, f64) {
+    let (sx, sy) = TUTORIAL02_SENSOR_XY;
+    (
+        sx + range * libm::cos(bearing),
+        sy + range * libm::sin(bearing),
+    )
+}
+
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub(crate) fn fixture_row<const N: usize>(
     table: &[[f64; N]; NUM_STEPS],

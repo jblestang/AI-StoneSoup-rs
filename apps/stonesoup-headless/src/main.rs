@@ -43,7 +43,7 @@ fn main() -> ExitCode {
                 eprintln!("run failed");
                 return ExitCode::from(3);
             }
-            let snap = match scenario.snapshot() {
+            let snap = match scenario.viewer_snapshot() {
                 Ok(s) => s,
                 Err(e) => {
                     eprintln!("snapshot: {e:?}");

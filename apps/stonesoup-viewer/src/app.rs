@@ -2,14 +2,17 @@ use std::f64::consts::TAU;
 
 use eframe::egui;
 use egui_plot::{Legend, Line, Plot, PlotPoints, Points, Polygon};
-use stonesoup_scenarios::{Lot1KalmanScenario, Lot1StepOutcome, ScenarioId, ScenarioRegistry};
+use stonesoup_scenarios::{
+    AnyScenario, Scenario, ScenarioId, ScenarioRegistry, ScenarioStepOutcome, ViewerSnapshot,
+    TUTORIAL02_SENSOR_XY,
+};
 
-/// NumPy / Stone Soup fixture seed (see `tools/python/export_lot1_fixtures.py`).
-const LOT1_FIXTURE_SEED: u32 = 1991;
+/// NumPy / Stone Soup fixture seed (tutorials 01–04).
+const FIXTURE_SEED: u32 = 1991;
 
-#[derive(Default)]
 pub struct ViewerApp {
-    lot1: Option<Lot1KalmanScenario>,
+    active_id: ScenarioId,
+    scenario: Option<AnyScenario>,
     playing: bool,
     speed: f32,
     error: Option<String>,
@@ -19,6 +22,24 @@ pub struct ViewerApp {
     est_trail: Vec<[f64; 2]>,
     last_ellipse: Option<EllipseOverlay>,
     last_advance: f64,
+}
+
+impl Default for ViewerApp {
+    fn default() -> Self {
+        Self {
+            active_id: ScenarioId::Lot1KalmanTutorial,
+            scenario: None,
+            playing: false,
+            speed: 1.0,
+            error: None,
+            export_notice: None,
+            truth_trail: Vec::new(),
+            meas_trail: Vec::new(),
+            est_trail: Vec::new(),
+            last_ellipse: None,
+            last_advance: 0.0,
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -51,45 +72,64 @@ fn ellipse_ring(
 }
 
 impl ViewerApp {
-    fn ensure_scenario(&mut self) {
-        if self.lot1.is_none() {
-            match ScenarioRegistry::spawn(ScenarioId::Lot1KalmanTutorial) {
-                Ok(s) => self.lot1 = Some(s),
-                Err(e) => self.error = Some(format!("{e:?}")),
+    fn load_scenario(&mut self, id: ScenarioId) {
+        match AnyScenario::spawn(id) {
+            Ok(s) => {
+                self.active_id = id;
+                self.scenario = Some(s);
+                self.error = None;
+                self.clear_trails();
             }
+            Err(e) => self.error = Some(format!("{e:?}")),
         }
     }
 
-    pub fn reset(&mut self) {
+    fn ensure_scenario(&mut self) {
+        if self.scenario.is_none() {
+            self.load_scenario(self.active_id);
+        }
+    }
+
+    fn clear_trails(&mut self) {
         self.truth_trail.clear();
         self.meas_trail.clear();
         self.est_trail.clear();
         self.last_ellipse = None;
+    }
+
+    pub fn reset(&mut self) {
+        self.clear_trails();
         self.playing = false;
         self.last_advance = 0.0;
         self.export_notice = None;
-        if let Some(s) = &mut self.lot1 {
+        if let Some(s) = &mut self.scenario {
             if let Err(e) = s.reset() {
                 self.error = Some(format!("{e:?}"));
             }
         }
     }
 
+    fn apply_snapshot(&mut self, snap: ViewerSnapshot) {
+        self.truth_trail.push([snap.truth_xy.0, snap.truth_xy.1]);
+        self.meas_trail
+            .push([snap.measurement_xy.0, snap.measurement_xy.1]);
+        self.est_trail
+            .push([snap.estimate_xy.0, snap.estimate_xy.1]);
+        self.last_ellipse = snap.ellipse_semi.map(|semi| EllipseOverlay {
+            center: [snap.estimate_xy.0, snap.estimate_xy.1],
+            semi,
+            angle_rad: snap.ellipse_angle_rad,
+        });
+    }
+
     pub fn step_once(&mut self) {
-        let Some(s) = &mut self.lot1 else { return };
+        let Some(s) = &mut self.scenario else {
+            return;
+        };
         match s.step() {
-            Ok(Lot1StepOutcome::Stepped | Lot1StepOutcome::Finished) => {
-                if let Ok(snap) = s.snapshot() {
-                    self.truth_trail.push([snap.truth_xy.0, snap.truth_xy.1]);
-                    self.meas_trail
-                        .push([snap.measurement_xy.0, snap.measurement_xy.1]);
-                    self.est_trail
-                        .push([snap.estimate_xy.0, snap.estimate_xy.1]);
-                    self.last_ellipse = Some(EllipseOverlay {
-                        center: [snap.estimate_xy.0, snap.estimate_xy.1],
-                        semi: snap.ellipse_semi,
-                        angle_rad: snap.ellipse_angle_rad,
-                    });
+            Ok(ScenarioStepOutcome::Stepped | ScenarioStepOutcome::Finished) => {
+                if let Ok(snap) = s.viewer_snapshot() {
+                    self.apply_snapshot(snap);
                 }
             }
             Err(e) => self.error = Some(format!("{e:?}")),
@@ -97,26 +137,34 @@ impl ViewerApp {
     }
 
     fn export_json(&mut self) -> Option<String> {
-        let s = self.lot1.as_ref()?;
-        let snap = s.snapshot().ok()?;
+        let s = self.scenario.as_ref()?;
+        let snap = s.viewer_snapshot().ok()?;
+        let desc = ScenarioRegistry::all()
+            .iter()
+            .find(|d| d.id == self.active_id)?;
         let payload = serde_json::json!({
-            "scenario_id": "Lot1KalmanTutorial",
-            "upstream": "docs/tutorials/01_KalmanFilterTutorial.py",
-            "fixture_seed": LOT1_FIXTURE_SEED,
+            "scenario_id": format!("{:?}", self.active_id),
+            "upstream": desc.upstream_path,
+            "fixture_seed": FIXTURE_SEED,
             "step": snap.step,
-            "max_steps": stonesoup_scenarios::MAX_LOT1_STEPS,
+            "max_steps": snap.max_steps,
             "rmse": snap.rmse,
             "finished": snap.finished,
             "truth_trail": self.truth_trail,
             "measurement_trail": self.meas_trail,
             "estimate_trail": self.est_trail,
-            "last_ellipse": {
-                "semi_axes": [snap.ellipse_semi.0, snap.ellipse_semi.1],
+            "bearing_range_last": snap.bearing_range,
+            "last_ellipse": snap.ellipse_semi.map(|semi| serde_json::json!({
+                "semi_axes": [semi.0, semi.1],
                 "angle_rad": snap.ellipse_angle_rad,
                 "center": [snap.estimate_xy.0, snap.estimate_xy.1],
-            },
+            })),
         });
         serde_json::to_string_pretty(&payload).ok()
+    }
+
+    fn is_lot2(&self) -> bool {
+        !matches!(self.active_id, ScenarioId::Lot1KalmanTutorial)
     }
 }
 
@@ -140,10 +188,24 @@ impl eframe::App for ViewerApp {
                 ui.label(desc.title);
                 ui.label(format!("Upstream: {}", desc.upstream_path));
                 ui.label(format!("SHA: {}", &desc.upstream_sha[..12]));
+                let selected = self.active_id == desc.id;
+                if ui
+                    .selectable_label(selected, if selected { "Active" } else { "Load" })
+                    .clicked()
+                    && !selected
+                {
+                    self.playing = false;
+                    self.load_scenario(desc.id);
+                }
             }
             ui.separator();
-            ui.label("Lot 1 — Kalman tutorial (active)");
-            ui.label(format!("Fixture seed: {LOT1_FIXTURE_SEED}"));
+            ui.label(format!("Fixture seed: {FIXTURE_SEED}"));
+            if self.is_lot2() {
+                ui.label(format!(
+                    "Sensor @ ({:.0}, {:.0}) m — bearing–range",
+                    TUTORIAL02_SENSOR_XY.0, TUTORIAL02_SENSOR_XY.1
+                ));
+            }
             if ui.button("Reset").clicked() {
                 self.reset();
             }
@@ -168,18 +230,20 @@ impl eframe::App for ViewerApp {
             if let Some(msg) = &self.export_notice {
                 ui.label(msg);
             }
-            if let Some(s) = &self.lot1 {
-                if let Ok(snap) = s.snapshot() {
-                    ui.label(format!(
-                        "Step {} / {}",
-                        snap.step,
-                        stonesoup_scenarios::MAX_LOT1_STEPS
-                    ));
+            if let Some(s) = &self.scenario {
+                if let Ok(snap) = s.viewer_snapshot() {
+                    ui.label(format!("Step {} / {}", snap.step, snap.max_steps));
                     ui.label(format!("RMSE: {:.4}", snap.rmse));
-                    ui.label(format!(
-                        "Ellipse semi-axes: {:.2}, {:.2}",
-                        snap.ellipse_semi.0, snap.ellipse_semi.1
-                    ));
+                    if let Some((b, r)) = snap.bearing_range {
+                        ui.label(format!(
+                            "Last detection: bearing {b:.2} rad, range {r:.2} m"
+                        ));
+                    }
+                    if let Some(semi) = snap.ellipse_semi {
+                        ui.label(format!("Ellipse semi-axes: {:.2}, {:.2}", semi.0, semi.1));
+                    } else if matches!(self.active_id, ScenarioId::Lot2ParticleTutorial) {
+                        ui.label("Particle mean (no covariance ellipse)");
+                    }
                     if snap.finished {
                         ui.colored_label(egui::Color32::LIGHT_GREEN, "Finished");
                     }
@@ -195,10 +259,23 @@ impl eframe::App for ViewerApp {
             let truth_pts: PlotPoints = self.truth_trail.iter().map(|p| [p[0], p[1]]).collect();
             let meas_pts: PlotPoints = self.meas_trail.iter().map(|p| [p[0], p[1]]).collect();
             let est_pts: PlotPoints = self.est_trail.iter().map(|p| [p[0], p[1]]).collect();
-            Plot::new("lot1_plot")
+            let sensor = if self.is_lot2() {
+                Some(TUTORIAL02_SENSOR_XY)
+            } else {
+                None
+            };
+            Plot::new("tracking_plot")
                 .legend(Legend::default())
                 .data_aspect(1.0)
                 .show(ui, |plot_ui| {
+                    if let Some((sx, sy)) = sensor {
+                        plot_ui.points(
+                            Points::new(vec![[sx, sy]])
+                                .name("Sensor")
+                                .radius(6.0)
+                                .color(egui::Color32::YELLOW),
+                        );
+                    }
                     if !self.truth_trail.is_empty() {
                         plot_ui.line(
                             Line::new(truth_pts)
@@ -209,7 +286,7 @@ impl eframe::App for ViewerApp {
                     if !self.meas_trail.is_empty() {
                         plot_ui.points(
                             Points::new(meas_pts)
-                                .name("Detections")
+                                .name("Detections (Cartesian)")
                                 .radius(4.0)
                                 .color(egui::Color32::LIGHT_BLUE),
                         );
