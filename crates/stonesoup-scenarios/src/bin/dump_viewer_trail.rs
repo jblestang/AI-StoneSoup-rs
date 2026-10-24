@@ -101,7 +101,21 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "12" | "information" => Some(ScenarioId::Lot6InformationFilterTutorial),
         "13" | "gmphd" => Some(ScenarioId::Lot7GmphdTutorial),
         "14" | "asd" => Some(ScenarioId::Lot8AsdTutorial),
-        "15" | "akkf" => Some(ScenarioId::Lot9AkkfTutorial),
+        "15" | "kdtree" => Some(ScenarioId::Lot11KdtreeTutorial),
+        "16" | "sensor" => Some(ScenarioId::Lot10SingleSensorTutorial),
+        "17" | "akkf" => Some(ScenarioId::Lot12AkkfTutorial),
+        "18" | "multisensor" => Some(ScenarioId::Lot13MultiSensorTutorial),
+        "19" | "optimised" => Some(ScenarioId::Lot14OptimisedSensorTutorial),
+        "20" | "architecture" => Some(ScenarioId::Lot15NetworkInfoArchTutorial),
+        "21" | "data-incest" => Some(ScenarioId::Lot16DataIncestTutorial),
+        "22" | "arch-intro" => Some(ScenarioId::Lot17ArchIntroTutorial),
+        "23" | "oosm" => Some(ScenarioId::Lot18SimpleOosmExample),
+        "24" | "kalman-oosm" => Some(ScenarioId::Lot19KalmanOosmExample),
+        "25" | "pf-oosm" => Some(ScenarioId::Lot20PfOosmExample),
+        "26" | "algorithm-c" => Some(ScenarioId::Lot21OosmAlgorithmExample),
+        "27" | "bearing-only" => Some(ScenarioId::Lot22BearingOnlyExample),
+        "28" | "multi-tracker" => Some(ScenarioId::Lot23MultiTrackerExample),
+        "29" | "ensemble" => Some(ScenarioId::Lot24EnsembleFilterExample),
         _ => None,
     }
 }
@@ -124,6 +138,14 @@ fn is_lot3_meas(id: ScenarioId) -> bool {
             | ScenarioId::Lot3JpdaTutorial
             | ScenarioId::Lot4InitiatorsTutorial
             | ScenarioId::Lot4SimulationTutorial
+            | ScenarioId::Lot10SingleSensorTutorial
+            | ScenarioId::Lot11KdtreeTutorial
+            | ScenarioId::Lot13MultiSensorTutorial
+            | ScenarioId::Lot14OptimisedSensorTutorial
+            | ScenarioId::Lot15NetworkInfoArchTutorial
+            | ScenarioId::Lot16DataIncestTutorial
+            | ScenarioId::Lot17ArchIntroTutorial
+            | ScenarioId::Lot23MultiTrackerExample
     )
 }
 
@@ -188,7 +210,7 @@ fn run_tutorial(code: &str) -> Result<serde_json::Value, String> {
 
 fn main() -> ExitCode {
     let Some(code) = std::env::args().nth(1) else {
-        eprintln!("usage: dump_viewer_trail <tutorial-code 01-14>");
+        eprintln!("usage: dump_viewer_trail <tutorial-code 01-29>");
         return ExitCode::from(2);
     };
     match run_tutorial(&code) {

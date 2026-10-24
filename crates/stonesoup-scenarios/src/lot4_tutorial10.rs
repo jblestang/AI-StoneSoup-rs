@@ -27,6 +27,7 @@ impl Lot4Tutorial10Scenario {
             process_noise: PROCESS_NOISE,
             meas_var: MEAS_VAR,
             prior,
+            gnn: crate::lot4_tracker::Lot4GnnAssociator::Linear,
         };
         let inner = Lot4MultiTargetTracker::new(params, NUM_STEPS, &MEAS_OFFSETS, &MEAS_XY)?;
         Ok(Self { inner })

@@ -1,6 +1,20 @@
 #![allow(clippy::large_enum_variant)]
 
+use crate::lot10_single_sensor::{Lot10SensorManagerMode, Lot10SingleSensorScenario};
+use crate::lot11_kdtree::Lot11KdtreeScenario;
+use crate::lot13_multi_sensor::Lot13MultiSensorScenario;
+use crate::lot14_optimised_sensor::Lot14OptimisedSensorScenario;
+use crate::lot15_network_info_arch::Lot15NetworkInfoArchScenario;
+use crate::lot16_data_incest::Lot16DataIncestScenario;
+use crate::lot17_arch_intro::Lot17ArchIntroScenario;
+use crate::lot18_simple_oosm::Lot18SimpleOosmScenario;
+use crate::lot19_kalman_oosm::Lot19KalmanOosmScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
+use crate::lot20_pf_oosm::Lot20PfOosmScenario;
+use crate::lot21_oosm_algorithm::Lot21OosmAlgorithmScenario;
+use crate::lot22_bearing_only::Lot22BearingOnlyScenario;
+use crate::lot23_multi_tracker::Lot23MultiTrackerScenario;
+use crate::lot24_ensemble_filter::Lot24EnsembleFilterScenario;
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
 };
@@ -107,7 +121,21 @@ pub enum AnyScenario {
     Lot6Information(Lot6InformationScenario),
     Lot7Gmphd(Lot7GmPhdScenario),
     Lot8Asd(Lot8AsdScenario),
-    Lot9Akkf(Lot9AkkfScenario),
+    Lot10SingleSensor(Lot10SingleSensorScenario),
+    Lot11Kdtree(Lot11KdtreeScenario),
+    Lot12Akkf(Lot9AkkfScenario),
+    Lot13MultiSensor(Lot13MultiSensorScenario),
+    Lot14OptimisedSensor(Lot14OptimisedSensorScenario),
+    Lot15NetworkInfoArch(Lot15NetworkInfoArchScenario),
+    Lot16DataIncest(Lot16DataIncestScenario),
+    Lot17ArchIntro(Lot17ArchIntroScenario),
+    Lot18SimpleOosm(Lot18SimpleOosmScenario),
+    Lot19KalmanOosm(Lot19KalmanOosmScenario),
+    Lot20PfOosm(Lot20PfOosmScenario),
+    Lot21OosmAlgorithm(Lot21OosmAlgorithmScenario),
+    Lot22BearingOnly(Lot22BearingOnlyScenario),
+    Lot23MultiTracker(Lot23MultiTrackerScenario),
+    Lot24EnsembleFilter(Lot24EnsembleFilterScenario),
 }
 
 impl AnyScenario {
@@ -148,9 +176,69 @@ impl AnyScenario {
                 Ok(Self::Lot7Gmphd(Lot7GmPhdScenario::tutorial_defaults()?))
             }
             ScenarioId::Lot8AsdTutorial => Ok(Self::Lot8Asd(Lot8AsdScenario::tutorial_defaults()?)),
-            ScenarioId::Lot9AkkfTutorial => {
-                Ok(Self::Lot9Akkf(Lot9AkkfScenario::tutorial_defaults()?))
+            ScenarioId::Lot11KdtreeTutorial => {
+                Ok(Self::Lot11Kdtree(Lot11KdtreeScenario::tutorial_defaults()?))
             }
+            ScenarioId::Lot10SingleSensorTutorial => Ok(Self::Lot10SingleSensor(
+                Lot10SingleSensorScenario::tutorial_defaults(Lot10SensorManagerMode::BruteForce)?,
+            )),
+            ScenarioId::Lot12AkkfTutorial => {
+                Ok(Self::Lot12Akkf(Lot9AkkfScenario::tutorial_defaults()?))
+            }
+            ScenarioId::Lot13MultiSensorTutorial => Ok(Self::Lot13MultiSensor(
+                Lot13MultiSensorScenario::tutorial_defaults(
+                    crate::lot13_multi_sensor::Lot13SensorManagerMode::BruteForce,
+                )?,
+            )),
+            ScenarioId::Lot14OptimisedSensorTutorial => Ok(Self::Lot14OptimisedSensor(
+                Lot14OptimisedSensorScenario::tutorial_defaults(
+                    crate::lot14_optimised_sensor::Lot14OptimisedSensorMode::OptimizeBrute,
+                )?,
+            )),
+            ScenarioId::Lot15NetworkInfoArchTutorial => Ok(Self::Lot15NetworkInfoArch(
+                Lot15NetworkInfoArchScenario::tutorial_defaults(
+                    crate::lot15_network_info_arch::Lot15ArchitectureMode::Network,
+                )?,
+            )),
+            ScenarioId::Lot16DataIncestTutorial => Ok(Self::Lot16DataIncest(
+                Lot16DataIncestScenario::tutorial_defaults(
+                    crate::lot16_data_incest::Lot16DataIncestMode::NonHierarchical,
+                )?,
+            )),
+            ScenarioId::Lot17ArchIntroTutorial => Ok(Self::Lot17ArchIntro(
+                Lot17ArchIntroScenario::tutorial_defaults()?,
+            )),
+            ScenarioId::Lot18SimpleOosmExample => Ok(Self::Lot18SimpleOosm(
+                Lot18SimpleOosmScenario::tutorial_defaults(
+                    crate::lot18_simple_oosm::Lot18OosmMode::FixedLag,
+                )?,
+            )),
+            ScenarioId::Lot19KalmanOosmExample => Ok(Self::Lot19KalmanOosm(
+                Lot19KalmanOosmScenario::tutorial_defaults(
+                    crate::lot19_kalman_oosm::Lot19KalmanOosmMode::Tracker2,
+                )?,
+            )),
+            ScenarioId::Lot20PfOosmExample => {
+                Ok(Self::Lot20PfOosm(Lot20PfOosmScenario::tutorial_defaults(
+                    crate::lot20_pf_oosm::Lot20PfOosmMode::Oosm,
+                )?))
+            }
+            ScenarioId::Lot21OosmAlgorithmExample => Ok(Self::Lot21OosmAlgorithm(
+                Lot21OosmAlgorithmScenario::tutorial_defaults(
+                    crate::lot21_oosm_algorithm::Lot21OosmAlgorithmMode::OosmTarget0,
+                )?,
+            )),
+            ScenarioId::Lot22BearingOnlyExample => Ok(Self::Lot22BearingOnly(
+                Lot22BearingOnlyScenario::tutorial_defaults()?,
+            )),
+            ScenarioId::Lot23MultiTrackerExample => Ok(Self::Lot23MultiTracker(
+                Lot23MultiTrackerScenario::tutorial_defaults(
+                    crate::lot23_multi_tracker::Lot23MultiTrackerMode::Ekf,
+                )?,
+            )),
+            ScenarioId::Lot24EnsembleFilterExample => Ok(Self::Lot24EnsembleFilter(
+                Lot24EnsembleFilterScenario::tutorial_defaults()?,
+            )),
         }
     }
 
@@ -171,7 +259,21 @@ impl AnyScenario {
             Self::Lot6Information(_) => ScenarioId::Lot6InformationFilterTutorial,
             Self::Lot7Gmphd(_) => ScenarioId::Lot7GmphdTutorial,
             Self::Lot8Asd(_) => ScenarioId::Lot8AsdTutorial,
-            Self::Lot9Akkf(_) => ScenarioId::Lot9AkkfTutorial,
+            Self::Lot10SingleSensor(_) => ScenarioId::Lot10SingleSensorTutorial,
+            Self::Lot11Kdtree(_) => ScenarioId::Lot11KdtreeTutorial,
+            Self::Lot12Akkf(_) => ScenarioId::Lot12AkkfTutorial,
+            Self::Lot13MultiSensor(_) => ScenarioId::Lot13MultiSensorTutorial,
+            Self::Lot14OptimisedSensor(_) => ScenarioId::Lot14OptimisedSensorTutorial,
+            Self::Lot15NetworkInfoArch(_) => ScenarioId::Lot15NetworkInfoArchTutorial,
+            Self::Lot16DataIncest(_) => ScenarioId::Lot16DataIncestTutorial,
+            Self::Lot17ArchIntro(_) => ScenarioId::Lot17ArchIntroTutorial,
+            Self::Lot18SimpleOosm(_) => ScenarioId::Lot18SimpleOosmExample,
+            Self::Lot19KalmanOosm(_) => ScenarioId::Lot19KalmanOosmExample,
+            Self::Lot20PfOosm(_) => ScenarioId::Lot20PfOosmExample,
+            Self::Lot21OosmAlgorithm(_) => ScenarioId::Lot21OosmAlgorithmExample,
+            Self::Lot22BearingOnly(_) => ScenarioId::Lot22BearingOnlyExample,
+            Self::Lot23MultiTracker(_) => ScenarioId::Lot23MultiTrackerExample,
+            Self::Lot24EnsembleFilter(_) => ScenarioId::Lot24EnsembleFilterExample,
         }
     }
 }
@@ -193,7 +295,21 @@ impl Scenario for AnyScenario {
             Self::Lot6Information(s) => s.reset(),
             Self::Lot7Gmphd(s) => s.reset(),
             Self::Lot8Asd(s) => s.reset(),
-            Self::Lot9Akkf(s) => s.reset(),
+            Self::Lot10SingleSensor(s) => s.reset(),
+            Self::Lot11Kdtree(s) => s.reset(),
+            Self::Lot12Akkf(s) => s.reset(),
+            Self::Lot13MultiSensor(s) => s.reset(),
+            Self::Lot14OptimisedSensor(s) => s.reset(),
+            Self::Lot15NetworkInfoArch(s) => s.reset(),
+            Self::Lot16DataIncest(s) => s.reset(),
+            Self::Lot17ArchIntro(s) => s.reset(),
+            Self::Lot18SimpleOosm(s) => s.reset(),
+            Self::Lot19KalmanOosm(s) => s.reset(),
+            Self::Lot20PfOosm(s) => s.reset(),
+            Self::Lot21OosmAlgorithm(s) => s.reset(),
+            Self::Lot22BearingOnly(s) => s.reset(),
+            Self::Lot23MultiTracker(s) => s.reset(),
+            Self::Lot24EnsembleFilter(s) => s.reset(),
         }
     }
 
@@ -273,10 +389,108 @@ impl Scenario for AnyScenario {
                 Lot8StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
                 Lot8StepOutcome::Finished => ScenarioStepOutcome::Finished,
             },
-            Self::Lot9Akkf(s) => match s.step()? {
+            Self::Lot10SingleSensor(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot11Kdtree(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot12Akkf(s) => match s.step()? {
                 Lot9StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
                 Lot9StepOutcome::Finished => ScenarioStepOutcome::Finished,
             },
+            Self::Lot13MultiSensor(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot14OptimisedSensor(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot15NetworkInfoArch(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot16DataIncest(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot17ArchIntro(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot18SimpleOosm(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot19KalmanOosm(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot20PfOosm(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot21OosmAlgorithm(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot22BearingOnly(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot23MultiTracker(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot24EnsembleFilter(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -370,7 +584,9 @@ impl Scenario for AnyScenario {
                     resample_xy: no_resample_view().2,
                 })
             }
-            Self::Lot9Akkf(s) => {
+            Self::Lot10SingleSensor(s) => s.viewer_snapshot(),
+            Self::Lot11Kdtree(s) => s.viewer_snapshot(),
+            Self::Lot12Akkf(s) => {
                 let snap = s.snapshot()?;
                 Ok(ViewerSnapshot {
                     step: snap.step,
@@ -394,6 +610,18 @@ impl Scenario for AnyScenario {
                     resample_xy: no_resample_view().2,
                 })
             }
+            Self::Lot13MultiSensor(s) => s.viewer_snapshot(),
+            Self::Lot14OptimisedSensor(s) => s.viewer_snapshot(),
+            Self::Lot15NetworkInfoArch(s) => s.viewer_snapshot(),
+            Self::Lot16DataIncest(s) => s.viewer_snapshot(),
+            Self::Lot17ArchIntro(s) => s.viewer_snapshot(),
+            Self::Lot18SimpleOosm(s) => s.viewer_snapshot(),
+            Self::Lot19KalmanOosm(s) => s.viewer_snapshot(),
+            Self::Lot20PfOosm(s) => s.viewer_snapshot(),
+            Self::Lot21OosmAlgorithm(s) => s.viewer_snapshot(),
+            Self::Lot22BearingOnly(s) => s.viewer_snapshot(),
+            Self::Lot23MultiTracker(s) => s.viewer_snapshot(),
+            Self::Lot24EnsembleFilter(s) => s.viewer_snapshot(),
         }
     }
 }
@@ -645,6 +873,12 @@ impl Lot4ViewerTracks for Lot4Tutorial09Scenario {
 impl Lot4ViewerTracks for Lot4Tutorial10Scenario {
     fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize {
         Lot4Tutorial10Scenario::snapshot_track_means(self, out)
+    }
+}
+
+impl Lot4ViewerTracks for Lot11KdtreeScenario {
+    fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize {
+        Lot11KdtreeScenario::snapshot_track_means(self, out)
     }
 }
 

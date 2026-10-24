@@ -16,11 +16,35 @@
 
 **Lot 8:** complete — **ASD filter** tutorial (`ASDFilter.py`: accumulated state densities, OOS measurement order, `max_nstep=30`). Headless: `lot8_asd`. WASM viewer: `?tutorial=14`. Parity: `parity_lot8_asd` (101 act-state updates vs Stone Soup export).
 
-**Lot 9:** complete — **AKKF** tutorial (`AKKF.py`: quadratic kernel, bearing-only BOT, 30 particles). Headless: `lot9_akkf`. WASM viewer: `?tutorial=15`. Parity: `parity_lot9_akkf` (30 steps, weighted mean vs Stone Soup export).
+**Lot 11:** complete — **KD-tree GNN** tutorial (`DetectionKDTreeGNN2D`, scaled multi-target stack with seed-42 replay). Headless: `lot11_kdtree`. WASM viewer: `?tutorial=15` (aliases `kdtree`). Parity: `parity_lot11_kdtree` (12 steps, sorted track means vs Stone Soup export).
+
+**Lot 10:** complete — **Single sensor management** tutorial (`01_SingleSensorManagement.py`: rotating bearing–range radar, random vs brute-force managers, EKF + GNN; measurement replay + `associate_gnn_2d_ekf`). Headless: `lot10_single_sensor`. WASM viewer: `?tutorial=16` (aliases `sensor`, `sensormanagement`). Parity: `parity_lot10_single_sensor` (random + brute, 20 steps, sorted track means vs Stone Soup export).
+
+**Lot 12:** complete — **AKKF** tutorial (`AKKF.py`: quadratic kernel, bearing-only BOT, 30 particles). Headless: `lot12_akkf` (alias `lot9_akkf`). WASM viewer: `?tutorial=17` (aliases `akkf`, `kernel`). Parity: `parity_lot9_akkf` (30 steps, weighted mean vs Stone Soup export).
+
+**Lot 13:** complete — **Multi-sensor management** tutorial (`02_MultiSensorManagement.py`: two rotating radars, random vs brute-force managers, per-detection EKF geometry via `associate_gnn_2d_ekf_det_models`). Headless: `lot13_multi_sensor`. WASM viewer: `?tutorial=18` (aliases `multisensor`, `multi-sensor`). Parity: `parity_lot13_multi_sensor` (random + brute, 20 steps).
+
+**Lot 14:** complete — **Optimised sensor management** tutorial (`03_OptimisedSensorManagement.py`: SciPy `OptimizeBrute` and `OptimizeBasinHopping` managers vs brute-force baseline; replay parity). Headless: `lot14_optimised_sensor`. WASM viewer: `?tutorial=19` (aliases `optimised`, `opt-sensor`). Parity: `parity_lot14_optimised_sensor` (three manager modes, 20 steps).
+
+**Lot 15:** complete — **Information vs network architectures** tutorial (`02_Information_and_Network_Architectures.py`: hierarchical generator, top fusion-node track replay from Stone Soup export; network/information agreement + edge-removal modes). Headless: `lot15_network_info_arch`. WASM viewer: `?tutorial=20` (aliases `architecture`, `network-arch`). Parity: `parity_lot15_network_info_arch` (fixture replay + network/information track alignment).
+
+**Lot 18:** complete — **Simple OOSM** example (`example_simple_oosm.py`: fixed-lag vs naive arrival-order tracks exported from Stone Soup; Rust fixture replay). Headless: `lot18_simple_oosm`. WASM viewer: `?tutorial=23` (aliases `oosm`, `simple-oosm`). Parity: `parity_lot18_simple_oosm`.
+
+**Lot 19:** complete — **Kalman filter OOSM** example (`KalmanFilterOOSMExample.py`: three EKF trackers — ignore delay, lag-adjusted, sensor-1-only; Stone Soup export + Rust fixture replay). Headless: `lot19_kalman_oosm`. WASM viewer: `?tutorial=24` (aliases `kalman-oosm`, `ekf-oosm`). Parity: `parity_lot19_kalman_oosm` (exact replay for all three tracker modes).
+
+**Lot 20:** complete — **Particle filter OOSM** example (`PF_OOSM_example.py`: Orton–Marrs-style PF OOSM vs ignore-delayed track; Stone Soup export + Rust fixture replay). Headless: `lot20_pf_oosm`. WASM viewer: `?tutorial=25` (aliases `pf-oosm`, `particle-oosm`). Parity: `parity_lot20_pf_oosm`.
+
+**Lot 22:** complete — **Bearings-only EKF** example (`bearing_only_example.py`: moving platform `RadarBearing`, single-target EKF tracker; Stone Soup export + Rust fixture replay). Headless: `lot22_bearing_only`. WASM viewer: `?tutorial=27` (aliases `bearing-only`, `bot`). Parity: `parity_lot22_bearing_only`.
+
+**Lot 21:** complete — **OOSM Algorithm C** example (`example_oosm_algorithm.py`: UKF+JPDA, two targets, inverse-time pseudo-measurements vs ignore-OOSM; Stone Soup export + Rust fixture replay). Headless: `lot21_oosm_algorithm`. WASM viewer: `?tutorial=26` (aliases `algorithm-c`, `oosm-algorithm`). Parity: `parity_lot21_oosm_algorithm` (four track/mode exports).
+
+**Lot 17:** complete — **Introduction to architectures** tutorial (`01_Introduction_to_Architectures.py`: static B→A and C→A information graph; Stone Soup topology export + viewer layout). Headless: `lot17_arch_intro`. WASM viewer: `?tutorial=22` (aliases `arch-intro`, `intro-arch`). Parity: `parity_lot17_arch_intro`.
+
+**Lot 16:** complete — **Avoiding data incest** tutorial (`03_Avoiding_Data_Incest.py`: NH vs hierarchical information architectures, Fusion Node 1 tracks + mean covariance trace replay). Headless: `lot16_data_incest`. WASM viewer: `?tutorial=21` (aliases `data-incest`, `incest`). Parity: `parity_lot16_data_incest` (fixture replay; NH lower mean cov trace vs hierarchical).
 
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (tutorials **01–15**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (catalogue **01–27**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
@@ -34,5 +58,5 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated catalogue tutorials at pinned SHA: **01–15** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = AKKF).
-- **Next feature lots:** sensor management, architecture, KD-tree, etc. (`PORTING_MATRIX.csv` `todo` rows).
+- Validated catalogue entries at pinned SHA: **01–27** (examples **23–27** include full OOSM set + bearings-only BOT) (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management; **20** = network/information architectures; **21** = data incest architectures; **22** = architecture introduction graph).
+- **Next feature lots:** native OOSM / architecture engines, further `PORTING_MATRIX.csv` `todo` rows.

@@ -1,21 +1,28 @@
 //! Multi-target tracker with ``MultiMeasurementInitiator`` (Tutorials 09–10).
 
 use stonesoup_core::{
-    associate_gnn_2d, initiate_from_detection, should_delete_covariance_trace, ConstantVelocity2d,
-    Detection, Duration, GaussianState, GnnAssignment, KalmanPredictor, KalmanUpdater,
-    KalmanWorkspace, LinearGaussianMeasurement, Mat, MeasurementHypothesis, Timestamp,
-    MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS,
+    associate_gnn_2d, associate_gnn_2d_kdtree, initiate_from_detection,
+    should_delete_covariance_trace, ConstantVelocity2d, Detection, Duration, GaussianState,
+    GnnAssignment, KalmanPredictor, KalmanUpdater, KalmanWorkspace, LinearGaussianMeasurement, Mat,
+    MeasurementHypothesis, Timestamp, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS,
+    MAX_GNN_ASSIGN_DETS,
 };
 
 use crate::lot3_meas::push_measurements;
 use crate::registry::ScenarioError;
 
 pub const MAX_LOT4_ACTIVE_TRACKS: usize = 16;
-pub const MAX_LOT4_HOLDING_TRACKS: usize = 16;
+pub const MAX_LOT4_HOLDING_TRACKS: usize = 64;
 
 struct HoldingTrack {
     tail: GaussianState,
     updates: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Lot4GnnAssociator {
+    Linear,
+    KdTree,
 }
 
 pub struct Lot4TrackerParams {
@@ -26,6 +33,7 @@ pub struct Lot4TrackerParams {
     pub process_noise: f64,
     pub meas_var: f64,
     pub prior: GaussianState,
+    pub gnn: Lot4GnnAssociator,
 }
 
 pub struct Lot4MultiTargetTracker {
@@ -78,6 +86,41 @@ impl Lot4MultiTargetTracker {
 
     fn ts(&self, step: usize) -> Timestamp {
         Timestamp::from_nanos((step as i64) * (self.params.step_seconds as i64) * Duration::SEC.0)
+    }
+
+    fn associate_gnn(
+        &mut self,
+        track_tails: &[GaussianState],
+        ts: Timestamp,
+        detections: &[Detection],
+        assigns: &mut [GnnAssignment],
+    ) -> Result<usize, ScenarioError> {
+        match self.params.gnn {
+            Lot4GnnAssociator::Linear => associate_gnn_2d(
+                track_tails,
+                ts,
+                detections,
+                self.params.gate,
+                &self.predictor,
+                &self.updater,
+                &mut self.ws,
+                assigns,
+            )
+            .map_err(ScenarioError::Core),
+            Lot4GnnAssociator::KdTree => associate_gnn_2d_kdtree(
+                track_tails,
+                ts,
+                detections,
+                self.params.gate,
+                &self.predictor,
+                &self.updater,
+                &mut self.ws,
+                assigns,
+                KDTREE_GNN_NEIGHBOURS,
+                KDTREE_GNN_COV_MULTIPLIER,
+            )
+            .map_err(ScenarioError::Core),
+        }
     }
 
     pub fn step_index(&self) -> usize {
@@ -166,18 +209,13 @@ impl Lot4MultiTargetTracker {
                     detection_index: None,
                     distance: self.params.gate,
                 },
-            }; MAX_GNN_ASSIGN_TRACKS];
-            associate_gnn_2d(
+            }; MAX_LOT4_HOLDING_TRACKS];
+            self.associate_gnn(
                 &hold_tails[..n_hold],
                 ts,
                 detections,
-                self.params.gate,
-                &self.predictor,
-                &self.updater,
-                &mut self.ws,
-                &mut assigns,
-            )
-            .map_err(ScenarioError::Core)?;
+                &mut assigns[..n_hold],
+            )?;
 
             for t in 0..n_hold {
                 let slot = hold_map[t];
@@ -267,18 +305,8 @@ impl Lot4MultiTargetTracker {
                     detection_index: None,
                     distance: self.params.gate,
                 },
-            }; MAX_GNN_ASSIGN_TRACKS];
-            associate_gnn_2d(
-                &act_tails[..n_act],
-                ts,
-                detections,
-                self.params.gate,
-                &self.predictor,
-                &self.updater,
-                &mut self.ws,
-                &mut assigns,
-            )
-            .map_err(ScenarioError::Core)?;
+            }; MAX_LOT4_ACTIVE_TRACKS];
+            self.associate_gnn(&act_tails[..n_act], ts, detections, &mut assigns)?;
 
             for t in 0..n_act {
                 let slot = act_map[t];

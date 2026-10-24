@@ -17,7 +17,21 @@ pub enum ScenarioId {
     Lot6InformationFilterTutorial,
     Lot7GmphdTutorial,
     Lot8AsdTutorial,
-    Lot9AkkfTutorial,
+    Lot10SingleSensorTutorial,
+    Lot11KdtreeTutorial,
+    Lot12AkkfTutorial,
+    Lot13MultiSensorTutorial,
+    Lot14OptimisedSensorTutorial,
+    Lot15NetworkInfoArchTutorial,
+    Lot16DataIncestTutorial,
+    Lot17ArchIntroTutorial,
+    Lot18SimpleOosmExample,
+    Lot19KalmanOosmExample,
+    Lot20PfOosmExample,
+    Lot21OosmAlgorithmExample,
+    Lot22BearingOnlyExample,
+    Lot23MultiTrackerExample,
+    Lot24EnsembleFilterExample,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -35,7 +49,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 15] = [
+        static LIST: [ScenarioDescriptor; 29] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -135,11 +149,110 @@ impl ScenarioRegistry {
                 family: "tutorial",
             },
             ScenarioDescriptor {
-                id: ScenarioId::Lot9AkkfTutorial,
-                title: "15 — Adaptive kernel Kalman filter (AKKF)",
+                id: ScenarioId::Lot11KdtreeTutorial,
+                title: "15 — KD-tree GNN data association",
+                upstream_path: "docs/tutorials/dataassociation/KDTree_Tutorial.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot10SingleSensorTutorial,
+                title: "16 — Single sensor management",
+                upstream_path: "docs/tutorials/sensormanagement/01_SingleSensorManagement.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot12AkkfTutorial,
+                title: "17 — Adaptive kernel Kalman filter (AKKF)",
                 upstream_path: "docs/tutorials/filters/AKKF.py",
                 upstream_sha: SHA,
                 family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot13MultiSensorTutorial,
+                title: "18 — Multi-sensor management",
+                upstream_path: "docs/tutorials/sensormanagement/02_MultiSensorManagement.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot14OptimisedSensorTutorial,
+                title: "19 — Optimised sensor management",
+                upstream_path: "docs/tutorials/sensormanagement/03_OptimisedSensorManagement.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot15NetworkInfoArchTutorial,
+                title: "20 — Information vs network architectures",
+                upstream_path:
+                    "docs/tutorials/architecture/02_Information_and_Network_Architectures.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot16DataIncestTutorial,
+                title: "21 — Avoiding data incest",
+                upstream_path: "docs/tutorials/architecture/03_Avoiding_Data_Incest.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot17ArchIntroTutorial,
+                title: "22 — Introduction to architectures",
+                upstream_path: "docs/tutorials/architecture/01_Introduction_to_Architectures.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot18SimpleOosmExample,
+                title: "23 — Simple OOSM (fixed lag)",
+                upstream_path: "docs/examples/oosm/example_simple_oosm.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot19KalmanOosmExample,
+                title: "24 — Kalman filter OOSM",
+                upstream_path: "docs/examples/oosm/KalmanFilterOOSMExample.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot20PfOosmExample,
+                title: "25 — Particle filter OOSM",
+                upstream_path: "docs/examples/oosm/PF_OOSM_example.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot21OosmAlgorithmExample,
+                title: "26 — OOSM Algorithm C (inverse time)",
+                upstream_path: "docs/examples/oosm/example_oosm_algorithm.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot22BearingOnlyExample,
+                title: "27 — Bearings-only EKF (moving platform)",
+                upstream_path: "docs/examples/filters/bearing_only_example.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot23MultiTrackerExample,
+                title: "28 — Multi-tracker comparison (manoeuvring targets)",
+                upstream_path: "docs/examples/filters/Multi_Tracker_Example.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot24EnsembleFilterExample,
+                title: "29 — Ensemble Kalman filter",
+                upstream_path: "docs/examples/filters/EnsembleFilterExample.py",
+                upstream_sha: SHA,
+                family: "example",
             },
         ];
         &LIST
@@ -166,7 +279,21 @@ impl ScenarioRegistry {
             | ScenarioId::Lot6InformationFilterTutorial
             | ScenarioId::Lot7GmphdTutorial
             | ScenarioId::Lot8AsdTutorial
-            | ScenarioId::Lot9AkkfTutorial => {
+            | ScenarioId::Lot10SingleSensorTutorial
+            | ScenarioId::Lot11KdtreeTutorial
+            | ScenarioId::Lot12AkkfTutorial
+            | ScenarioId::Lot13MultiSensorTutorial
+            | ScenarioId::Lot14OptimisedSensorTutorial
+            | ScenarioId::Lot15NetworkInfoArchTutorial
+            | ScenarioId::Lot16DataIncestTutorial
+            | ScenarioId::Lot17ArchIntroTutorial
+            | ScenarioId::Lot18SimpleOosmExample
+            | ScenarioId::Lot19KalmanOosmExample
+            | ScenarioId::Lot20PfOosmExample
+            | ScenarioId::Lot21OosmAlgorithmExample
+            | ScenarioId::Lot22BearingOnlyExample
+            | ScenarioId::Lot23MultiTrackerExample
+            | ScenarioId::Lot24EnsembleFilterExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -189,7 +316,21 @@ impl ScenarioRegistry {
             | ScenarioId::Lot6InformationFilterTutorial
             | ScenarioId::Lot7GmphdTutorial
             | ScenarioId::Lot8AsdTutorial
-            | ScenarioId::Lot9AkkfTutorial => {
+            | ScenarioId::Lot10SingleSensorTutorial
+            | ScenarioId::Lot11KdtreeTutorial
+            | ScenarioId::Lot12AkkfTutorial
+            | ScenarioId::Lot13MultiSensorTutorial
+            | ScenarioId::Lot14OptimisedSensorTutorial
+            | ScenarioId::Lot15NetworkInfoArchTutorial
+            | ScenarioId::Lot16DataIncestTutorial
+            | ScenarioId::Lot17ArchIntroTutorial
+            | ScenarioId::Lot18SimpleOosmExample
+            | ScenarioId::Lot19KalmanOosmExample
+            | ScenarioId::Lot20PfOosmExample
+            | ScenarioId::Lot21OosmAlgorithmExample
+            | ScenarioId::Lot22BearingOnlyExample
+            | ScenarioId::Lot23MultiTrackerExample
+            | ScenarioId::Lot24EnsembleFilterExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

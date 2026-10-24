@@ -4,10 +4,20 @@ use std::process::ExitCode;
 
 use stonesoup_scenarios::scenario::{AnyScenario, Scenario};
 use stonesoup_scenarios::{
-    Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario,
-    Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario,
-    Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario,
-    Lot9AkkfScenario, ScenarioId, ScenarioRegistry, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
+    Lot10SensorManagerMode, Lot10SingleSensorScenario, Lot11KdtreeScenario,
+    Lot13MultiSensorScenario, Lot13SensorManagerMode, Lot14OptimisedSensorMode,
+    Lot14OptimisedSensorScenario, Lot15ArchitectureMode, Lot15NetworkInfoArchScenario,
+    Lot16DataIncestMode, Lot16DataIncestScenario, Lot17ArchIntroScenario, Lot18OosmMode,
+    Lot18SimpleOosmScenario, Lot19KalmanOosmMode, Lot19KalmanOosmScenario, Lot20PfOosmMode,
+    Lot20PfOosmScenario, Lot21OosmAlgorithmMode, Lot21OosmAlgorithmScenario,
+    Lot22BearingOnlyScenario, Lot23MultiTrackerMode, Lot23MultiTrackerScenario,
+    Lot24EnsembleFilterScenario, Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario,
+    Lot3JpdaScenario, Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario,
+    Lot4Tutorial10Scenario, Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario,
+    Lot8AsdScenario, Lot9AkkfScenario, ScenarioId, ScenarioRegistry, MAX_LOT10_STEPS,
+    MAX_LOT11_KDTREE_STEPS, MAX_LOT13_STEPS, MAX_LOT14_STEPS, MAX_LOT15_STEPS, MAX_LOT16_STEPS,
+    MAX_LOT17_STEPS, MAX_LOT18_STEPS, MAX_LOT19_STEPS, MAX_LOT20_STEPS, MAX_LOT21_STEPS,
+    MAX_LOT22_STEPS, MAX_LOT23_STEPS, MAX_LOT24_STEPS, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
     MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS,
     MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
 };
@@ -28,7 +38,25 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot6_information") => ScenarioKind::Lot6Information,
         Some("lot7_gm_phd") => ScenarioKind::Lot7Gmphd,
         Some("lot8_asd") => ScenarioKind::Lot8Asd,
-        Some("lot9_akkf") => ScenarioKind::Lot9Akkf,
+        Some("lot11_kdtree") => ScenarioKind::Lot11Kdtree,
+        Some("lot10_single_sensor") => ScenarioKind::Lot10SingleSensor,
+        Some("lot12_akkf") | Some("lot9_akkf") => ScenarioKind::Lot12Akkf,
+        Some("lot13_multi_sensor") => ScenarioKind::Lot13MultiSensor,
+        Some("lot14_optimised_sensor") => ScenarioKind::Lot14OptimisedSensor,
+        Some("lot15_network_info_arch") | Some("lot15_architecture") => {
+            ScenarioKind::Lot15NetworkInfoArch
+        }
+        Some("lot16_data_incest") | Some("lot16_architecture") => ScenarioKind::Lot16DataIncest,
+        Some("lot17_arch_intro") | Some("lot17_architecture") => ScenarioKind::Lot17ArchIntro,
+        Some("lot18_simple_oosm") | Some("lot18_oosm") => ScenarioKind::Lot18SimpleOosm,
+        Some("lot19_kalman_oosm") | Some("lot19_oosm") => ScenarioKind::Lot19KalmanOosm,
+        Some("lot20_pf_oosm") | Some("lot20_oosm") => ScenarioKind::Lot20PfOosm,
+        Some("lot21_oosm_algorithm") | Some("lot21_algorithm_c") => {
+            ScenarioKind::Lot21OosmAlgorithm
+        }
+        Some("lot22_bearing_only") | Some("lot22_bot") => ScenarioKind::Lot22BearingOnly,
+        Some("lot23_multi_tracker") | Some("lot23_mtt") => ScenarioKind::Lot23MultiTracker,
+        Some("lot24_ensemble_filter") | Some("lot24_enkf") => ScenarioKind::Lot24EnsembleFilter,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -48,7 +76,21 @@ enum ScenarioKind {
     Lot6Information,
     Lot7Gmphd,
     Lot8Asd,
-    Lot9Akkf,
+    Lot10SingleSensor,
+    Lot11Kdtree,
+    Lot12Akkf,
+    Lot13MultiSensor,
+    Lot14OptimisedSensor,
+    Lot15NetworkInfoArch,
+    Lot16DataIncest,
+    Lot17ArchIntro,
+    Lot18SimpleOosm,
+    Lot19KalmanOosm,
+    Lot20PfOosm,
+    Lot21OosmAlgorithm,
+    Lot22BearingOnly,
+    Lot23MultiTracker,
+    Lot24EnsembleFilter,
 }
 
 fn main() -> ExitCode {
@@ -250,6 +292,317 @@ fn main() -> ExitCode {
                 MAX_LOT4_T10_STEPS, n, xy.0, xy.1
             );
         }
+        ScenarioKind::Lot10SingleSensor => {
+            let mut scenario = match Lot10SingleSensorScenario::tutorial_defaults(
+                Lot10SensorManagerMode::BruteForce,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 3];
+            let n = scenario.sorted_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot10_single_sensor steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT10_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot11Kdtree => {
+            let mut scenario = match Lot11KdtreeScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 16];
+            let n = scenario.snapshot_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot11_kdtree steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT11_KDTREE_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot13MultiSensor => {
+            let mut scenario = match Lot13MultiSensorScenario::tutorial_defaults(
+                Lot13SensorManagerMode::BruteForce,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 3];
+            let n = scenario.sorted_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot13_multi_sensor steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT13_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot14OptimisedSensor => {
+            let mut scenario = match Lot14OptimisedSensorScenario::tutorial_defaults(
+                Lot14OptimisedSensorMode::OptimizeBrute,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 3];
+            let n = scenario.sorted_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot14_optimised_sensor steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT14_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot15NetworkInfoArch => {
+            let mut scenario = match Lot15NetworkInfoArchScenario::tutorial_defaults(
+                Lot15ArchitectureMode::Network,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 3];
+            let n = scenario.sorted_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot15_network_info_arch steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT15_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot16DataIncest => {
+            let mut scenario = match Lot16DataIncestScenario::tutorial_defaults(
+                Lot16DataIncestMode::NonHierarchical,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let snap = match scenario.viewer_snapshot() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("snapshot: {e:?}");
+                    return ExitCode::from(4);
+                }
+            };
+            println!(
+                "scenario=lot16_data_incest steps={} finished=true mean_cov_trace={:.6}",
+                MAX_LOT16_STEPS, snap.rmse
+            );
+        }
+        ScenarioKind::Lot17ArchIntro => {
+            let mut scenario = match Lot17ArchIntroScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let snap = match scenario.viewer_snapshot() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("snapshot: {e:?}");
+                    return ExitCode::from(4);
+                }
+            };
+            println!(
+                "scenario=lot17_arch_intro steps={} finished=true edges={:.0}",
+                MAX_LOT17_STEPS, snap.rmse
+            );
+        }
+        ScenarioKind::Lot18SimpleOosm => {
+            let mut scenario =
+                match Lot18SimpleOosmScenario::tutorial_defaults(Lot18OosmMode::FixedLag) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        eprintln!("scenario error: {e:?}");
+                        return ExitCode::from(2);
+                    }
+                };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let m = scenario.estimate_mean();
+            println!(
+                "scenario=lot18_simple_oosm steps={} finished=true estimate_xy=({:.3}, {:.3})",
+                MAX_LOT18_STEPS, m[0], m[2]
+            );
+        }
+        ScenarioKind::Lot19KalmanOosm => {
+            let mut scenario =
+                match Lot19KalmanOosmScenario::tutorial_defaults(Lot19KalmanOosmMode::Tracker2) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        eprintln!("scenario error: {e:?}");
+                        return ExitCode::from(2);
+                    }
+                };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let m = scenario.estimate_mean();
+            println!(
+                "scenario=lot19_kalman_oosm steps={} finished=true estimate_xy=({:.3}, {:.3})",
+                MAX_LOT19_STEPS, m[0], m[2]
+            );
+        }
+        ScenarioKind::Lot20PfOosm => {
+            let mut scenario = match Lot20PfOosmScenario::tutorial_defaults(Lot20PfOosmMode::Oosm) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let m = scenario.estimate_mean();
+            println!(
+                "scenario=lot20_pf_oosm steps={} finished=true estimate_xy=({:.3}, {:.3})",
+                MAX_LOT20_STEPS, m[0], m[2]
+            );
+        }
+        ScenarioKind::Lot21OosmAlgorithm => {
+            let mut scenario = match Lot21OosmAlgorithmScenario::tutorial_defaults(
+                Lot21OosmAlgorithmMode::OosmTarget0,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let m = scenario.estimate_mean();
+            println!(
+                "scenario=lot21_oosm_algorithm steps={} finished=true estimate_xy=({:.3}, {:.3})",
+                MAX_LOT21_STEPS, m[0], m[2]
+            );
+        }
+        ScenarioKind::Lot22BearingOnly => {
+            let mut scenario = match Lot22BearingOnlyScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let m = scenario.estimate_mean();
+            println!(
+                "scenario=lot22_bearing_only steps={} finished=true estimate_xy=({:.3}, {:.3})",
+                MAX_LOT22_STEPS, m[0], m[2]
+            );
+        }
+        ScenarioKind::Lot23MultiTracker => {
+            let mut scenario =
+                match Lot23MultiTrackerScenario::tutorial_defaults(Lot23MultiTrackerMode::Ekf) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        eprintln!("scenario error: {e:?}");
+                        return ExitCode::from(2);
+                    }
+                };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut buf = [[0.0; 4]; 3];
+            let n = scenario.sorted_track_means(&mut buf);
+            let m = if n > 0 { buf[0] } else { [0.0; 4] };
+            println!(
+                "scenario=lot23_multi_tracker steps={} finished=true estimate_xy=({:.3}, {:.3}) tracks={n}",
+                MAX_LOT23_STEPS, m[0], m[2]
+            );
+        }
+        ScenarioKind::Lot24EnsembleFilter => {
+            let mut scenario = match Lot24EnsembleFilterScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let m = scenario.estimate_mean();
+            println!(
+                "scenario=lot24_ensemble_filter steps={} finished=true estimate_xy=({:.3}, {:.3})",
+                MAX_LOT24_STEPS, m[0], m[2]
+            );
+        }
         ScenarioKind::Lot7Gmphd => {
             let mut scenario = match Lot7GmPhdScenario::tutorial_defaults() {
                 Ok(s) => s,
@@ -291,7 +644,7 @@ fn main() -> ExitCode {
                 MAX_LOT8_STEPS, snap.finished, snap.rmse, snap.estimate_xy.0, snap.estimate_xy.1
             );
         }
-        ScenarioKind::Lot9Akkf => {
+        ScenarioKind::Lot12Akkf => {
             let mut scenario = match Lot9AkkfScenario::tutorial_defaults() {
                 Ok(s) => s,
                 Err(e) => {
@@ -305,7 +658,7 @@ fn main() -> ExitCode {
             ) {}
             let snap = scenario.snapshot().expect("snapshot");
             println!(
-                "scenario=lot9_akkf steps={} finished={} rmse={:.6} estimate_xy=({:.3}, {:.3})",
+                "scenario=lot12_akkf steps={} finished={} rmse={:.6} estimate_xy=({:.3}, {:.3})",
                 MAX_LOT9_STEPS, snap.finished, snap.rmse, snap.estimate_xy.0, snap.estimate_xy.1
             );
         }

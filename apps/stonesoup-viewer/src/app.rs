@@ -103,7 +103,25 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "12" | "information" | "if" => Some(ScenarioId::Lot6InformationFilterTutorial),
         "13" | "gmphd" | "phd" | "gm-phd" => Some(ScenarioId::Lot7GmphdTutorial),
         "14" | "asd" => Some(ScenarioId::Lot8AsdTutorial),
-        "15" | "akkf" | "kernel" => Some(ScenarioId::Lot9AkkfTutorial),
+        "15" | "kdtree" => Some(ScenarioId::Lot11KdtreeTutorial),
+        "16" | "sensor" | "sensormanagement" => Some(ScenarioId::Lot10SingleSensorTutorial),
+        "17" | "akkf" | "kernel" => Some(ScenarioId::Lot12AkkfTutorial),
+        "18" | "multisensor" | "multi-sensor" => Some(ScenarioId::Lot13MultiSensorTutorial),
+        "19" | "optimised" | "optimized" | "opt-sensor" => {
+            Some(ScenarioId::Lot14OptimisedSensorTutorial)
+        }
+        "20" | "architecture" | "network-arch" | "info-arch" => {
+            Some(ScenarioId::Lot15NetworkInfoArchTutorial)
+        }
+        "21" | "data-incest" | "incest" => Some(ScenarioId::Lot16DataIncestTutorial),
+        "22" | "arch-intro" | "intro-arch" => Some(ScenarioId::Lot17ArchIntroTutorial),
+        "23" | "oosm" | "simple-oosm" => Some(ScenarioId::Lot18SimpleOosmExample),
+        "24" | "kalman-oosm" | "ekf-oosm" => Some(ScenarioId::Lot19KalmanOosmExample),
+        "25" | "pf-oosm" | "particle-oosm" => Some(ScenarioId::Lot20PfOosmExample),
+        "26" | "algorithm-c" | "oosm-algorithm" => Some(ScenarioId::Lot21OosmAlgorithmExample),
+        "27" | "bearing-only" | "bot" => Some(ScenarioId::Lot22BearingOnlyExample),
+        "28" | "multi-tracker" | "multi_tracker" => Some(ScenarioId::Lot23MultiTrackerExample),
+        "29" | "ensemble" | "enkf" => Some(ScenarioId::Lot24EnsembleFilterExample),
         _ => None,
     }
 }
@@ -342,6 +360,13 @@ impl ViewerApp {
             ScenarioId::Lot2EkfTutorial
                 | ScenarioId::Lot2UkfTutorial
                 | ScenarioId::Lot2ParticleTutorial
+                | ScenarioId::Lot10SingleSensorTutorial
+                | ScenarioId::Lot12AkkfTutorial
+                | ScenarioId::Lot13MultiSensorTutorial
+                | ScenarioId::Lot14OptimisedSensorTutorial
+                | ScenarioId::Lot15NetworkInfoArchTutorial
+                | ScenarioId::Lot16DataIncestTutorial
+                | ScenarioId::Lot17ArchIntroTutorial
         )
     }
 
@@ -354,6 +379,13 @@ impl ViewerApp {
                 | ScenarioId::Lot3JpdaTutorial
                 | ScenarioId::Lot4InitiatorsTutorial
                 | ScenarioId::Lot4SimulationTutorial
+                | ScenarioId::Lot10SingleSensorTutorial
+                | ScenarioId::Lot11KdtreeTutorial
+                | ScenarioId::Lot13MultiSensorTutorial
+                | ScenarioId::Lot14OptimisedSensorTutorial
+                | ScenarioId::Lot15NetworkInfoArchTutorial
+                | ScenarioId::Lot16DataIncestTutorial
+                | ScenarioId::Lot17ArchIntroTutorial
         )
     }
 
@@ -505,6 +537,8 @@ impl eframe::App for ViewerApp {
             let est_pts: PlotPoints = self.est_trail.iter().map(|p| [p[0], p[1]]).collect();
             let sensor = if self.is_lot2() {
                 Some(TUTORIAL02_SENSOR_XY)
+            } else if matches!(self.active_id, ScenarioId::Lot10SingleSensorTutorial) {
+                Some(stonesoup_scenarios::LOT10_SENSOR_XY)
             } else {
                 None
             };

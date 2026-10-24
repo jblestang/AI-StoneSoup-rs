@@ -38,8 +38,64 @@ if ! grep -q 'ASDFilter.py' "$csv"; then
   echo "catalogue: ASDFilter.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
+if ! grep -q 'KDTree_Tutorial.py' "$csv"; then
+  echo "catalogue: KDTree_Tutorial.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q '01_SingleSensorManagement.py' "$csv"; then
+  echo "catalogue: 01_SingleSensorManagement.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
 if ! grep -q 'AKKF.py' "$csv"; then
   echo "catalogue: AKKF.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
-echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + AKKF)"
+if ! grep -q '02_MultiSensorManagement.py' "$csv"; then
+  echo "catalogue: 02_MultiSensorManagement.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q '03_OptimisedSensorManagement.py' "$csv"; then
+  echo "catalogue: 03_OptimisedSensorManagement.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q '02_Information_and_Network_Architectures.py' "$csv"; then
+  echo "catalogue: 02_Information_and_Network_Architectures.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q '03_Avoiding_Data_Incest.py' "$csv"; then
+  echo "catalogue: 03_Avoiding_Data_Incest.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q '01_Introduction_to_Architectures.py' "$csv"; then
+  echo "catalogue: 01_Introduction_to_Architectures.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'example_simple_oosm.py' "$csv"; then
+  echo "catalogue: example_simple_oosm.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'KalmanFilterOOSMExample.py' "$csv"; then
+  echo "catalogue: KalmanFilterOOSMExample.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'PF_OOSM_example.py' "$csv"; then
+  echo "catalogue: PF_OOSM_example.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'example_oosm_algorithm.py' "$csv"; then
+  echo "catalogue: example_oosm_algorithm.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'bearing_only_example.py' "$csv"; then
+  echo "catalogue: bearing_only_example.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'Multi_Tracker_Example.py' "$csv"; then
+  echo "catalogue: Multi_Tracker_Example.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'EnsembleFilterExample.py' "$csv"; then
+  echo "catalogue: EnsembleFilterExample.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + sensor mgmt + AKKF + multi + optimised + architecture + OOSM examples)"

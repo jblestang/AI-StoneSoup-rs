@@ -9,6 +9,8 @@ pub struct CartesianToBearingRange {
     pub sensor_x: f64,
     pub sensor_y: f64,
     pub noise_covar: Mat<2, 2>,
+    /// Antenna boresight in world frame (rad), Stone Soup ``dwell_centre`` + orientation.
+    pub antenna_heading_rad: f64,
 }
 
 impl CartesianToBearingRange {
@@ -23,17 +25,30 @@ impl CartesianToBearingRange {
             sensor_x: 50.0,
             sensor_y: 0.0,
             noise_covar: r,
+            antenna_heading_rad: 0.0,
         })
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-    pub fn h(&self, state: [f64; 4]) -> Result<[f64; 2], Error> {
+    fn rotated_xy(&self, state: [f64; 4]) -> Result<(f64, f64), Error> {
         let dx = state[0] - self.sensor_x;
         let dy = state[2] - self.sensor_y;
         require_finite(dx)?;
         require_finite(dy)?;
-        let bearing = mod_bearing(libm::atan2(dy, dx))?;
-        let range = libm::sqrt(dx * dx + dy * dy);
+        let sin_a = libm::sin(self.antenna_heading_rad);
+        let cos_a = libm::cos(self.antenna_heading_rad);
+        let rx = cos_a * dx + sin_a * dy;
+        let ry = -sin_a * dx + cos_a * dy;
+        require_finite(rx)?;
+        require_finite(ry)?;
+        Ok((rx, ry))
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn h(&self, state: [f64; 4]) -> Result<[f64; 2], Error> {
+        let (rx, ry) = self.rotated_xy(state)?;
+        let bearing = mod_bearing(libm::atan2(ry, rx))?;
+        let range = libm::sqrt(rx * rx + ry * ry);
         require_finite(range)?;
         Ok([bearing, range])
     }
@@ -46,6 +61,11 @@ impl CartesianToBearingRange {
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn jacobian(&self, state: &GaussianState) -> Result<Mat<2, 4>, Error> {
+        if self.antenna_heading_rad != 0.0 {
+            let s = state.mean.0;
+            let model = *self;
+            return crate::numeric::jacobian::jacobian4x2(s, |x| model.h(x));
+        }
         let s = state.mean.0;
         let dx = s[0] - self.sensor_x;
         let dy = s[2] - self.sensor_y;
@@ -57,10 +77,8 @@ impl CartesianToBearingRange {
         }
         let r = libm::sqrt(r2);
         let mut h = Mat::<2, 4>::zeros();
-        // bearing = atan2(dy, dx)
         h.set(0, 0, -dy / r2)?;
         h.set(0, 2, dx / r2)?;
-        // range = sqrt(dx^2 + dy^2)
         h.set(1, 0, dx / r)?;
         h.set(1, 2, dy / r)?;
         Ok(h)
