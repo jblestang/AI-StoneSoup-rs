@@ -25,6 +25,7 @@ pub enum ScenarioId {
     Lot15NetworkInfoArchTutorial,
     Lot16DataIncestTutorial,
     Lot17ArchIntroTutorial,
+    Lot18SimpleOosmExample,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -42,7 +43,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 22] = [
+        static LIST: [ScenarioDescriptor; 23] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -198,6 +199,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot18SimpleOosmExample,
+                title: "23 — Simple OOSM (fixed lag)",
+                upstream_path: "docs/examples/oosm/example_simple_oosm.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
         ];
         &LIST
     }
@@ -230,7 +238,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot14OptimisedSensorTutorial
             | ScenarioId::Lot15NetworkInfoArchTutorial
             | ScenarioId::Lot16DataIncestTutorial
-            | ScenarioId::Lot17ArchIntroTutorial => {
+            | ScenarioId::Lot17ArchIntroTutorial
+            | ScenarioId::Lot18SimpleOosmExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -260,7 +269,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot14OptimisedSensorTutorial
             | ScenarioId::Lot15NetworkInfoArchTutorial
             | ScenarioId::Lot16DataIncestTutorial
-            | ScenarioId::Lot17ArchIntroTutorial => {
+            | ScenarioId::Lot17ArchIntroTutorial
+            | ScenarioId::Lot18SimpleOosmExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
