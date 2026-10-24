@@ -9705,6 +9705,11 @@
     "true_plot_tracks": 21822
   },
   "truths": {
+    "continuous_track_by_fused_sensor_updates": {
+      "both_radars": 121,
+      "radar_a_only": 450,
+      "radar_b_only": 61
+    },
     "continuous_track_by_plot_visibility": {
       "both_radars": 140,
       "radar_a_only": 609,

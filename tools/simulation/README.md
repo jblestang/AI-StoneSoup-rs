@@ -27,7 +27,8 @@ Co-located **90° FOV** rotating bearing–range sensors, **fused** **JPDA + EKF
 | `plots.total_plots` | Sum over all rotations in 60 s (≫ 500) |
 | `plots.radar_*_max_targets_in_one_rotation` | ≤ **1000** true-target cap per rotation (clutter not counted) |
 | `truths.plot_visibility` | Truths with plots from **A only**, **B only**, or **both** |
-| `truths.continuous_track_by_plot_visibility` | Continuous TrackToTruth count in each visibility class |
+| `truths.continuous_track_by_plot_visibility` | Continuous tracks vs which radars **plotted** the truth |
+| `truths.continuous_track_by_fused_sensor_updates` | Continuous tracks vs which radars **updated the fused filter** (JPDA meas) |
 | `tracks.total_unique_tracks` | One row per **true** plot (detection bookkeeping) |
 | `tracks.fused_lifecycle_tracks` | Raw GNN+EKF segment count after coast (may split on one target) |
 | `track_to_truth.continuous_track_count` | **4** — one merged track per truth |

@@ -110,6 +110,11 @@ fn run() -> Result<String, ScenarioError> {
                 "radar_b_only": stats.continuous_track_sensor_counts.radar_b_only,
                 "both_radars": stats.continuous_track_sensor_counts.both_radars,
             },
+            "continuous_track_by_fused_sensor_updates": {
+                "radar_a_only": stats.continuous_track_fused_sensor_counts.radar_a_only,
+                "radar_b_only": stats.continuous_track_fused_sensor_counts.radar_b_only,
+                "both_radars": stats.continuous_track_fused_sensor_counts.both_radars,
+            },
         },
         "tracks": {
             "description": "total_unique_tracks = one fused-network row per true plot. fused_lifecycle_tracks = long-coast JPDA+EKF segments (sequential per-sensor).",

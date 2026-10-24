@@ -108,6 +108,7 @@ struct ActiveTrack {
     tail: GaussianState,
     last_meas_step: usize,
     birth_step: usize,
+    sensors_meas_mask: u8,
 }
 
 /// How many **simulated truths** received ≥1 true plot from each radar (detection layer).
@@ -127,6 +128,30 @@ fn truth_sensor_plot_counts(seen_a: &[bool], seen_b: &[bool]) -> TruthSensorPlot
             (true, false) => out.radar_a_only += 1,
             (false, true) => out.radar_b_only += 1,
             (false, false) => out.no_plots += 1,
+        }
+    }
+    out
+}
+
+fn continuous_tracks_by_fused_sensor_mask(
+    continuous: &[ContinuousTruthTrack],
+    id_to_mask: &[(u32, u8)],
+) -> TruthSensorPlotCounts {
+    let mut out = TruthSensorPlotCounts::default();
+    for ct in continuous {
+        let mut mask = 0u8;
+        for id in &ct.linked_filter_track_ids {
+            for (fid, m) in id_to_mask {
+                if fid == id {
+                    mask |= m;
+                }
+            }
+        }
+        match mask {
+            0b01 => out.radar_a_only += 1,
+            0b10 => out.radar_b_only += 1,
+            0b11 => out.both_radars += 1,
+            _ => {}
         }
     }
     out
@@ -157,10 +182,13 @@ fn continuous_tracks_by_plot_visibility(
 
 #[derive(Debug, Clone, Copy)]
 pub struct CompletedTrack {
+    pub filter_track_id: u32,
     pub birth_step: usize,
     pub death_step: usize,
     pub end_xy: (f64, f64),
     pub truth_id: Option<u16>,
+    /// Bit ``i``: fused track received JPDA meas update on radar ``i`` (0=A, 1=B).
+    pub sensors_meas_mask: u8,
 }
 
 #[derive(Debug, Clone)]
@@ -187,6 +215,8 @@ pub struct DualRadarStats {
     pub continuous_truth_tracks: Vec<ContinuousTruthTrack>,
     pub truth_plot_sensor_counts: TruthSensorPlotCounts,
     pub continuous_track_sensor_counts: TruthSensorPlotCounts,
+    /// Continuous tracks classified by **fused filter** measurement updates (not plots alone).
+    pub continuous_track_fused_sensor_counts: TruthSensorPlotCounts,
 }
 
 fn half_fov_rad() -> f64 {
@@ -560,10 +590,12 @@ impl DualRadarClutterSim {
             return;
         }
         self.true_plot_tracks.push(CompletedTrack {
+            filter_track_id: 0,
             birth_step: self.step,
             death_step: self.step,
             end_xy: (state[0], state[2]),
             truth_id: Some(truth_idx as u16),
+            sensors_meas_mask: 0,
         });
     }
 
@@ -658,6 +690,7 @@ impl DualRadarClutterSim {
             tail,
             last_meas_step: step,
             birth_step: step,
+            sensors_meas_mask: 0,
         });
         Ok(())
     }
@@ -675,10 +708,12 @@ impl DualRadarClutterSim {
     fn finish_track(&mut self, t: ActiveTrack, step: usize) -> Result<(), ScenarioError> {
         let m = t.tail.mean.0;
         self.completed.push(CompletedTrack {
+            filter_track_id: t.id,
             birth_step: t.birth_step,
             death_step: step,
             end_xy: (m[0], m[2]),
             truth_id: None,
+            sensors_meas_mask: t.sensors_meas_mask,
         });
         Ok(())
     }
@@ -813,6 +848,7 @@ impl DualRadarClutterSim {
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
         clutter_density: f64,
+        radar_idx: usize,
     ) -> Result<(Vec<Detection>, Vec<CartesianToBearingRange>), ScenarioError> {
         let ts = self.ts();
         let n_dets = detections.len();
@@ -839,6 +875,9 @@ impl DualRadarClutterSim {
                 let meas_p = Self::meas_association_prob(set);
                 if meas_p >= JPDA_MEAS_UPDATE_THRESH {
                     track.last_meas_step = self.step;
+                    if radar_idx < 2 {
+                        track.sensors_meas_mask |= 1 << radar_idx;
+                    }
                 }
             }
             self.jpda_apply_sets(&mut act_tails, &sets, detections, det_models)?;
@@ -914,7 +953,7 @@ impl DualRadarClutterSim {
                 step_all_models.extend(models.iter().copied());
                 let clutter_rho = clutter_spatial_density(self.radars[ri].max_range_m);
                 let (mut unassoc, mut un_models) =
-                    self.associate_update_actives(dets, &models, clutter_rho)?;
+                    self.associate_update_actives(dets, &models, clutter_rho, ri)?;
                 step_unassoc.append(&mut unassoc);
                 step_unassoc_models.append(&mut un_models);
             }
@@ -990,6 +1029,12 @@ impl DualRadarClutterSim {
             &self.truths_plot_seen_a,
             &self.truths_plot_seen_b,
         );
+        let id_to_mask: alloc::vec::Vec<(u32, u8)> = completed
+            .iter()
+            .map(|c| (c.filter_track_id, c.sensors_meas_mask))
+            .collect();
+        let continuous_track_fused_sensor_counts =
+            continuous_tracks_by_fused_sensor_mask(&continuous_truth_tracks, &id_to_mask);
 
         for ri in 0..2 {
             let rt = &mut self.radar_rt[ri];
@@ -1018,6 +1063,7 @@ impl DualRadarClutterSim {
             continuous_truth_tracks,
             truth_plot_sensor_counts,
             continuous_track_sensor_counts,
+            continuous_track_fused_sensor_counts,
         })
     }
 }
