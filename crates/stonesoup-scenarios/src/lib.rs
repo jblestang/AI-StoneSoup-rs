@@ -17,6 +17,7 @@ mod lot20_pf_oosm;
 mod lot21_oosm_algorithm;
 mod lot22_bearing_only;
 mod lot23_multi_tracker;
+mod lot24_ensemble_filter;
 mod lot2_ekf;
 mod lot2_ukf;
 mod lot3_clutter;
@@ -75,6 +76,7 @@ pub use lot22_bearing_only::{Lot22BearingOnlyScenario, MAX_LOT22_STEPS};
 pub use lot23_multi_tracker::{
     Lot23MultiTrackerMode, Lot23MultiTrackerScenario, MAX_LOT23_STEPS, MAX_LOT23_TRACKS,
 };
+pub use lot24_ensemble_filter::{Lot24EnsembleFilterScenario, MAX_LOT24_STEPS};
 pub use lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
     TUTORIAL02_SENSOR_XY,

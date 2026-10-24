@@ -10,15 +10,16 @@ use stonesoup_scenarios::{
     Lot16DataIncestMode, Lot16DataIncestScenario, Lot17ArchIntroScenario, Lot18OosmMode,
     Lot18SimpleOosmScenario, Lot19KalmanOosmMode, Lot19KalmanOosmScenario, Lot20PfOosmMode,
     Lot20PfOosmScenario, Lot21OosmAlgorithmMode, Lot21OosmAlgorithmScenario,
-    Lot22BearingOnlyScenario, Lot23MultiTrackerMode, Lot23MultiTrackerScenario, Lot2EkfScenario,
-    Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario, Lot3MultiTargetScenario,
-    Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario, Lot5ResamplingScenario,
-    Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario, Lot9AkkfScenario, ScenarioId,
-    ScenarioRegistry, MAX_LOT10_STEPS, MAX_LOT11_KDTREE_STEPS, MAX_LOT13_STEPS, MAX_LOT14_STEPS,
-    MAX_LOT15_STEPS, MAX_LOT16_STEPS, MAX_LOT17_STEPS, MAX_LOT18_STEPS, MAX_LOT19_STEPS,
-    MAX_LOT20_STEPS, MAX_LOT21_STEPS, MAX_LOT22_STEPS, MAX_LOT23_STEPS, MAX_LOT3_JPDA_STEPS,
-    MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS,
-    MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
+    Lot22BearingOnlyScenario, Lot23MultiTrackerMode, Lot23MultiTrackerScenario,
+    Lot24EnsembleFilterScenario, Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario,
+    Lot3JpdaScenario, Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario,
+    Lot4Tutorial10Scenario, Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario,
+    Lot8AsdScenario, Lot9AkkfScenario, ScenarioId, ScenarioRegistry, MAX_LOT10_STEPS,
+    MAX_LOT11_KDTREE_STEPS, MAX_LOT13_STEPS, MAX_LOT14_STEPS, MAX_LOT15_STEPS, MAX_LOT16_STEPS,
+    MAX_LOT17_STEPS, MAX_LOT18_STEPS, MAX_LOT19_STEPS, MAX_LOT20_STEPS, MAX_LOT21_STEPS,
+    MAX_LOT22_STEPS, MAX_LOT23_STEPS, MAX_LOT24_STEPS, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
+    MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS,
+    MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -55,6 +56,7 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         }
         Some("lot22_bearing_only") | Some("lot22_bot") => ScenarioKind::Lot22BearingOnly,
         Some("lot23_multi_tracker") | Some("lot23_mtt") => ScenarioKind::Lot23MultiTracker,
+        Some("lot24_ensemble_filter") | Some("lot24_enkf") => ScenarioKind::Lot24EnsembleFilter,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -88,6 +90,7 @@ enum ScenarioKind {
     Lot21OosmAlgorithm,
     Lot22BearingOnly,
     Lot23MultiTracker,
+    Lot24EnsembleFilter,
 }
 
 fn main() -> ExitCode {
@@ -580,6 +583,24 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot23_multi_tracker steps={} finished=true estimate_xy=({:.3}, {:.3}) tracks={n}",
                 MAX_LOT23_STEPS, m[0], m[2]
+            );
+        }
+        ScenarioKind::Lot24EnsembleFilter => {
+            let mut scenario = match Lot24EnsembleFilterScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let m = scenario.estimate_mean();
+            println!(
+                "scenario=lot24_ensemble_filter steps={} finished=true estimate_xy=({:.3}, {:.3})",
+                MAX_LOT24_STEPS, m[0], m[2]
             );
         }
         ScenarioKind::Lot7Gmphd => {

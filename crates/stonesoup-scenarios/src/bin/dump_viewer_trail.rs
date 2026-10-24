@@ -115,6 +115,7 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "26" | "algorithm-c" => Some(ScenarioId::Lot21OosmAlgorithmExample),
         "27" | "bearing-only" => Some(ScenarioId::Lot22BearingOnlyExample),
         "28" | "multi-tracker" => Some(ScenarioId::Lot23MultiTrackerExample),
+        "29" | "ensemble" => Some(ScenarioId::Lot24EnsembleFilterExample),
         _ => None,
     }
 }
@@ -209,7 +210,7 @@ fn run_tutorial(code: &str) -> Result<serde_json::Value, String> {
 
 fn main() -> ExitCode {
     let Some(code) = std::env::args().nth(1) else {
-        eprintln!("usage: dump_viewer_trail <tutorial-code 01-28>");
+        eprintln!("usage: dump_viewer_trail <tutorial-code 01-29>");
         return ExitCode::from(2);
     };
     match run_tutorial(&code) {

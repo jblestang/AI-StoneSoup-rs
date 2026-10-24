@@ -14,6 +14,7 @@ use crate::lot20_pf_oosm::Lot20PfOosmScenario;
 use crate::lot21_oosm_algorithm::Lot21OosmAlgorithmScenario;
 use crate::lot22_bearing_only::Lot22BearingOnlyScenario;
 use crate::lot23_multi_tracker::Lot23MultiTrackerScenario;
+use crate::lot24_ensemble_filter::Lot24EnsembleFilterScenario;
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
 };
@@ -134,6 +135,7 @@ pub enum AnyScenario {
     Lot21OosmAlgorithm(Lot21OosmAlgorithmScenario),
     Lot22BearingOnly(Lot22BearingOnlyScenario),
     Lot23MultiTracker(Lot23MultiTrackerScenario),
+    Lot24EnsembleFilter(Lot24EnsembleFilterScenario),
 }
 
 impl AnyScenario {
@@ -234,6 +236,9 @@ impl AnyScenario {
                     crate::lot23_multi_tracker::Lot23MultiTrackerMode::Ekf,
                 )?,
             )),
+            ScenarioId::Lot24EnsembleFilterExample => Ok(Self::Lot24EnsembleFilter(
+                Lot24EnsembleFilterScenario::tutorial_defaults()?,
+            )),
         }
     }
 
@@ -268,6 +273,7 @@ impl AnyScenario {
             Self::Lot21OosmAlgorithm(_) => ScenarioId::Lot21OosmAlgorithmExample,
             Self::Lot22BearingOnly(_) => ScenarioId::Lot22BearingOnlyExample,
             Self::Lot23MultiTracker(_) => ScenarioId::Lot23MultiTrackerExample,
+            Self::Lot24EnsembleFilter(_) => ScenarioId::Lot24EnsembleFilterExample,
         }
     }
 }
@@ -303,6 +309,7 @@ impl Scenario for AnyScenario {
             Self::Lot21OosmAlgorithm(s) => s.reset(),
             Self::Lot22BearingOnly(s) => s.reset(),
             Self::Lot23MultiTracker(s) => s.reset(),
+            Self::Lot24EnsembleFilter(s) => s.reset(),
         }
     }
 
@@ -477,6 +484,13 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot24EnsembleFilter(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -607,6 +621,7 @@ impl Scenario for AnyScenario {
             Self::Lot21OosmAlgorithm(s) => s.viewer_snapshot(),
             Self::Lot22BearingOnly(s) => s.viewer_snapshot(),
             Self::Lot23MultiTracker(s) => s.viewer_snapshot(),
+            Self::Lot24EnsembleFilter(s) => s.viewer_snapshot(),
         }
     }
 }
