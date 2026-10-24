@@ -40,9 +40,8 @@ pub const COAST_SECONDS: f64 = 30.0;
 pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
 pub const SEED: u64 = 42;
 
-const MAX_ACTIVE: usize = 32;
-const MAX_HOLDING: usize = 256;
-const MAX_COMPLETED: usize = 128;
+pub const MAX_ACTIVE: usize = 1000;
+const MAX_HOLDING: usize = 8192;
 const MAX_TRUE_PLOT_TRACKS: usize = 32_768;
 
 #[derive(Debug, Clone, Copy)]
@@ -329,10 +328,9 @@ pub struct DualRadarClutterSim {
     total_clutter: usize,
     truths_detected: u8,
     step: usize,
-    active: [Option<ActiveTrack>; MAX_ACTIVE],
-    holding: [Option<HoldingTrack>; MAX_HOLDING],
-    completed: [Option<CompletedTrack>; MAX_COMPLETED],
-    n_completed: usize,
+    active: Vec<ActiveTrack>,
+    holding: Vec<HoldingTrack>,
+    completed: Vec<CompletedTrack>,
     coast_steps: usize,
     rng: SplitMix64,
     true_plots_in_overlap: usize,
@@ -406,10 +404,9 @@ impl DualRadarClutterSim {
             total_clutter: 0,
             truths_detected: 0,
             step: 0,
-            active: [None; MAX_ACTIVE],
-            holding: [None; MAX_HOLDING],
-            completed: [None; MAX_COMPLETED],
-            n_completed: 0,
+            active: Vec::with_capacity(16),
+            holding: Vec::with_capacity(32),
+            completed: Vec::new(),
             coast_steps,
             rng: SplitMix64::new(SEED.wrapping_add(1)),
             true_plots_in_overlap: 0,
@@ -445,16 +442,12 @@ impl DualRadarClutterSim {
     }
 
     fn snapshot_active_paths(&mut self, ts: Timestamp) {
-        let mut snaps = [(0u32, [0.0; 4]); MAX_ACTIVE];
-        let mut n = 0usize;
-        for t in self.active.iter().flatten() {
-            if n < MAX_ACTIVE {
-                snaps[n] = (t.id, t.tail.mean.0);
-                n += 1;
-            }
-        }
-        for i in 0..n {
-            let (id, mean) = snaps[i];
+        let snaps: alloc::vec::Vec<(u32, [f64; 4])> = self
+            .active
+            .iter()
+            .map(|t| (t.id, t.tail.mean.0))
+            .collect();
+        for (id, mean) in snaps {
             self.append_filter_path(id, ts, mean);
         }
     }
@@ -545,65 +538,55 @@ impl DualRadarClutterSim {
     }
 
     fn insert_active(&mut self, tail: GaussianState, step: usize) -> Result<(), ScenarioError> {
+        if self.active.len() >= MAX_ACTIVE {
+            return Err(ScenarioError::Core(Error::CapacityExceeded));
+        }
         let id = self.next_track_id;
         self.next_track_id = self.next_track_id.saturating_add(1);
         let ts = self.ts();
         self.start_filter_path(id, ts, tail.mean.0);
-        for slot in &mut self.active {
-            if slot.is_none() {
-                *slot = Some(ActiveTrack {
-                    id,
-                    tail,
-                    last_meas_step: step,
-                    birth_step: step,
-                });
-                return Ok(());
-            }
-        }
-        Err(ScenarioError::Core(Error::CapacityExceeded))
+        self.active.push(ActiveTrack {
+            id,
+            tail,
+            last_meas_step: step,
+            birth_step: step,
+        });
+        Ok(())
     }
 
     fn insert_holding(&mut self, tail: GaussianState) -> Result<(), ScenarioError> {
-        for slot in &mut self.holding {
-            if slot.is_none() {
-                *slot = Some(HoldingTrack { tail, updates: 1 });
-                return Ok(());
-            }
+        if self.holding.len() >= MAX_HOLDING {
+            return Err(ScenarioError::Core(Error::CapacityExceeded));
         }
-        Err(ScenarioError::Core(Error::CapacityExceeded))
+        self.holding.push(HoldingTrack { tail, updates: 1 });
+        Ok(())
     }
 
     fn finish_track(&mut self, t: ActiveTrack, step: usize) -> Result<(), ScenarioError> {
-        if self.n_completed >= MAX_COMPLETED {
-            return Err(ScenarioError::Core(Error::CapacityExceeded));
-        }
         let m = t.tail.mean.0;
-        self.completed[self.n_completed] = Some(CompletedTrack {
+        self.completed.push(CompletedTrack {
             birth_step: t.birth_step,
             death_step: step,
             end_xy: (m[0], m[2]),
             truth_id: None,
         });
-        self.n_completed += 1;
         Ok(())
     }
 
     fn delete_stale_active(&mut self) -> Result<(), ScenarioError> {
         let step = self.step;
         let coast = self.coast_steps;
-        let mut to_finish = [None; MAX_ACTIVE];
-        for (i, slot) in self.active.iter().enumerate() {
-            if let Some(t) = slot {
-                if step.saturating_sub(t.last_meas_step) > coast {
-                    to_finish[i] = Some(*t);
-                }
+        let mut stale = Vec::new();
+        self.active.retain(|t| {
+            if step.saturating_sub(t.last_meas_step) > coast {
+                stale.push(*t);
+                false
+            } else {
+                true
             }
-        }
-        for (i, done) in to_finish.iter().enumerate() {
-            if let Some(t) = done {
-                self.finish_track(*t, step)?;
-                self.active[i] = None;
-            }
+        });
+        for t in stale {
+            self.finish_track(t, step)?;
         }
         Ok(())
     }
@@ -615,26 +598,18 @@ impl DualRadarClutterSim {
     ) -> Result<(), ScenarioError> {
         let ts = self.ts();
         let mut det_used = [false; MAX_GNN_ASSIGN_DETS];
-        let mut hold_tails = [self.prior; MAX_HOLDING];
-        let mut hold_map = [0usize; MAX_HOLDING];
-        let mut n_hold = 0usize;
-        for (i, slot) in self.holding.iter().enumerate() {
-            if let Some(h) = slot {
-                hold_tails[n_hold] = h.tail;
-                hold_map[n_hold] = i;
-                n_hold += 1;
-            }
-        }
+        let n_hold = self.holding.len();
         if n_hold > 0 && !detections.is_empty() {
-            let mut assigns = [GnnAssignment {
+            let hold_tails: Vec<GaussianState> = self.holding.iter().map(|h| h.tail).collect();
+            let mut assigns = alloc::vec![GnnAssignment {
                 hypothesis: MeasurementHypothesis {
                     prediction: hold_tails[0],
                     detection_index: None,
                     distance: GATE,
                 },
-            }; MAX_HOLDING];
+            }; n_hold];
             associate_gnn_2d_ekf_det_models(
-                &hold_tails[..n_hold],
+                &hold_tails,
                 ts,
                 detections,
                 GATE,
@@ -642,38 +617,35 @@ impl DualRadarClutterSim {
                 &self.updater,
                 Some(det_models),
                 &mut self.ws,
-                &mut assigns[..n_hold],
+                &mut assigns,
             )
             .map_err(ScenarioError::Core)?;
-            for t in 0..n_hold {
-                let slot = hold_map[t];
-                let h = &assigns[t].hypothesis;
-                let ht = self.holding[slot]
-                    .as_mut()
-                    .ok_or(ScenarioError::Core(Error::InvalidDimension))?;
+            for (slot, assign) in self.holding.iter_mut().zip(assigns.iter()) {
+                let h = &assign.hypothesis;
                 if let Some(di) = h.detection_index {
                     self.updater.measurement = det_models[di];
                     let post = self
                         .updater
                         .update(&h.prediction, &detections[di], &mut self.ws)
                         .map_err(ScenarioError::Core)?;
-                    ht.tail = post;
-                    ht.updates = ht.updates.saturating_add(1);
+                    slot.tail = post;
+                    slot.updates = slot.updates.saturating_add(1);
                     det_used[di] = true;
                 } else {
-                    ht.tail = h.prediction;
+                    slot.tail = h.prediction;
                 }
             }
-            for slot in 0..MAX_HOLDING {
-                if let Some(ht) = self.holding[slot].as_ref() {
-                    if ht.updates >= MIN_POINTS {
-                        let tail = self.holding[slot]
-                            .take()
-                            .map(|h| h.tail)
-                            .ok_or(ScenarioError::Core(Error::InvalidDimension))?;
-                        self.insert_active(tail, self.step)?;
-                    }
+            let mut promote = Vec::new();
+            self.holding.retain(|ht| {
+                if ht.updates >= MIN_POINTS {
+                    promote.push(ht.tail);
+                    false
+                } else {
+                    true
                 }
+            });
+            for tail in promote {
+                self.insert_active(tail, self.step)?;
             }
         }
         for (i, det) in detections.iter().enumerate() {
@@ -693,26 +665,18 @@ impl DualRadarClutterSim {
     ) -> Result<(), ScenarioError> {
         let ts = self.ts();
         let mut det_used = [false; MAX_GNN_ASSIGN_DETS];
-        let mut act_tails = [self.prior; MAX_ACTIVE];
-        let mut act_map = [0usize; MAX_ACTIVE];
-        let mut n_act = 0usize;
-        for (i, slot) in self.active.iter().enumerate() {
-            if let Some(t) = slot {
-                act_tails[n_act] = t.tail;
-                act_map[n_act] = i;
-                n_act += 1;
-            }
-        }
+        let n_act = self.active.len();
         if n_act > 0 && !detections.is_empty() {
-            let mut assigns = [GnnAssignment {
+            let act_tails: Vec<GaussianState> = self.active.iter().map(|t| t.tail).collect();
+            let mut assigns = alloc::vec![GnnAssignment {
                 hypothesis: MeasurementHypothesis {
                     prediction: act_tails[0],
                     detection_index: None,
                     distance: GATE,
                 },
-            }; MAX_ACTIVE];
+            }; n_act];
             associate_gnn_2d_ekf_det_models(
-                &act_tails[..n_act],
+                &act_tails,
                 ts,
                 detections,
                 GATE,
@@ -720,15 +684,11 @@ impl DualRadarClutterSim {
                 &self.updater,
                 Some(det_models),
                 &mut self.ws,
-                &mut assigns[..n_act],
+                &mut assigns,
             )
             .map_err(ScenarioError::Core)?;
-            for t in 0..n_act {
-                let slot = act_map[t];
-                let h = &assigns[t].hypothesis;
-                let track = self.active[slot]
-                    .as_mut()
-                    .ok_or(ScenarioError::Core(Error::InvalidDimension))?;
+            for (track, assign) in self.active.iter_mut().zip(assigns.iter()) {
+                let h = &assign.hypothesis;
                 if let Some(di) = h.detection_index {
                     self.updater.measurement = det_models[di];
                     let post = self
@@ -813,28 +773,24 @@ impl DualRadarClutterSim {
             self.step += 1;
         }
         let step = self.step;
-        let remaining: [Option<ActiveTrack>; MAX_ACTIVE] = self.active;
-        for t in remaining.into_iter().flatten() {
+        for t in core::mem::take(&mut self.active) {
             self.finish_track(t, step)?;
         }
-        self.active = [None; MAX_ACTIVE];
-        let mut completed = Vec::new();
-        for i in 0..self.n_completed {
-            if let Some(mut c) = self.completed[i] {
-                let mut best = TRUTH_ASSOC_METERS;
-                let mut best_id = None;
-                for (ti, gt) in self.truths.iter().enumerate() {
-                    let d = euclidean_xy(c.end_xy, (gt.state[0], gt.state[2]));
-                    if d < best {
-                        best = d;
-                        best_id = Some(ti as u8);
-                    }
+        let mut completed = Vec::with_capacity(self.completed.len());
+        for mut c in core::mem::take(&mut self.completed) {
+            let mut best = TRUTH_ASSOC_METERS;
+            let mut best_id = None;
+            for (ti, gt) in self.truths.iter().enumerate() {
+                let d = euclidean_xy(c.end_xy, (gt.state[0], gt.state[2]));
+                if d < best {
+                    best = d;
+                    best_id = Some(ti as u8);
                 }
-                if best <= TRUTH_ASSOC_METERS {
-                    c.truth_id = best_id;
-                }
-                completed.push(c);
             }
+            if best <= TRUTH_ASSOC_METERS {
+                c.truth_id = best_id;
+            }
+            completed.push(c);
         }
         let truths_with_track = completed
             .iter()

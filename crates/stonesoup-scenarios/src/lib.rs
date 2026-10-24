@@ -79,7 +79,7 @@ pub use lot23_multi_tracker::{
 };
 pub use lot24_ensemble_filter::{Lot24EnsembleFilterScenario, MAX_LOT24_STEPS};
 pub use dual_radar_clutter::{
-    max_simulation_steps, CompletedTrack, DualRadarClutterSim, DualRadarStats,
+    max_simulation_steps, CompletedTrack, DualRadarClutterSim, DualRadarStats, MAX_ACTIVE,
     CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S, FOV_DEG, OVERLAP_AREA_FRACTION,
     PLOTS_PER_RADAR, PLOTS_PER_ROTATION, TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M,
     RANGE_B_M, SEED,

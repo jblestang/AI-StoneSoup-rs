@@ -1,5 +1,6 @@
 use stonesoup_scenarios::{
-    max_simulation_steps, DualRadarClutterSim, DT_S, SIM_DURATION_S, TARGETS_PER_ROTATION,
+    max_simulation_steps, DualRadarClutterSim, DT_S, MAX_ACTIVE, SIM_DURATION_S,
+    TARGETS_PER_ROTATION,
 };
 
 #[test]
@@ -41,7 +42,7 @@ fn dual_radar_runs_full_duration_with_per_rotation_target_cap() {
     );
     assert_eq!(stats.total_unique_tracks(), stats.total_true);
     assert!(
-        stats.fused_completed.len() < 128,
+        stats.fused_completed.len() <= MAX_ACTIVE,
         "fused lifecycle count {}",
         stats.fused_completed.len()
     );
