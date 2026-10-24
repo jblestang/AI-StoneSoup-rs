@@ -4,9 +4,9 @@ Matplotlib captures of the **same viewer trails** as the Rust WASM catalogue (`?
 
 Plot panel only (no egui catalogue sidebar). Colors and layers match `apps/stonesoup-viewer/src/app.rs`.
 
-| File | Tutorial |
-|------|----------|
-| `tutorial_01.png` … `tutorial_14.png` | Catalogue tutorials 01–14 |
+| File | Catalogue |
+|------|-----------|
+| `tutorial_01.png` … `tutorial_27.png` | Registry entries **01–27** (tutorials + OOSM/filter examples) |
 | `tutorial_11_step_*.png` | Resampling tutorial — per resampler case |
 | `tutorial_11_all_cases.png` | Resampling — 2×3 grid of all cases |
 
@@ -27,4 +27,4 @@ bash tools/scripts/capture_wasm_tutorial_screenshots.sh
 bash tools/scripts/capture_python_tutorial_screenshots.sh
 ```
 
-WASM PNGs include the catalogue UI; Python PNGs are the tracking (or resampling) plot only. Trails and final-step detections should align.
+WASM PNGs include the catalogue UI; Python PNGs are the tracking plot only. Trails and final-step geometry should align.
