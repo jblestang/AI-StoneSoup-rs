@@ -129,3 +129,4 @@ pub fn mat4_to_array(m: stonesoup_core::Mat<4, 4>) -> Result<[[f64; 4]; 4], Erro
     }
     Ok(a)
 }
+
