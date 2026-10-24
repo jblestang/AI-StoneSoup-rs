@@ -42,4 +42,8 @@ if ! grep -q 'KDTree_Tutorial.py' "$csv"; then
   echo "catalogue: KDTree_Tutorial.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
-echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree)"
+if ! grep -q '01_SingleSensorManagement.py' "$csv"; then
+  echo "catalogue: 01_SingleSensorManagement.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + KD-tree + single sensor mgmt)"

@@ -18,9 +18,11 @@
 
 **Lot 11:** complete — **KD-tree GNN** tutorial (`DetectionKDTreeGNN2D`, scaled multi-target stack with seed-42 replay). Headless: `lot11_kdtree`. WASM viewer: `?tutorial=15` (aliases `kdtree`). Parity: `parity_lot11_kdtree` (12 steps, sorted track means vs Stone Soup export).
 
+**Lot 10:** complete — **Single sensor management** tutorial (`01_SingleSensorManagement.py`: rotating bearing–range radar, random vs brute-force managers, EKF + GNN; measurement replay + `associate_gnn_2d_ekf`). Headless: `lot10_single_sensor`. WASM viewer: `?tutorial=16` (aliases `sensor`, `sensormanagement`). Parity: `parity_lot10_single_sensor` (random + brute, 20 steps, sorted track means vs Stone Soup export).
+
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (tutorials **01–14**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (tutorials **01–16**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
@@ -34,5 +36,5 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated catalogue tutorials at pinned SHA: **01–14** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD).
-- **Next feature lots:** AKKF, sensor management, architecture, KD-tree, etc. (`PORTING_MATRIX.csv` `todo` rows).
+- Validated catalogue tutorials at pinned SHA: **01–16** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management).
+- **Next feature lots:** AKKF, multi-sensor management, architecture, etc. (`PORTING_MATRIX.csv` `todo` rows).

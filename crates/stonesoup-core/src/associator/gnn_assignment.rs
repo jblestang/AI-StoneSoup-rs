@@ -37,7 +37,7 @@ fn missed_hypothesis(prediction: GaussianState, gate: f64) -> MeasurementHypothe
 }
 
 /// Hungarian assignment from per-track distance hypotheses (shared by linear and kd-tree GNN).
-pub(super) fn assign_from_per_track_hypotheses(
+pub(crate) fn assign_from_per_track_hypotheses(
     n_tracks: usize,
     n_dets: usize,
     gate: f64,
