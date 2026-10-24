@@ -105,6 +105,18 @@ fn run() -> Result<String, ScenarioError> {
             "durations_s_true": dur_true,
             "durations_s_false": dur_false,
         },
+        "track_to_truth": {
+            "continuous_track_count": stats.continuous_truth_tracks.len(),
+            "continuous_tracks": stats.continuous_truth_tracks.iter().map(|c| {
+                serde_json::json!({
+                    "truth_id": c.truth_id,
+                    "wall_duration_s": (c.wall_end.0 - c.wall_start.0) as f64 / 1e9,
+                    "covered_duration_s": c.covered.as_seconds(),
+                    "linked_filter_track_ids": c.linked_filter_track_ids,
+                })
+            }).collect::<Vec<_>>(),
+            "association_count": stats.track_to_truth.len(),
+        },
     });
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../verification/reports");

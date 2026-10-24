@@ -7,6 +7,7 @@ mod kdtree2;
 mod kdtree_gnn;
 mod nearest_neighbour;
 mod pda;
+mod track_to_truth;
 
 pub use distance::{distance_hypotheses, squared_mahalanobis};
 pub use ekf_gnn::{associate_gnn_2d_ekf, associate_gnn_2d_ekf_det_models};
@@ -23,4 +24,8 @@ pub use nearest_neighbour::{
 pub use pda::{
     gm_reduce_single, pda_hypotheses, pda_merged_update, ProbabilityHypothesis, MAX_PDA_HYPOTHESES,
     PDA_GATE_CHI2_2D,
+};
+pub use track_to_truth::{
+    associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack, TrackPath,
+    TrackToTruthConfig, TrackTruthAssociation, TruthPath,
 };

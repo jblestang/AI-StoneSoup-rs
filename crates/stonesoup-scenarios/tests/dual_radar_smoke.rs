@@ -27,4 +27,9 @@ fn dual_radar_runs_to_plot_budget() {
         "fused lifecycle count {}",
         stats.fused_completed.len()
     );
+    assert_eq!(
+        stats.continuous_truth_tracks.len(),
+        4,
+        "TrackToTruth should yield one continuous track per truth"
+    );
 }

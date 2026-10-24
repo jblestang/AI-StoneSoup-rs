@@ -6,10 +6,11 @@ use alloc::vec::Vec;
 
 use stonesoup_core::linalg::Mat;
 use stonesoup_core::{
-    associate_gnn_2d_ekf_det_models, mod_bearing, CartesianToBearingRange, ConstantVelocity2d,
-    Detection, Duration, Error, ExtendedKalmanUpdater, GaussianState, GnnAssignment,
-    KalmanPredictor, KalmanWorkspace, MeasurementHypothesis, SensorId, Timestamp,
-    MAX_GNN_ASSIGN_DETS,
+    associate_gnn_2d_ekf_det_models, associate_tracks_to_truths, continuous_tracks_per_truth,
+    mod_bearing, CartesianToBearingRange, ConstantVelocity2d, ContinuousTruthTrack, Detection,
+    Duration, Error, ExtendedKalmanUpdater, GaussianState, GnnAssignment, KalmanPredictor,
+    KalmanWorkspace, MeasurementHypothesis, SensorId, Timestamp, TrackPath, TrackToTruthConfig,
+    TrackTruthAssociation, TruthPath, MAX_GNN_ASSIGN_DETS,
 };
 use stonesoup_core::GroundTruthState;
 use stonesoup_sim::{SplitMix64, TruthStepConfig};
@@ -30,7 +31,7 @@ pub const DT_S: f64 = 0.25;
 pub const NUM_TRUTHS: usize = 4;
 pub const GATE: f64 = 6.0;
 pub const MIN_POINTS: u8 = 3;
-pub const COAST_SECONDS: f64 = 8.0;
+pub const COAST_SECONDS: f64 = 30.0;
 pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
 pub const SEED: u64 = 42;
 
@@ -60,6 +61,7 @@ struct HoldingTrack {
 
 #[derive(Debug, Clone, Copy)]
 struct ActiveTrack {
+    id: u32,
     tail: GaussianState,
     last_meas_step: usize,
     birth_step: usize,
@@ -88,6 +90,8 @@ pub struct DualRadarStats {
     pub true_plot_tracks: Vec<CompletedTrack>,
     /// True plots whose range falls inside radar B max range (both sensors’ overlap disk).
     pub true_plots_in_overlap: usize,
+    pub track_to_truth: Vec<TrackTruthAssociation>,
+    pub continuous_truth_tracks: Vec<ContinuousTruthTrack>,
 }
 
 fn half_fov_rad() -> f64 {
@@ -313,6 +317,9 @@ pub struct DualRadarClutterSim {
     rng: SplitMix64,
     true_plots_in_overlap: usize,
     true_plot_tracks: Vec<CompletedTrack>,
+    next_track_id: u32,
+    filter_paths: Vec<TrackPath>,
+    truth_log: [Vec<(Timestamp, [f64; 4])>; NUM_TRUTHS],
 }
 
 impl DualRadarClutterSim {
@@ -381,7 +388,49 @@ impl DualRadarClutterSim {
             rng: SplitMix64::new(SEED.wrapping_add(1)),
             true_plots_in_overlap: 0,
             true_plot_tracks: Vec::new(),
+            next_track_id: 0,
+            filter_paths: Vec::new(),
+            truth_log: [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
         })
+    }
+
+    fn log_truths_at(&mut self, ts: Timestamp) {
+        let truths = self.truths;
+        for (i, gt) in truths.iter().enumerate() {
+            if self.truth_log[i].len() < 4096 {
+                self.truth_log[i].push((ts, gt.state));
+            }
+        }
+    }
+
+    fn start_filter_path(&mut self, id: u32, ts: Timestamp, mean: [f64; 4]) {
+        self.filter_paths.push(TrackPath {
+            id,
+            states: alloc::vec![(ts, mean)],
+        });
+    }
+
+    fn append_filter_path(&mut self, id: u32, ts: Timestamp, mean: [f64; 4]) {
+        if let Some(p) = self.filter_paths.iter_mut().find(|p| p.id == id) {
+            if p.states.last().map(|(t, _)| *t != ts).unwrap_or(true) {
+                p.states.push((ts, mean));
+            }
+        }
+    }
+
+    fn snapshot_active_paths(&mut self, ts: Timestamp) {
+        let mut snaps = [(0u32, [0.0; 4]); MAX_ACTIVE];
+        let mut n = 0usize;
+        for t in self.active.iter().flatten() {
+            if n < MAX_ACTIVE {
+                snaps[n] = (t.id, t.tail.mean.0);
+                n += 1;
+            }
+        }
+        for i in 0..n {
+            let (id, mean) = snaps[i];
+            self.append_filter_path(id, ts, mean);
+        }
     }
 
     fn record_true_plot_track(
@@ -459,9 +508,14 @@ impl DualRadarClutterSim {
     }
 
     fn insert_active(&mut self, tail: GaussianState, step: usize) -> Result<(), ScenarioError> {
+        let id = self.next_track_id;
+        self.next_track_id = self.next_track_id.saturating_add(1);
+        let ts = self.ts();
+        self.start_filter_path(id, ts, tail.mean.0);
         for slot in &mut self.active {
             if slot.is_none() {
                 *slot = Some(ActiveTrack {
+                    id,
                     tail,
                     last_meas_step: step,
                     birth_step: step,
@@ -676,6 +730,7 @@ impl DualRadarClutterSim {
             }
             self.multi_initiate(&unassoc[..n_unassoc], &un_models[..n_unassoc])?;
         }
+        self.snapshot_active_paths(ts);
         Ok(())
     }
 
@@ -685,6 +740,7 @@ impl DualRadarClutterSim {
                 self.advance_truths()?;
             }
             let ts = self.ts();
+            self.log_truths_at(ts);
             self.prior.timestamp = ts;
             let mut det_buf = [Detection {
                 vector: stonesoup_core::VecN([0.0, 0.0]),
@@ -746,6 +802,26 @@ impl DualRadarClutterSim {
             .iter()
             .filter(|c| c.truth_id.is_some())
             .fold(0u8, |acc, c| acc | (1 << c.truth_id.unwrap_or(0)));
+
+        let truth_paths: Vec<TruthPath> = self
+            .truth_log
+            .iter()
+            .enumerate()
+            .map(|(i, states)| TruthPath {
+                id: i as u8,
+                states: states.clone(),
+            })
+            .collect();
+        let tt_config = TrackToTruthConfig {
+            association_threshold_m: TRUTH_ASSOC_METERS,
+            consec_pairs_confirm: 3,
+            consec_misses_end: 2,
+        };
+        let track_to_truth =
+            associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config);
+        let continuous_truth_tracks =
+            continuous_tracks_per_truth(&track_to_truth, NUM_TRUTHS as u8);
+
         Ok(DualRadarStats {
             radar_a_plots: self.plot_counts[0],
             radar_b_plots: self.plot_counts[1],
@@ -757,6 +833,8 @@ impl DualRadarClutterSim {
             fused_completed: completed,
             true_plot_tracks: self.true_plot_tracks.clone(),
             true_plots_in_overlap: self.true_plots_in_overlap,
+            track_to_truth,
+            continuous_truth_tracks,
         })
     }
 }

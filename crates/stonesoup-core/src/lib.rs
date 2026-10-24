@@ -30,6 +30,8 @@ pub use associator::{
     GnnAssignment, GnnTrackAssignment, JpdaHypothesisSet, KdTree2D, MeasurementHypothesis,
     ProbabilityHypothesis, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS, MAX_GNN_ASSIGN_DETS,
     MAX_GNN_TRACKS, MAX_KDTREE_POINTS, MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
+    associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack,
+    TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
 };
 pub use deleter::{covariance_trace, should_delete_covariance_trace};
 pub use error::Error;

@@ -25,6 +25,47 @@
     "true_plots_in_overlap_disk": 453,
     "true_plots_in_overlap_fraction": 1.0
   },
+  "track_to_truth": {
+    "association_count": 7,
+    "continuous_track_count": 4,
+    "continuous_tracks": [
+      {
+        "covered_duration_s": 57.25,
+        "linked_filter_track_ids": [
+          0,
+          4
+        ],
+        "truth_id": 0,
+        "wall_duration_s": 57.25
+      },
+      {
+        "covered_duration_s": 56.75,
+        "linked_filter_track_ids": [
+          1,
+          5
+        ],
+        "truth_id": 1,
+        "wall_duration_s": 56.75
+      },
+      {
+        "covered_duration_s": 56.0,
+        "linked_filter_track_ids": [
+          2
+        ],
+        "truth_id": 2,
+        "wall_duration_s": 56.0
+      },
+      {
+        "covered_duration_s": 55.25,
+        "linked_filter_track_ids": [
+          3,
+          6
+        ],
+        "truth_id": 3,
+        "wall_duration_s": 55.25
+      }
+    ]
+  },
   "tracks": {
     "description": "total_unique_tracks = one fused-network row per true plot (~450). fused_lifecycle_tracks = long-coast GNN+EKF segments.",
     "durations_s_false": [],

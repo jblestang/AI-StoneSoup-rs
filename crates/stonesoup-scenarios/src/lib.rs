@@ -83,6 +83,7 @@ pub use dual_radar_clutter::{
     FOV_DEG, OVERLAP_AREA_FRACTION, PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M,
     SEED,
 };
+pub use stonesoup_core::{ContinuousTruthTrack, TrackTruthAssociation};
 pub use lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
     TUTORIAL02_SENSOR_XY,
