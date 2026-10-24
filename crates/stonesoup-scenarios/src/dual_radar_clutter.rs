@@ -33,7 +33,10 @@ pub const FOV_DEG: f64 = 90.0;
 pub const DT_S: f64 = 0.25;
 /// Wall-clock simulation length (plot budget resets each radar rotation).
 pub const SIM_DURATION_S: f64 = 60.0;
-pub const NUM_TRUTHS: usize = 4;
+/// Distinct ground-truth targets in the scenario (each may produce plots every rotation).
+pub const NUM_TRUTHS: usize = 250;
+const TRUTH_MIN_RANGE_M: f64 = 50_000.0;
+const TRUTH_MAX_RANGE_M: f64 = RANGE_A_M * 0.98;
 pub const GATE: f64 = 6.0;
 pub const MIN_POINTS: u8 = 3;
 pub const COAST_SECONDS: f64 = 30.0;
@@ -43,7 +46,7 @@ pub const SEED: u64 = 42;
 /// Concurrent fused tracks; [`MAX_GNN_ASSIGN_DETS`] matches this per-step detection budget.
 pub const MAX_ACTIVE: usize = 1000;
 const MAX_HOLDING: usize = 8192;
-const MAX_TRUE_PLOT_TRACKS: usize = 32_768;
+const MAX_TRUE_PLOT_TRACKS: usize = 512_000;
 
 #[derive(Debug, Clone, Copy)]
 struct RadarConfig {
@@ -94,8 +97,9 @@ pub struct DualRadarStats {
     pub total_true: usize,
     pub total_clutter: usize,
     pub simulation_steps: usize,
-    pub truths_with_plot: u8,
-    pub truths_with_track: u8,
+    pub truths_with_any_plot: usize,
+    pub truths_with_labeled_fused_track: usize,
+    pub continuous_truth_track_count: usize,
     /// Fused filter: completed segments after coast (few per truth).
     pub fused_completed: Vec<CompletedTrack>,
     /// One STT-style track row per **true** plot (~450 at 10% clutter on 500 plots).
@@ -241,32 +245,38 @@ fn initiate_bearing_range(
     GaussianState::new_from_array(mean, cov, det.timestamp).map_err(ScenarioError::Core)
 }
 
-fn init_truths(
-    ts0: Timestamp,
-    bearings: &[f64; NUM_TRUTHS],
-    rng: &mut SplitMix64,
-) -> Result<[GroundTruthState; NUM_TRUTHS], ScenarioError> {
-    let p0 = truth_at(ts0, bearings[0], rng)?;
-    let p1 = truth_at(ts0, bearings[1], rng)?;
-    let p2 = truth_at(ts0, bearings[2], rng)?;
-    let p3 = truth_at(ts0, bearings[3], rng)?;
-    Ok([p0, p1, p2, p3])
+fn init_truths(ts0: Timestamp, rng: &mut SplitMix64) -> Result<Vec<GroundTruthState>, ScenarioError> {
+    let mut out = Vec::with_capacity(NUM_TRUTHS);
+    let r_min2 = TRUTH_MIN_RANGE_M * TRUTH_MIN_RANGE_M;
+    let r_max2 = TRUTH_MAX_RANGE_M * TRUTH_MAX_RANGE_M;
+    for _ in 0..NUM_TRUTHS {
+        let bearing = rng.uniform01() * 2.0 * core::f64::consts::PI;
+        let u = rng.uniform01();
+        let range = libm::sqrt(u * (r_max2 - r_min2) + r_min2);
+        let vx = (rng.standard_normal().map_err(ScenarioError::Core)? * 3.0).clamp(-6.0, 6.0);
+        let vy = (rng.standard_normal().map_err(ScenarioError::Core)? * 3.0).clamp(-6.0, 6.0);
+        let state = [
+            range * libm::cos(bearing),
+            vx,
+            range * libm::sin(bearing),
+            vy,
+        ];
+        out.push(GroundTruthState::new(state, ts0).map_err(ScenarioError::Core)?);
+    }
+    Ok(out)
 }
 
-fn truth_at(
-    ts0: Timestamp,
-    bearing: f64,
-    rng: &mut SplitMix64,
-) -> Result<GroundTruthState, ScenarioError> {
-    let vx = (rng.standard_normal().map_err(ScenarioError::Core)? * 3.0).clamp(-6.0, 6.0);
-    let vy = (rng.standard_normal().map_err(ScenarioError::Core)? * 3.0).clamp(-6.0, 6.0);
-    let state = [
-        80_000.0 * libm::cos(bearing),
-        vx,
-        80_000.0 * libm::sin(bearing),
-        vy,
-    ];
-    GroundTruthState::new(state, ts0).map_err(ScenarioError::Core)
+fn count_unique_truth_labels(completed: &[CompletedTrack]) -> usize {
+    let mut seen = [false; NUM_TRUTHS];
+    for c in completed {
+        if let Some(tid) = c.truth_id {
+            let i = tid as usize;
+            if i < NUM_TRUTHS {
+                seen[i] = true;
+            }
+        }
+    }
+    seen.iter().filter(|&&x| x).count()
 }
 
 fn advance_truth(
@@ -320,14 +330,14 @@ pub struct DualRadarClutterSim {
     updater: ExtendedKalmanUpdater,
     ws: KalmanWorkspace,
     prior: GaussianState,
-    truths: [GroundTruthState; NUM_TRUTHS],
+    truths: Vec<GroundTruthState>,
     truth_cfg: TruthStepConfig,
     radars: [RadarConfig; 2],
     radar_rt: [RadarRuntime; 2],
     plot_counts: [usize; 2],
     total_true: usize,
     total_clutter: usize,
-    truths_detected: u8,
+    truths_plot_seen: Vec<bool>,
     step: usize,
     active: Vec<ActiveTrack>,
     holding: Vec<HoldingTrack>,
@@ -338,7 +348,7 @@ pub struct DualRadarClutterSim {
     true_plot_tracks: Vec<CompletedTrack>,
     next_track_id: u32,
     filter_paths: Vec<TrackPath>,
-    truth_log: [Vec<(Timestamp, [f64; 4])>; NUM_TRUTHS],
+    truth_log: Vec<Vec<(Timestamp, [f64; 4])>>,
 }
 
 impl DualRadarClutterSim {
@@ -351,14 +361,10 @@ impl DualRadarClutterSim {
             dt: Duration::from_seconds(DT_S).map_err(ScenarioError::Core)?,
         };
         let ts0 = Timestamp::ZERO;
-        let bearings = [
-            0.0,
-            core::f64::consts::FRAC_PI_2,
-            core::f64::consts::PI,
-            3.0 * core::f64::consts::PI / 2.0,
-        ];
         let mut rng = SplitMix64::new(SEED);
-        let truths = init_truths(ts0, &bearings, &mut rng)?;
+        let truths = init_truths(ts0, &mut rng)?;
+        let truths_plot_seen = alloc::vec![false; NUM_TRUTHS];
+        let truth_log = alloc::vec![Vec::new(); NUM_TRUTHS];
         let coast_steps = libm::ceil(COAST_SECONDS / DT_S) as usize;
         Ok(Self {
             predictor,
@@ -403,7 +409,7 @@ impl DualRadarClutterSim {
             plot_counts: [0, 0],
             total_true: 0,
             total_clutter: 0,
-            truths_detected: 0,
+            truths_plot_seen,
             step: 0,
             active: Vec::with_capacity(16),
             holding: Vec::with_capacity(32),
@@ -414,13 +420,12 @@ impl DualRadarClutterSim {
             true_plot_tracks: Vec::new(),
             next_track_id: 0,
             filter_paths: Vec::new(),
-            truth_log: [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
+            truth_log,
         })
     }
 
     fn log_truths_at(&mut self, ts: Timestamp) {
-        let truths = self.truths;
-        for (i, gt) in truths.iter().enumerate() {
+        for (i, gt) in self.truths.iter().enumerate() {
             if self.truth_log[i].len() < 4096 {
                 self.truth_log[i].push((ts, gt.state));
             }
@@ -492,8 +497,9 @@ impl DualRadarClutterSim {
         let dwell = self.radar_rt[radar_idx].dwell_rad;
         let model = radar_model(dwell)?;
         let mut n = 0usize;
-        let truths = self.truths;
-        for (ti, gt) in truths.iter().copied().enumerate() {
+        let n_truths = self.truths.len();
+        for ti in 0..n_truths {
+            let gt = self.truths[ti];
             if self.radar_rt[radar_idx].targets_this_rotation >= TARGETS_PER_ROTATION {
                 break;
             }
@@ -504,7 +510,9 @@ impl DualRadarClutterSim {
                     n += 1;
                     self.bump_radar_target(radar_idx);
                     self.total_true += 1;
-                    self.truths_detected |= 1 << ti;
+                    if ti < NUM_TRUTHS {
+                        self.truths_plot_seen[ti] = true;
+                    }
                     if det.vector.0[1] <= RANGE_B_M {
                         self.true_plots_in_overlap += 1;
                     }
@@ -793,10 +801,8 @@ impl DualRadarClutterSim {
             }
             completed.push(c);
         }
-        let truths_with_track = completed
-            .iter()
-            .filter(|c| c.truth_id.is_some())
-            .fold(0u8, |acc, c| acc | (1 << c.truth_id.unwrap_or(0)));
+        let truths_with_labeled = count_unique_truth_labels(&completed);
+        let truths_with_any_plot = self.truths_plot_seen.iter().filter(|&&x| x).count();
 
         let truth_paths: Vec<TruthPath> = self
             .truth_log
@@ -834,8 +840,9 @@ impl DualRadarClutterSim {
             total_true: self.total_true,
             total_clutter: self.total_clutter,
             simulation_steps: self.step,
-            truths_with_plot: self.truths_detected,
-            truths_with_track,
+            truths_with_any_plot,
+            truths_with_labeled_fused_track: truths_with_labeled,
+            continuous_truth_track_count: continuous_truth_tracks.len(),
             fused_completed: completed,
             true_plot_tracks: self.true_plot_tracks.clone(),
             true_plots_in_overlap: self.true_plots_in_overlap,
@@ -851,10 +858,6 @@ fn truth_step_nanos() -> i64 {
 
 pub fn max_simulation_steps() -> usize {
     libm::ceil(SIM_DURATION_S / DT_S) as usize
-}
-
-fn count_bits(x: u8) -> u8 {
-    x.count_ones() as u8
 }
 
 impl DualRadarStats {
@@ -890,11 +893,4 @@ impl DualRadarStats {
         (c.death_step.saturating_sub(c.birth_step)) as f64 * DT_S
     }
 
-    pub fn truths_with_plot_count(&self) -> u8 {
-        count_bits(self.truths_with_plot)
-    }
-
-    pub fn truths_with_track_count(&self) -> u8 {
-        count_bits(self.truths_with_track)
-    }
 }

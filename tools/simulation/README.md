@@ -18,7 +18,7 @@ Writes `verification/reports/dual_radar_clutter_stats.json`.
 Co-located **90° FOV** rotating bearing–range sensors, **fused** GNN + EKF: **sequential per-sensor** association/update on the same active set each step (initiation only after both radars), **3-point** initiation, **30 s** coast delete. Post-run **TrackToTruth** (2 km, 3-of-3 confirm) builds **one continuous track per target**.
 
 - **60 s** simulation (`Δt = 0.25 s`, 240 steps); up to **250 target detections per rotation per radar** (counter resets each 360° sweep). **Clutter is additional** (Poisson λ=0.1 per dwell). ~10 revs on A, ~20 on B in 60 s.
-- Four truths at **80 km** on cardinal bearings.
+- **250** distinct simulated targets (random range/bearing in the surveillance disk).
 
 ## Plots vs tracks
 

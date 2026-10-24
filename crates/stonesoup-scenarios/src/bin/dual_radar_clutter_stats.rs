@@ -7,12 +7,9 @@ use std::process::ExitCode;
 
 use stonesoup_scenarios::{
     max_simulation_steps, DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S,
-    FOV_DEG, OVERLAP_AREA_FRACTION, TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M,
-    RANGE_B_M,
-    SEED, SIM_DURATION_S, ScenarioError,
+    FOV_DEG, NUM_TRUTHS, OVERLAP_AREA_FRACTION, TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S,
+    RANGE_A_M, RANGE_B_M, SEED, SIM_DURATION_S, ScenarioError,
 };
-
-const NUM_TRUTHS: usize = 4;
 
 fn main() -> ExitCode {
     match run() {
@@ -73,7 +70,7 @@ fn run() -> Result<String, ScenarioError> {
             "period_b_s": PERIOD_B_S,
             "fov_deg": FOV_DEG,
             "num_truths": NUM_TRUTHS,
-            "truth_layout": "four targets at 80 km on cardinal bearings",
+            "truth_layout": "250 targets uniform random range 50–392 km bearing",
             "seed": SEED,
             "simulation_duration_s": SIM_DURATION_S,
             "time_step_s": DT_S,
@@ -97,8 +94,9 @@ fn run() -> Result<String, ScenarioError> {
         },
         "truths": {
             "simulated": NUM_TRUTHS,
-            "with_any_plot": stats.truths_with_plot_count(),
-            "with_confirmed_track": stats.truths_with_track_count(),
+            "with_any_plot": stats.truths_with_any_plot,
+            "with_labeled_fused_track": stats.truths_with_labeled_fused_track,
+            "with_continuous_track_to_truth": stats.continuous_truth_track_count,
         },
         "tracks": {
             "description": "total_unique_tracks = one fused-network row per true plot (~450). fused_lifecycle_tracks = long-coast GNN+EKF segments.",
