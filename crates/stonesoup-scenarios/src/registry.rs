@@ -28,6 +28,7 @@ pub enum ScenarioId {
     Lot18SimpleOosmExample,
     Lot19KalmanOosmExample,
     Lot20PfOosmExample,
+    Lot21OosmAlgorithmExample,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -45,7 +46,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 25] = [
+        static LIST: [ScenarioDescriptor; 26] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -222,6 +223,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "example",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot21OosmAlgorithmExample,
+                title: "26 — OOSM Algorithm C (inverse time)",
+                upstream_path: "docs/examples/oosm/example_oosm_algorithm.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
         ];
         &LIST
     }
@@ -257,7 +265,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot17ArchIntroTutorial
             | ScenarioId::Lot18SimpleOosmExample
             | ScenarioId::Lot19KalmanOosmExample
-            | ScenarioId::Lot20PfOosmExample => {
+            | ScenarioId::Lot20PfOosmExample
+            | ScenarioId::Lot21OosmAlgorithmExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -290,7 +299,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot17ArchIntroTutorial
             | ScenarioId::Lot18SimpleOosmExample
             | ScenarioId::Lot19KalmanOosmExample
-            | ScenarioId::Lot20PfOosmExample => {
+            | ScenarioId::Lot20PfOosmExample
+            | ScenarioId::Lot21OosmAlgorithmExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

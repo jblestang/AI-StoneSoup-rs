@@ -118,6 +118,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "23" | "oosm" | "simple-oosm" => Some(ScenarioId::Lot18SimpleOosmExample),
         "24" | "kalman-oosm" | "ekf-oosm" => Some(ScenarioId::Lot19KalmanOosmExample),
         "25" | "pf-oosm" | "particle-oosm" => Some(ScenarioId::Lot20PfOosmExample),
+        "26" | "algorithm-c" | "oosm-algorithm" => Some(ScenarioId::Lot21OosmAlgorithmExample),
         _ => None,
     }
 }
