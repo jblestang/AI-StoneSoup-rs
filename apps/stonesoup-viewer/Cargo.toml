@@ -24,7 +24,7 @@ serde_json = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = "0.4.43"
-web-sys = { version = "0.3.70", features = ["Document", "Window", "HtmlCanvasElement"] }
+web-sys = { version = "0.3.70", features = ["Document", "Window", "HtmlCanvasElement", "Location"] }
 
 [features]
 default = []

@@ -7,8 +7,11 @@ use stonesoup_scenarios::{
     TUTORIAL02_SENSOR_XY,
 };
 
-/// NumPy / Stone Soup fixture seed (tutorials 01–04).
+/// NumPy / Stone Soup fixture seed (tutorials 01–08).
 const FIXTURE_SEED: u32 = 1991;
+
+/// Document title set when `?finish=1` run completes (WASM screenshot automation).
+pub const WASM_READY_TITLE: &str = "stonesoup-viewer-ready";
 
 pub struct ViewerApp {
     active_id: ScenarioId,
@@ -28,6 +31,10 @@ pub struct ViewerApp {
     step_clutter: Vec<[f64; 2]>,
     step_true_dets: Vec<[f64; 2]>,
     step_associated: Option<[f64; 2]>,
+    #[cfg(target_arch = "wasm32")]
+    wasm_query_handled: bool,
+    #[cfg(target_arch = "wasm32")]
+    pending_auto_finish: bool,
 }
 
 impl Default for ViewerApp {
@@ -49,7 +56,25 @@ impl Default for ViewerApp {
             step_clutter: Vec::new(),
             step_true_dets: Vec::new(),
             step_associated: None,
+            #[cfg(target_arch = "wasm32")]
+            wasm_query_handled: false,
+            #[cfg(target_arch = "wasm32")]
+            pending_auto_finish: false,
         }
+    }
+}
+
+fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
+    match code {
+        "01" | "1" => Some(ScenarioId::Lot1KalmanTutorial),
+        "02" | "2" => Some(ScenarioId::Lot2EkfTutorial),
+        "03" | "3" => Some(ScenarioId::Lot2UkfTutorial),
+        "04" | "4" => Some(ScenarioId::Lot2ParticleTutorial),
+        "05" | "5" => Some(ScenarioId::Lot3ClutterTutorial),
+        "06" | "6" => Some(ScenarioId::Lot3MultiTargetTutorial),
+        "07" | "7" => Some(ScenarioId::Lot3PdaTutorial),
+        "08" | "8" => Some(ScenarioId::Lot3JpdaTutorial),
+        _ => None,
     }
 }
 
@@ -159,6 +184,73 @@ impl ViewerApp {
         });
     }
 
+    /// Advance until the scenario reports finished; rebuild trails for the plot.
+    pub fn finish_to_end(&mut self) {
+        self.playing = false;
+        self.clear_trails();
+        self.ensure_scenario();
+        loop {
+            let progress = {
+                let Some(s) = &mut self.scenario else {
+                    break;
+                };
+                match s.step() {
+                    Ok(ScenarioStepOutcome::Stepped) => (true, s.viewer_snapshot().ok()),
+                    Ok(ScenarioStepOutcome::Finished) => (false, s.viewer_snapshot().ok()),
+                    Err(e) => {
+                        self.error = Some(format!("{e:?}"));
+                        break;
+                    }
+                }
+            };
+            if let Some(snap) = progress.1 {
+                self.apply_snapshot(snap);
+            }
+            if !progress.0 {
+                break;
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
+        if let Some(window) = web_sys::window() {
+            let _ = window.document().and_then(|d| {
+                d.set_title(WASM_READY_TITLE);
+                Some(())
+            });
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn apply_wasm_query_params(&mut self) {
+        if self.wasm_query_handled {
+            return;
+        }
+        self.wasm_query_handled = true;
+        let Some(window) = web_sys::window() else {
+            return;
+        };
+        let Ok(search) = window.location().search() else {
+            return;
+        };
+        let mut tutorial: Option<String> = None;
+        let mut finish = false;
+        for pair in search.trim_start_matches('?').split('&') {
+            let Some((key, value)) = pair.split_once('=') else {
+                continue;
+            };
+            match key {
+                "tutorial" => tutorial = Some(value.to_string()),
+                "finish" if value == "1" || value.eq_ignore_ascii_case("true") => finish = true,
+                _ => {}
+            }
+        }
+        if let Some(code) = tutorial.as_deref().and_then(scenario_id_from_tutorial) {
+            self.load_scenario(code);
+        }
+        if finish {
+            self.pending_auto_finish = true;
+        }
+    }
+
     pub fn step_once(&mut self) {
         let Some(s) = &mut self.scenario else {
             return;
@@ -216,7 +308,14 @@ impl ViewerApp {
 
 impl eframe::App for ViewerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        #[cfg(target_arch = "wasm32")]
+        self.apply_wasm_query_params();
         self.ensure_scenario();
+        #[cfg(target_arch = "wasm32")]
+        if self.pending_auto_finish {
+            self.pending_auto_finish = false;
+            self.finish_to_end();
+        }
         if self.playing {
             let now = ctx.input(|i| i.time);
             let delay = 0.4 / f64::from(self.speed.max(0.1));
