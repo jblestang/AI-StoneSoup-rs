@@ -1,9 +1,10 @@
 //! Multi-target tracker with ``MultiMeasurementInitiator`` (Tutorials 09–10).
 
 use stonesoup_core::{
-    associate_gnn_2d, initiate_from_detection, should_delete_covariance_trace, ConstantVelocity2d,
-    Detection, Duration, GaussianState, GnnAssignment, KalmanPredictor, KalmanUpdater,
-    KalmanWorkspace, LinearGaussianMeasurement, Mat, MeasurementHypothesis, Timestamp,
+    associate_gnn_2d, associate_gnn_2d_kdtree, initiate_from_detection,
+    should_delete_covariance_trace, ConstantVelocity2d, Detection, Duration, GaussianState,
+    GnnAssignment, KalmanPredictor, KalmanUpdater, KalmanWorkspace, LinearGaussianMeasurement, Mat,
+    MeasurementHypothesis, Timestamp, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS,
     MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS,
 };
 
@@ -11,11 +12,17 @@ use crate::lot3_meas::push_measurements;
 use crate::registry::ScenarioError;
 
 pub const MAX_LOT4_ACTIVE_TRACKS: usize = 16;
-pub const MAX_LOT4_HOLDING_TRACKS: usize = 16;
+pub const MAX_LOT4_HOLDING_TRACKS: usize = 64;
 
 struct HoldingTrack {
     tail: GaussianState,
     updates: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Lot4GnnAssociator {
+    Linear,
+    KdTree,
 }
 
 pub struct Lot4TrackerParams {
@@ -26,6 +33,7 @@ pub struct Lot4TrackerParams {
     pub process_noise: f64,
     pub meas_var: f64,
     pub prior: GaussianState,
+    pub gnn: Lot4GnnAssociator,
 }
 
 pub struct Lot4MultiTargetTracker {
@@ -39,6 +47,27 @@ pub struct Lot4MultiTargetTracker {
     max_steps: usize,
     meas_offsets: &'static [usize],
     meas_xy: &'static [[f64; 2]],
+}
+
+fn compress_unassigned_detections(
+    detections: &[Detection],
+    det_used: &[bool],
+    out: &mut [Detection],
+    orig_index: &mut [usize],
+) -> Result<usize, ScenarioError> {
+    let mut n = 0usize;
+    for (i, det) in detections.iter().enumerate() {
+        if det_used.get(i).copied().unwrap_or(false) {
+            continue;
+        }
+        if n >= out.len() || n >= orig_index.len() {
+            return Err(ScenarioError::Core(stonesoup_core::Error::CapacityExceeded));
+        }
+        out[n] = *det;
+        orig_index[n] = i;
+        n += 1;
+    }
+    Ok(n)
 }
 
 impl Lot4MultiTargetTracker {
@@ -78,6 +107,41 @@ impl Lot4MultiTargetTracker {
 
     fn ts(&self, step: usize) -> Timestamp {
         Timestamp::from_nanos((step as i64) * (self.params.step_seconds as i64) * Duration::SEC.0)
+    }
+
+    fn associate_gnn(
+        &mut self,
+        track_tails: &[GaussianState],
+        ts: Timestamp,
+        detections: &[Detection],
+        assigns: &mut [GnnAssignment],
+    ) -> Result<usize, ScenarioError> {
+        match self.params.gnn {
+            Lot4GnnAssociator::Linear => associate_gnn_2d(
+                track_tails,
+                ts,
+                detections,
+                self.params.gate,
+                &self.predictor,
+                &self.updater,
+                &mut self.ws,
+                assigns,
+            )
+            .map_err(ScenarioError::Core),
+            Lot4GnnAssociator::KdTree => associate_gnn_2d_kdtree(
+                track_tails,
+                ts,
+                detections,
+                self.params.gate,
+                &self.predictor,
+                &self.updater,
+                &mut self.ws,
+                assigns,
+                KDTREE_GNN_NEIGHBOURS,
+                KDTREE_GNN_COV_MULTIPLIER,
+            )
+            .map_err(ScenarioError::Core),
+        }
     }
 
     pub fn step_index(&self) -> usize {
@@ -167,35 +231,51 @@ impl Lot4MultiTargetTracker {
                     distance: self.params.gate,
                 },
             }; MAX_GNN_ASSIGN_TRACKS];
-            associate_gnn_2d(
-                &hold_tails[..n_hold],
-                ts,
-                detections,
-                self.params.gate,
-                &self.predictor,
-                &self.updater,
-                &mut self.ws,
-                &mut assigns,
-            )
-            .map_err(ScenarioError::Core)?;
+            let mut comp_dets = [Detection {
+                vector: stonesoup_core::VecN([0.0, 0.0]),
+                timestamp: ts,
+                sensor: stonesoup_core::SensorId(0),
+            }; MAX_GNN_ASSIGN_DETS];
+            let mut comp_map = [0usize; MAX_GNN_ASSIGN_DETS];
+            let mut hold_offset = 0usize;
+            while hold_offset < n_hold {
+                let chunk = (n_hold - hold_offset).min(MAX_GNN_ASSIGN_TRACKS);
+                let n_comp = compress_unassigned_detections(
+                    detections,
+                    &det_used,
+                    &mut comp_dets,
+                    &mut comp_map,
+                )?;
+                self.associate_gnn(
+                    &hold_tails[hold_offset..hold_offset + chunk],
+                    ts,
+                    &comp_dets[..n_comp],
+                    &mut assigns[..chunk],
+                )?;
 
-            for t in 0..n_hold {
-                let slot = hold_map[t];
-                let h = &assigns[t].hypothesis;
-                let ht = self.holding[slot]
-                    .as_mut()
-                    .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
-                if let Some(di) = h.detection_index {
-                    let post = self
-                        .updater
-                        .update(&h.prediction, &detections[di], &mut self.ws)
-                        .map_err(ScenarioError::Core)?;
-                    ht.tail = post;
-                    ht.updates = ht.updates.saturating_add(1);
-                    det_used[di] = true;
-                } else {
-                    ht.tail = h.prediction;
+                for t in 0..chunk {
+                    let slot = hold_map[hold_offset + t];
+                    let h = &assigns[t].hypothesis;
+                    let ht = self.holding[slot]
+                        .as_mut()
+                        .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+                    if let Some(di) = h.detection_index {
+                        let orig = comp_map
+                            .get(di)
+                            .copied()
+                            .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+                        let post = self
+                            .updater
+                            .update(&h.prediction, &detections[orig], &mut self.ws)
+                            .map_err(ScenarioError::Core)?;
+                        ht.tail = post;
+                        ht.updates = ht.updates.saturating_add(1);
+                        det_used[orig] = true;
+                    } else {
+                        ht.tail = h.prediction;
+                    }
                 }
+                hold_offset += chunk;
             }
 
             for slot in 0..MAX_LOT4_HOLDING_TRACKS {
@@ -268,17 +348,7 @@ impl Lot4MultiTargetTracker {
                     distance: self.params.gate,
                 },
             }; MAX_GNN_ASSIGN_TRACKS];
-            associate_gnn_2d(
-                &act_tails[..n_act],
-                ts,
-                detections,
-                self.params.gate,
-                &self.predictor,
-                &self.updater,
-                &mut self.ws,
-                &mut assigns,
-            )
-            .map_err(ScenarioError::Core)?;
+            self.associate_gnn(&act_tails[..n_act], ts, detections, &mut assigns)?;
 
             for t in 0..n_act {
                 let slot = act_map[t];

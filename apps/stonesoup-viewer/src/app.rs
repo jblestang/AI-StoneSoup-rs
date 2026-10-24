@@ -103,6 +103,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "12" | "information" | "if" => Some(ScenarioId::Lot6InformationFilterTutorial),
         "13" | "gmphd" | "phd" | "gm-phd" => Some(ScenarioId::Lot7GmphdTutorial),
         "14" | "asd" => Some(ScenarioId::Lot8AsdTutorial),
+        "15" | "kdtree" => Some(ScenarioId::Lot11KdtreeTutorial),
         _ => None,
     }
 }
@@ -353,6 +354,7 @@ impl ViewerApp {
                 | ScenarioId::Lot3JpdaTutorial
                 | ScenarioId::Lot4InitiatorsTutorial
                 | ScenarioId::Lot4SimulationTutorial
+                | ScenarioId::Lot11KdtreeTutorial
         )
     }
 

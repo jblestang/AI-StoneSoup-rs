@@ -3,6 +3,7 @@
 
 extern crate alloc;
 
+mod lot11_kdtree;
 mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;
@@ -23,6 +24,7 @@ mod particle_lot2;
 mod registry;
 pub mod scenario;
 
+pub use lot11_kdtree::{Lot11KdtreeScenario, MAX_LOT11_KDTREE_STEPS};
 pub use lot1_kalman::{
     tutorial_cov, Lot1KalmanScenario, Lot1Snapshot, Lot1StepOutcome, MAX_LOT1_STEPS, MEASUREMENTS,
     TRUTH,

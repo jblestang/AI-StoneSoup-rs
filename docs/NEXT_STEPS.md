@@ -16,6 +16,8 @@
 
 **Lot 8:** complete — **ASD filter** tutorial (`ASDFilter.py`: accumulated state densities, OOS measurement order, `max_nstep=30`). Headless: `lot8_asd`. WASM viewer: `?tutorial=14`. Parity: `parity_lot8_asd` (101 act-state updates vs Stone Soup export).
 
+**Lot 11:** complete — **KD-tree GNN** tutorial (`DetectionKDTreeGNN2D`, scaled multi-target stack with seed-42 replay). Headless: `lot11_kdtree`. WASM viewer: `?tutorial=15` (aliases `kdtree`). Parity: `parity_lot11_kdtree` (12 steps, sorted track means vs Stone Soup export).
+
 ## Screenshots & viewer catalogue
 
 - **WASM** final states (tutorials **01–14**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`

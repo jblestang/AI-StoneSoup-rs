@@ -1,5 +1,6 @@
 #![allow(clippy::large_enum_variant)]
 
+use crate::lot11_kdtree::Lot11KdtreeScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
@@ -106,6 +107,7 @@ pub enum AnyScenario {
     Lot6Information(Lot6InformationScenario),
     Lot7Gmphd(Lot7GmPhdScenario),
     Lot8Asd(Lot8AsdScenario),
+    Lot11Kdtree(Lot11KdtreeScenario),
 }
 
 impl AnyScenario {
@@ -146,6 +148,9 @@ impl AnyScenario {
                 Ok(Self::Lot7Gmphd(Lot7GmPhdScenario::tutorial_defaults()?))
             }
             ScenarioId::Lot8AsdTutorial => Ok(Self::Lot8Asd(Lot8AsdScenario::tutorial_defaults()?)),
+            ScenarioId::Lot11KdtreeTutorial => {
+                Ok(Self::Lot11Kdtree(Lot11KdtreeScenario::tutorial_defaults()?))
+            }
         }
     }
 
@@ -166,6 +171,7 @@ impl AnyScenario {
             Self::Lot6Information(_) => ScenarioId::Lot6InformationFilterTutorial,
             Self::Lot7Gmphd(_) => ScenarioId::Lot7GmphdTutorial,
             Self::Lot8Asd(_) => ScenarioId::Lot8AsdTutorial,
+            Self::Lot11Kdtree(_) => ScenarioId::Lot11KdtreeTutorial,
         }
     }
 }
@@ -187,6 +193,7 @@ impl Scenario for AnyScenario {
             Self::Lot6Information(s) => s.reset(),
             Self::Lot7Gmphd(s) => s.reset(),
             Self::Lot8Asd(s) => s.reset(),
+            Self::Lot11Kdtree(s) => s.reset(),
         }
     }
 
@@ -266,6 +273,13 @@ impl Scenario for AnyScenario {
                 Lot8StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
                 Lot8StepOutcome::Finished => ScenarioStepOutcome::Finished,
             },
+            Self::Lot11Kdtree(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -359,6 +373,7 @@ impl Scenario for AnyScenario {
                     resample_xy: no_resample_view().2,
                 })
             }
+            Self::Lot11Kdtree(s) => s.viewer_snapshot(),
         }
     }
 }
@@ -610,6 +625,12 @@ impl Lot4ViewerTracks for Lot4Tutorial09Scenario {
 impl Lot4ViewerTracks for Lot4Tutorial10Scenario {
     fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize {
         Lot4Tutorial10Scenario::snapshot_track_means(self, out)
+    }
+}
+
+impl Lot4ViewerTracks for Lot11KdtreeScenario {
+    fn snapshot_track_means(&self, out: &mut [[f64; 4]; MAX_LOT4_ACTIVE_TRACKS]) -> usize {
+        Lot11KdtreeScenario::snapshot_track_means(self, out)
     }
 }
 

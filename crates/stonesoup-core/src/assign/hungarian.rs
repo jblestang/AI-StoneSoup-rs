@@ -19,10 +19,10 @@ pub fn linear_sum_assignment_min(
         return Err(Error::InvalidDimension);
     }
     let n = rows.max(cols);
-    if n > 32 {
+    if n > 96 {
         return Err(Error::CapacityExceeded);
     }
-    let mut a = [0.0f64; 32 * 32];
+    let mut a = [0.0f64; 96 * 96];
     for i in 0..rows {
         for j in 0..cols {
             a[i * n + j] = cost[i * cols + j];
@@ -36,15 +36,15 @@ pub fn linear_sum_assignment_min(
             a[i * n + j] = 0.0;
         }
     }
-    let mut u = [0.0f64; 32];
-    let mut v = [0.0f64; 32];
-    let mut p = [0usize; 32];
-    let mut way = [0usize; 32];
+    let mut u = [0.0f64; 96];
+    let mut v = [0.0f64; 96];
+    let mut p = [0usize; 96];
+    let mut way = [0usize; 96];
     for i in 1..=n {
         p[0] = i;
         let mut j0 = 0usize;
-        let mut minv = [INF; 32];
-        let mut used = [false; 32];
+        let mut minv = [INF; 96];
+        let mut used = [false; 96];
         loop {
             used[j0] = true;
             let i0 = p[j0];

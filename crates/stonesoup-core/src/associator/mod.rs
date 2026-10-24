@@ -2,6 +2,8 @@ mod distance;
 mod global_neighbour;
 mod gnn_assignment;
 mod jpda;
+mod kdtree2;
+mod kdtree_gnn;
 mod nearest_neighbour;
 mod pda;
 
@@ -13,6 +15,8 @@ pub use gnn_assignment::{
     associate_gnn_2d, GnnAssignment, MAX_GNN_ASSIGN_DETS, MAX_GNN_ASSIGN_TRACKS,
 };
 pub use jpda::{jpda_associate, JpdaHypothesisSet};
+pub use kdtree2::{KdTree2D, MAX_KDTREE_POINTS};
+pub use kdtree_gnn::{associate_gnn_2d_kdtree, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS};
 pub use nearest_neighbour::{
     associate_nearest_neighbour, AssociationOutcome, MeasurementHypothesis,
 };

@@ -16,8 +16,9 @@ use crate::types::Detection;
 use super::distance::{distance_hypotheses, MAX_DISTANCE_HYPOTHESES};
 use super::nearest_neighbour::MeasurementHypothesis;
 
-pub const MAX_GNN_ASSIGN_TRACKS: usize = 16;
-pub const MAX_GNN_ASSIGN_DETS: usize = 32;
+pub const MAX_GNN_ASSIGN_TRACKS: usize = 48;
+pub const MAX_GNN_ASSIGN_DETS: usize = 48;
+pub const MAX_GNN_ASSIGN_COLS: usize = MAX_GNN_ASSIGN_DETS + MAX_GNN_ASSIGN_TRACKS;
 const INF: f64 = 1e100;
 
 #[derive(Debug, Clone, Copy)]
@@ -94,16 +95,16 @@ pub fn associate_gnn_2d(
     }
 
     let cols = n_dets + n_det_tracks;
-    if cols > 48 {
+    if cols > MAX_GNN_ASSIGN_COLS {
         return Err(Error::CapacityExceeded);
     }
 
-    let mut cost = [INF; MAX_GNN_ASSIGN_TRACKS * 48];
+    let mut cost = [INF; MAX_GNN_ASSIGN_TRACKS * MAX_GNN_ASSIGN_COLS];
     let mut hyp = [[MeasurementHypothesis {
         prediction: track_tails[0],
         detection_index: None,
         distance: gate,
-    }; 48]; MAX_GNN_ASSIGN_TRACKS];
+    }; MAX_GNN_ASSIGN_COLS]; MAX_GNN_ASSIGN_TRACKS];
 
     for (row, &t) in detected.iter().enumerate().take(n_det_tracks) {
         for h in &per_track[t][..counts[t]] {
