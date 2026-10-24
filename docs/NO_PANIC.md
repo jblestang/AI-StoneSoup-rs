@@ -1,38 +1,33 @@
 # No-panic verification (strict crates)
 
-## Claimed scope (current)
+## Claimed scope (Lot 1)
 
 | Target | Profile | Status |
 |--------|---------|--------|
-| `x86_64-unknown-linux-gnu` | `no-panic-test` profile, `panic = "unwind"` | Partial harness links |
+| `x86_64-unknown-linux-gnu` | `no-panic-test`, `panic = "unwind"` | **Harness links** (Kalman + Lot 1 scenario) |
 | `thumbv7em-none-eabihf` | `cargo check` strict crates | Compiles |
 | `wasm32-unknown-unknown` | `cargo check` scenarios | Compiles |
 
-**Certified entry points (native, `#[no_panic]` harness):**
+**Certified entry points (native harness, `#[no_panic]`):**
 
-- `ConstantVelocity2d::new`, `transition_matrix`, `process_noise`
-- `LinearGaussianMeasurement::position_2d`
-- `GaussianState::new_from_array`
-- `RmseAccumulator::push`, `rmse`
-- `stonesoup_scenarios::tutorial_cov`
+- `exercise_kalman_once` — full predict/update on tutorial-sized state
+- `exercise_lot1_scenario` — `Lot1KalmanScenario::run_to_end` + RMSE accumulator
 
-**Not yet certified (linker plugin still reports panic paths):**
-
-- `KalmanPredictor::predict`, `KalmanUpdater::update` (`Mat::mul` / transpose chain)
-- `Lot1KalmanScenario::tutorial_defaults` / `run_to_end` (depends on Kalman)
-
-Root cause under investigation: `no-panic` treats some optimised matrix loops as potentially panicking despite fallible `get`/`set`. Workaround tracked in Lot 1.1 — do **not** claim full strict-crate panic freedom until Kalman paths link clean.
+Core/scenario functions used on these paths are annotated with `#[no_panic]` when built with feature `no-panic-cert` (enabled only for the standalone harness crate).
 
 ## How to run
 
 ```bash
-cargo run -p stonesoup-no-panic-harness --profile no-panic-test --locked
-./verification/scripts/check_no_panic.sh
+cargo run --manifest-path verification/no-panic-harness/Cargo.toml --profile no-panic-test --locked
+./verification/scripts/check_no_panic.sh   # wrapper (optional)
+./verification/scripts/mutation_no_panic.sh
 ```
+
+The harness lives **outside** the root workspace (`workspace.exclude`) so normal `cargo test --workspace` does not require the no-panic linker plugin.
 
 ## Negative control
 
-`verification/mutations/README.md` — manual mutation procedure (insert `unwrap()` in core); harness / link step must fail before merge when full Kalman coverage is enabled.
+`verification/scripts/mutation_no_panic.sh` injects a deliberate `unwrap()` into `KalmanUpdater::update` and expects a link failure with `ERROR[no-panic]`.
 
 ## Limits
 

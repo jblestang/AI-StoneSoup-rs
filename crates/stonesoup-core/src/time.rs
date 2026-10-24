@@ -15,6 +15,7 @@ impl Timestamp {
         self.0
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn checked_add(self, dt: Duration) -> Result<Self, Error> {
         let sum = self.0.checked_add(dt.0).ok_or(Error::InvalidTimeStep)?;
         if sum < 0 {
@@ -23,6 +24,7 @@ impl Timestamp {
         Ok(Self(sum))
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn checked_sub(self, other: Self) -> Result<Duration, Error> {
         let d = self.0.checked_sub(other.0).ok_or(Error::InvalidTimeStep)?;
         Ok(Duration(d))
@@ -52,6 +54,7 @@ impl Duration {
         Ok(Self(nanos as i64))
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn as_seconds(self) -> f64 {
         (self.0 as f64) / 1e9
     }

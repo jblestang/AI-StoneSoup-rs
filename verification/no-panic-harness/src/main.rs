@@ -1,52 +1,81 @@
-//! Native linked harness exercising strict APIs under `#[no_panic]`.
-//!
-//! Manifest (Lot 1): `ConstantVelocity2d`, `LinearGaussianMeasurement`, `GaussianState`,
-//! `RmseAccumulator`, `tutorial_cov`. Kalman predict/update and full scenario stepping are
-//! tracked in `docs/NO_PANIC.md` (Mat::mul still flagged by the linker plugin).
+//! Native linked harness — manifest in `docs/NO_PANIC.md`.
 
 use no_panic::no_panic;
 use stonesoup_core::{
-    ConstantVelocity2d, Duration, GaussianState, LinearGaussianMeasurement, Mat, RmseAccumulator,
-    Timestamp,
+    ConstantVelocity2d, Detection, Duration, GaussianState, KalmanPredictor, KalmanUpdater,
+    KalmanWorkspace, LinearGaussianMeasurement, Mat, RmseAccumulator, SensorId, Timestamp,
 };
-use stonesoup_scenarios::tutorial_cov;
+use stonesoup_scenarios::Lot1KalmanScenario;
 
 #[no_panic]
-fn exercise_core_lot1() -> u32 {
+fn exercise_kalman_once() -> u32 {
     let transition = match ConstantVelocity2d::new(0.05, 0.05) {
         Ok(t) => t,
         Err(_) => return 1,
     };
-    if transition.transition_matrix(Duration::SEC).is_err() {
-        return 2;
-    }
-    if transition.process_noise(Duration::SEC).is_err() {
-        return 3;
-    }
+    let predictor = KalmanPredictor::new(transition);
     let mut r = Mat::<2, 2>::zeros();
     if r.set(0, 0, 5.0).is_err() || r.set(1, 1, 5.0).is_err() {
+        return 2;
+    }
+    let measurement = match LinearGaussianMeasurement::position_2d(r) {
+        Ok(m) => m,
+        Err(_) => return 3,
+    };
+    let updater = KalmanUpdater::new(measurement);
+    let mut cov = Mat::<4, 4>::zeros();
+    if cov.set(0, 0, 1.5).is_err()
+        || cov.set(1, 1, 0.5).is_err()
+        || cov.set(2, 2, 1.5).is_err()
+        || cov.set(3, 3, 0.5).is_err()
+    {
         return 4;
     }
-    if LinearGaussianMeasurement::position_2d(r).is_err() {
-        return 5;
-    }
-    let cov = match tutorial_cov() {
-        Ok(c) => c,
+    let prior = match GaussianState::new_from_array([0.0, 1.0, 0.0, 1.0], cov, Timestamp::ZERO) {
+        Ok(p) => p,
+        Err(_) => return 5,
+    };
+    let mut ws = KalmanWorkspace {
+        f: Mat::zeros(),
+        q: Mat::zeros(),
+        h: Mat::zeros(),
+        r: Mat::zeros(),
+    };
+    let ts = Timestamp::from_nanos(Duration::SEC.0);
+    let predicted = match predictor.predict(&prior, ts, &mut ws) {
+        Ok(p) => p,
         Err(_) => return 6,
     };
-    if GaussianState::new_from_array([0.0, 1.0, 0.0, 1.0], cov, Timestamp::ZERO).is_err() {
-        return 7;
-    }
-    let mut rmse = RmseAccumulator::new();
-    if rmse.push(0.2, -0.1).is_err() {
+    let det = match Detection::new([1.0, 2.0], ts, SensorId(0)) {
+        Ok(d) => d,
+        Err(_) => return 7,
+    };
+    if updater.update(&predicted, &det, &mut ws).is_err() {
         return 8;
     }
+    0
+}
+
+#[no_panic]
+fn exercise_lot1_scenario() -> u32 {
+    let mut sc = match Lot1KalmanScenario::tutorial_defaults() {
+        Ok(s) => s,
+        Err(_) => return 10,
+    };
+    if sc.run_to_end().is_err() {
+        return 11;
+    }
+    let mut rmse = RmseAccumulator::new();
+    if rmse.push(0.1, -0.2).is_err() {
+        return 12;
+    }
     if rmse.rmse().is_err() {
-        return 9;
+        return 13;
     }
     0
 }
 
 fn main() {
-    std::process::exit(exercise_core_lot1() as i32);
+    let code = exercise_kalman_once() + exercise_lot1_scenario();
+    std::process::exit(code.min(255) as i32);
 }

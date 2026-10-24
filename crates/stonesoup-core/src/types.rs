@@ -16,6 +16,7 @@ pub struct GroundTruthState {
 }
 
 impl GroundTruthState {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn new(state: [f64; 4], timestamp: Timestamp) -> Result<Self, Error> {
         for &v in &state {
             require_finite(v)?;
@@ -33,9 +34,12 @@ pub struct Detection {
 }
 
 impl Detection {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn new(vector: [f64; 2], timestamp: Timestamp, sensor: SensorId) -> Result<Self, Error> {
+        require_finite(vector[0])?;
+        require_finite(vector[1])?;
         Ok(Self {
-            vector: VecN::from_slice(&vector)?,
+            vector: VecN(vector),
             timestamp,
             sensor,
         })

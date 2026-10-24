@@ -63,14 +63,37 @@ fn main() -> ExitCode {
             "--locked",
         ],
     ));
+    ok &= run({
+        let mut c = Command::new("cargo");
+        c.args([
+            "run",
+            "--manifest-path",
+            "verification/no-panic-harness/Cargo.toml",
+            "--profile",
+            "no-panic-test",
+            "--locked",
+        ]);
+        c
+    });
+    ok &= run({
+        let mut c = Command::new("bash");
+        c.arg("verification/scripts/check_catalogue.sh");
+        c
+    });
+    ok &= run({
+        let mut c = Command::new("bash");
+        c.arg("verification/scripts/mutation_no_panic.sh");
+        c
+    });
     ok &= run(cargo(
         "run",
         &[
             "-p",
-            "stonesoup-no-panic-harness",
-            "--profile",
-            "no-panic-test",
+            "stonesoup-headless",
+            "--release",
             "--locked",
+            "--",
+            "lot1",
         ],
     ));
     if ok {

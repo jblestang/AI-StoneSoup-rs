@@ -1,14 +1,20 @@
 #![allow(clippy::arithmetic_side_effects)]
 
+pub mod fixed;
+
 use crate::error::Error;
 use libm::{fabs, sqrt};
 
 #[inline]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn is_finite(x: f64) -> bool {
     x.is_finite()
 }
 
 #[inline]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn require_finite(x: f64) -> Result<(), Error> {
     if x.is_finite() {
         Ok(())
@@ -26,6 +32,8 @@ impl<const R: usize, const C: usize> Mat<R, C> {
         Self([[0.0; C]; R])
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn get(&self, r: usize, c: usize) -> Result<f64, Error> {
         self.0
             .get(r)
@@ -34,6 +42,8 @@ impl<const R: usize, const C: usize> Mat<R, C> {
             .ok_or(Error::InvalidDimension)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn set(&mut self, r: usize, c: usize, v: f64) -> Result<(), Error> {
         require_finite(v)?;
         let row = self.0.get_mut(r).ok_or(Error::InvalidDimension)?;
@@ -42,6 +52,8 @@ impl<const R: usize, const C: usize> Mat<R, C> {
         Ok(())
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn transpose(self) -> Result<Mat<C, R>, Error> {
         let mut out = Mat::<C, R>::zeros();
         for i in 0..R {
@@ -52,6 +64,8 @@ impl<const R: usize, const C: usize> Mat<R, C> {
         Ok(out)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn add(self, other: Self) -> Result<Self, Error> {
         let mut out = Self::zeros();
         for i in 0..R {
@@ -64,6 +78,8 @@ impl<const R: usize, const C: usize> Mat<R, C> {
         Ok(out)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn sub(self, other: Self) -> Result<Self, Error> {
         let mut out = Self::zeros();
         for i in 0..R {
@@ -76,6 +92,8 @@ impl<const R: usize, const C: usize> Mat<R, C> {
         Ok(out)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn scale(self, s: f64) -> Result<Self, Error> {
         require_finite(s)?;
         let mut out = Self::zeros();
@@ -89,6 +107,8 @@ impl<const R: usize, const C: usize> Mat<R, C> {
         Ok(out)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn mul<const K: usize>(self, other: Mat<C, K>) -> Result<Mat<R, K>, Error> {
         let mut out = Mat::<R, K>::zeros();
         for i in 0..R {
@@ -113,10 +133,14 @@ impl<const N: usize> VecN<N> {
         Self([0.0; N])
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn get(&self, i: usize) -> Result<f64, Error> {
         self.0.get(i).copied().ok_or(Error::InvalidDimension)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn set(&mut self, i: usize, v: f64) -> Result<(), Error> {
         require_finite(v)?;
         let cell = self.0.get_mut(i).ok_or(Error::InvalidDimension)?;
@@ -124,6 +148,8 @@ impl<const N: usize> VecN<N> {
         Ok(())
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn from_slice(slice: &[f64]) -> Result<Self, Error> {
         if slice.len() != N {
             return Err(Error::InvalidDimension);
@@ -136,6 +162,8 @@ impl<const N: usize> VecN<N> {
         Ok(out)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn add(self, other: Self) -> Result<Self, Error> {
         let mut out = Self::zeros();
         for i in 0..N {
@@ -146,6 +174,8 @@ impl<const N: usize> VecN<N> {
         Ok(out)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn sub(self, other: Self) -> Result<Self, Error> {
         let mut out = Self::zeros();
         for i in 0..N {
@@ -156,6 +186,8 @@ impl<const N: usize> VecN<N> {
         Ok(out)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn scale(self, s: f64) -> Result<Self, Error> {
         require_finite(s)?;
         let mut out = Self::zeros();
@@ -168,6 +200,8 @@ impl<const N: usize> VecN<N> {
     }
 }
 
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn mat_vec_mul<const R: usize, const C: usize>(
     m: Mat<R, C>,
     v: VecN<C>,
@@ -185,26 +219,15 @@ pub fn mat_vec_mul<const R: usize, const C: usize>(
 }
 
 /// Invert 2×2 matrix; returns error if singular or non-finite.
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn inv2(m: Mat<2, 2>) -> Result<Mat<2, 2>, Error> {
-    let a = m.get(0, 0)?;
-    let b = m.get(0, 1)?;
-    let c = m.get(1, 0)?;
-    let d = m.get(1, 1)?;
-    let det = a * d - b * c;
-    if fabs(det) < 1e-18 {
-        return Err(Error::SingularInnovation);
-    }
-    let inv_det = 1.0 / det;
-    require_finite(inv_det)?;
-    let mut out = Mat::<2, 2>::zeros();
-    out.set(0, 0, d * inv_det)?;
-    out.set(0, 1, -b * inv_det)?;
-    out.set(1, 0, -c * inv_det)?;
-    out.set(1, 1, a * inv_det)?;
-    Ok(out)
+    fixed::inv2(m)
 }
 
 /// Cholesky factorization of 4×4 SPD matrix; returns lower triangular L with A ≈ L Lᵀ.
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn cholesky4(a: Mat<4, 4>) -> Result<Mat<4, 4>, Error> {
     let mut l = Mat::<4, 4>::zeros();
     for i in 0..4 {
@@ -236,6 +259,8 @@ pub fn cholesky4(a: Mat<4, 4>) -> Result<Mat<4, 4>, Error> {
 }
 
 /// Solve A x = b for SPD A using Cholesky.
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn solve_spd4(a: Mat<4, 4>, b: VecN<4>) -> Result<VecN<4>, Error> {
     let l = cholesky4(a)?;
     let mut y = VecN::<4>::zeros();
@@ -269,15 +294,15 @@ pub fn solve_spd4(a: Mat<4, 4>, b: VecN<4>) -> Result<VecN<4>, Error> {
     Ok(x)
 }
 
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn identity4() -> Result<Mat<4, 4>, Error> {
-    let mut m = Mat::<4, 4>::zeros();
-    for i in 0..4 {
-        m.set(i, i, 1.0)?;
-    }
-    Ok(m)
+    fixed::identity4()
 }
 
 /// 2×2 symmetric covariance ellipse semi-axes at Mahalanobis scale `conf`.
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn ellipse_from_cov2(c00: f64, c01: f64, c11: f64, conf: f64) -> Result<(f64, f64), Error> {
     require_finite(c00)?;
     require_finite(c01)?;

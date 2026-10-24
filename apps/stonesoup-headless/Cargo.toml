@@ -1,0 +1,13 @@
+[package]
+name = "stonesoup-headless"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "stonesoup-headless"
+path = "src/main.rs"
+
+[dependencies]
+stonesoup-scenarios = { path = "../../crates/stonesoup-scenarios" }
