@@ -15,6 +15,7 @@ use crate::lot21_oosm_algorithm::Lot21OosmAlgorithmScenario;
 use crate::lot22_bearing_only::Lot22BearingOnlyScenario;
 use crate::lot23_multi_tracker::Lot23MultiTrackerScenario;
 use crate::lot24_ensemble_filter::Lot24EnsembleFilterScenario;
+use crate::lot25_particle_flow::Lot25ParticleFlowScenario;
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
 };
@@ -136,6 +137,7 @@ pub enum AnyScenario {
     Lot22BearingOnly(Lot22BearingOnlyScenario),
     Lot23MultiTracker(Lot23MultiTrackerScenario),
     Lot24EnsembleFilter(Lot24EnsembleFilterScenario),
+    Lot25ParticleFlow(Lot25ParticleFlowScenario),
 }
 
 impl AnyScenario {
@@ -239,6 +241,11 @@ impl AnyScenario {
             ScenarioId::Lot24EnsembleFilterExample => Ok(Self::Lot24EnsembleFilter(
                 Lot24EnsembleFilterScenario::tutorial_defaults()?,
             )),
+            ScenarioId::Lot25ParticleFlowExample => Ok(Self::Lot25ParticleFlow(
+                Lot25ParticleFlowScenario::tutorial_defaults(
+                    crate::lot25_particle_flow::Lot25ParticleFlowMode::GromovFlow,
+                )?,
+            )),
         }
     }
 
@@ -274,6 +281,7 @@ impl AnyScenario {
             Self::Lot22BearingOnly(_) => ScenarioId::Lot22BearingOnlyExample,
             Self::Lot23MultiTracker(_) => ScenarioId::Lot23MultiTrackerExample,
             Self::Lot24EnsembleFilter(_) => ScenarioId::Lot24EnsembleFilterExample,
+            Self::Lot25ParticleFlow(_) => ScenarioId::Lot25ParticleFlowExample,
         }
     }
 }
@@ -310,6 +318,7 @@ impl Scenario for AnyScenario {
             Self::Lot22BearingOnly(s) => s.reset(),
             Self::Lot23MultiTracker(s) => s.reset(),
             Self::Lot24EnsembleFilter(s) => s.reset(),
+            Self::Lot25ParticleFlow(s) => s.reset(),
         }
     }
 
@@ -491,6 +500,13 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot25ParticleFlow(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -622,6 +638,7 @@ impl Scenario for AnyScenario {
             Self::Lot22BearingOnly(s) => s.viewer_snapshot(),
             Self::Lot23MultiTracker(s) => s.viewer_snapshot(),
             Self::Lot24EnsembleFilter(s) => s.viewer_snapshot(),
+            Self::Lot25ParticleFlow(s) => s.viewer_snapshot(),
         }
     }
 }

@@ -42,9 +42,15 @@
 
 **Lot 16:** complete — **Avoiding data incest** tutorial (`03_Avoiding_Data_Incest.py`: NH vs hierarchical information architectures, Fusion Node 1 tracks + mean covariance trace replay). Headless: `lot16_data_incest`. WASM viewer: `?tutorial=21` (aliases `data-incest`, `incest`). Parity: `parity_lot16_data_incest` (fixture replay; NH lower mean cov trace vs hierarchical).
 
+**Lot 23:** complete — **Multi-tracker comparison** example (`Multi_Tracker_Example.py`: EKF/UKF/PF/ESIF on manoeuvring targets; Stone Soup export + fixture replay). Headless: `lot23_multi_tracker`. WASM viewer: `?tutorial=28` (aliases `multi-tracker`). Parity: `parity_lot23_multi_tracker` (four filter modes).
+
+**Lot 24:** complete — **Ensemble Kalman filter** example (`EnsembleFilterExample.py`: EnKF bearing–range, seed 1991). Headless: `lot24_ensemble_filter`. WASM viewer: `?tutorial=29` (aliases `ensemble`, `enkf`). Parity: `parity_lot24_ensemble_filter`.
+
+**Lot 25:** complete — **Gromov particle flow** example (`ParticleFlow.py`: bootstrap PF vs Gromov flow vs parallel-EKF flow; seed 2020). Headless: `lot25_particle_flow`. WASM viewer: `?tutorial=30` (aliases `particle-flow`, `gromov`). Parity: `parity_lot25_particle_flow` (three filter modes).
+
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (catalogue **01–27**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (catalogue **01–30**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
