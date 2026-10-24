@@ -106,6 +106,7 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "17" | "akkf" => Some(ScenarioId::Lot12AkkfTutorial),
         "18" | "multisensor" => Some(ScenarioId::Lot13MultiSensorTutorial),
         "19" | "optimised" => Some(ScenarioId::Lot14OptimisedSensorTutorial),
+        "20" | "architecture" => Some(ScenarioId::Lot15NetworkInfoArchTutorial),
         _ => None,
     }
 }
@@ -132,6 +133,7 @@ fn is_lot3_meas(id: ScenarioId) -> bool {
             | ScenarioId::Lot11KdtreeTutorial
             | ScenarioId::Lot13MultiSensorTutorial
             | ScenarioId::Lot14OptimisedSensorTutorial
+            | ScenarioId::Lot15NetworkInfoArchTutorial
     )
 }
 

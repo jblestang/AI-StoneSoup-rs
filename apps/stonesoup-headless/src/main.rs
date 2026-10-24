@@ -6,13 +6,14 @@ use stonesoup_scenarios::scenario::{AnyScenario, Scenario};
 use stonesoup_scenarios::{
     Lot10SensorManagerMode, Lot10SingleSensorScenario, Lot11KdtreeScenario,
     Lot13MultiSensorScenario, Lot13SensorManagerMode, Lot14OptimisedSensorMode,
-    Lot14OptimisedSensorScenario, Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario,
-    Lot3JpdaScenario, Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario,
-    Lot4Tutorial10Scenario, Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario,
-    Lot8AsdScenario, Lot9AkkfScenario, ScenarioId, ScenarioRegistry, MAX_LOT10_STEPS,
-    MAX_LOT11_KDTREE_STEPS, MAX_LOT13_STEPS, MAX_LOT14_STEPS, MAX_LOT3_JPDA_STEPS,
-    MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS,
-    MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
+    Lot14OptimisedSensorScenario, Lot15ArchitectureMode, Lot15NetworkInfoArchScenario,
+    Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario,
+    Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario,
+    Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario,
+    Lot9AkkfScenario, ScenarioId, ScenarioRegistry, MAX_LOT10_STEPS, MAX_LOT11_KDTREE_STEPS,
+    MAX_LOT13_STEPS, MAX_LOT14_STEPS, MAX_LOT15_STEPS, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
+    MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS,
+    MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -36,6 +37,9 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot12_akkf") | Some("lot9_akkf") => ScenarioKind::Lot12Akkf,
         Some("lot13_multi_sensor") => ScenarioKind::Lot13MultiSensor,
         Some("lot14_optimised_sensor") => ScenarioKind::Lot14OptimisedSensor,
+        Some("lot15_network_info_arch") | Some("lot15_architecture") => {
+            ScenarioKind::Lot15NetworkInfoArch
+        }
         _ => ScenarioKind::Lot1,
     }
 }
@@ -60,6 +64,7 @@ enum ScenarioKind {
     Lot12Akkf,
     Lot13MultiSensor,
     Lot14OptimisedSensor,
+    Lot15NetworkInfoArch,
 }
 
 fn main() -> ExitCode {
@@ -361,6 +366,32 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot14_optimised_sensor steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
                 MAX_LOT14_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot15NetworkInfoArch => {
+            let mut scenario = match Lot15NetworkInfoArchScenario::tutorial_defaults(
+                Lot15ArchitectureMode::Network,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let mut means = [[0.0; 4]; 3];
+            let n = scenario.sorted_track_means(&mut means);
+            let xy = if n > 0 {
+                (means[0][0], means[0][2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot15_network_info_arch steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
+                MAX_LOT15_STEPS, n, xy.0, xy.1
             );
         }
         ScenarioKind::Lot7Gmphd => {

@@ -7,6 +7,7 @@ mod lot10_single_sensor;
 mod lot11_kdtree;
 mod lot13_multi_sensor;
 mod lot14_optimised_sensor;
+mod lot15_network_info_arch;
 mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;
@@ -40,6 +41,9 @@ pub use lot13_multi_sensor::{
 pub use lot14_optimised_sensor::{
     Lot14OptimisedSensorMode, Lot14OptimisedSensorScenario, LOT14_SENSOR_X, MAX_LOT14_STEPS,
     MAX_LOT14_TRACKS,
+};
+pub use lot15_network_info_arch::{
+    Lot15ArchitectureMode, Lot15NetworkInfoArchScenario, MAX_LOT15_STEPS, MAX_LOT15_TRACKS,
 };
 pub use lot1_kalman::{
     tutorial_cov, Lot1KalmanScenario, Lot1Snapshot, Lot1StepOutcome, MAX_LOT1_STEPS, MEASUREMENTS,
