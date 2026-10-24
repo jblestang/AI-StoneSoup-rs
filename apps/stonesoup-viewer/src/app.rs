@@ -20,6 +20,8 @@ pub struct ViewerApp {
     truth_trail: Vec<[f64; 2]>,
     meas_trail: Vec<[f64; 2]>,
     est_trail: Vec<[f64; 2]>,
+    truth_b_trail: Vec<[f64; 2]>,
+    est_b_trail: Vec<[f64; 2]>,
     last_ellipse: Option<EllipseOverlay>,
     last_advance: f64,
     /// Current-step detections (Tutorial 05 clutter).
@@ -40,6 +42,8 @@ impl Default for ViewerApp {
             truth_trail: Vec::new(),
             meas_trail: Vec::new(),
             est_trail: Vec::new(),
+            truth_b_trail: Vec::new(),
+            est_b_trail: Vec::new(),
             last_ellipse: None,
             last_advance: 0.0,
             step_clutter: Vec::new(),
@@ -101,6 +105,8 @@ impl ViewerApp {
         self.truth_trail.clear();
         self.meas_trail.clear();
         self.est_trail.clear();
+        self.truth_b_trail.clear();
+        self.est_b_trail.clear();
         self.last_ellipse = None;
         self.step_clutter.clear();
         self.step_true_dets.clear();
@@ -140,6 +146,12 @@ impl ViewerApp {
         }
         self.est_trail
             .push([snap.estimate_xy.0, snap.estimate_xy.1]);
+        if let Some(t) = snap.truth_b_xy {
+            self.truth_b_trail.push([t.0, t.1]);
+        }
+        if let Some(e) = snap.estimate_b_xy {
+            self.est_b_trail.push([e.0, e.1]);
+        }
         self.last_ellipse = snap.ellipse_semi.map(|semi| EllipseOverlay {
             center: [snap.estimate_xy.0, snap.estimate_xy.1],
             semi,
@@ -356,7 +368,29 @@ impl eframe::App for ViewerApp {
                         }
                     }
                     if !self.est_trail.is_empty() {
-                        plot_ui.line(Line::new(est_pts).name("Track").color(egui::Color32::GREEN));
+                        plot_ui.line(
+                            Line::new(est_pts)
+                                .name("Track A")
+                                .color(egui::Color32::GREEN),
+                        );
+                    }
+                    if !self.truth_b_trail.is_empty() {
+                        let tb: PlotPoints =
+                            self.truth_b_trail.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.line(
+                            Line::new(tb)
+                                .name("Ground truth B")
+                                .color(egui::Color32::from_rgb(200, 200, 255)),
+                        );
+                    }
+                    if !self.est_b_trail.is_empty() {
+                        let eb: PlotPoints =
+                            self.est_b_trail.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.line(
+                            Line::new(eb)
+                                .name("Track B")
+                                .color(egui::Color32::from_rgb(255, 140, 80)),
+                        );
                     }
                     if let Some(el) = self.last_ellipse {
                         let ring = ellipse_ring(el.center, el.semi, el.angle_rad, 48);

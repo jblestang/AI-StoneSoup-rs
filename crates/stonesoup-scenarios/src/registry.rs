@@ -8,6 +8,9 @@ pub enum ScenarioId {
     Lot2UkfTutorial,
     Lot2ParticleTutorial,
     Lot3ClutterTutorial,
+    Lot3MultiTargetTutorial,
+    Lot3PdaTutorial,
+    Lot3JpdaTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -25,7 +28,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 5] = [
+        static LIST: [ScenarioDescriptor; 8] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -61,6 +64,27 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot3MultiTargetTutorial,
+                title: "06 — Multi-target (GNN)",
+                upstream_path: "docs/tutorials/06_DataAssociation-MultiTargetTutorial.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot3PdaTutorial,
+                title: "07 — Probabilistic data association",
+                upstream_path: "docs/tutorials/07_PDATutorial.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot3JpdaTutorial,
+                title: "08 — Joint PDA",
+                upstream_path: "docs/tutorials/08_JPDATutorial.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -76,7 +100,10 @@ impl ScenarioRegistry {
             ScenarioId::Lot2EkfTutorial
             | ScenarioId::Lot2UkfTutorial
             | ScenarioId::Lot2ParticleTutorial
-            | ScenarioId::Lot3ClutterTutorial => {
+            | ScenarioId::Lot3ClutterTutorial
+            | ScenarioId::Lot3MultiTargetTutorial
+            | ScenarioId::Lot3PdaTutorial
+            | ScenarioId::Lot3JpdaTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -89,7 +116,10 @@ impl ScenarioRegistry {
             ScenarioId::Lot1KalmanTutorial
             | ScenarioId::Lot2UkfTutorial
             | ScenarioId::Lot2ParticleTutorial
-            | ScenarioId::Lot3ClutterTutorial => {
+            | ScenarioId::Lot3ClutterTutorial
+            | ScenarioId::Lot3MultiTargetTutorial
+            | ScenarioId::Lot3PdaTutorial
+            | ScenarioId::Lot3JpdaTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

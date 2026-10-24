@@ -199,14 +199,14 @@ stonesoup.architecture.generator,stonesoup/architecture/generator.py,component,n
 stonesoup.architecture.node,stonesoup/architecture/node.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
 tutorial:docs/tutorials/02_ExtendedKalmanFilterTutorial.py,docs/tutorials/02_ExtendedKalmanFilterTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot2.rs,validated,,
 tutorial:docs/tutorials/05_DataAssociation-Clutter.py,docs/tutorials/05_DataAssociation-Clutter.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,validated,Lot3ClutterTutorial,parity_lot3
-tutorial:docs/tutorials/08_JPDATutorial.py,docs/tutorials/08_JPDATutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
+tutorial:docs/tutorials/08_JPDATutorial.py,docs/tutorials/08_JPDATutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,validated,Lot3JpdaTutorial,parity_lot3_jpda
 tutorial:docs/tutorials/04_ParticleFilter.py,docs/tutorials/04_ParticleFilter.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot2_pf.rs,validated,,
 tutorial:docs/tutorials/01_KalmanFilterTutorial.py,docs/tutorials/01_KalmanFilterTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios/src/lot1_kalman.rs,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot1.rs,validated,,
 tutorial:docs/tutorials/09_Initiators_&_Deleters.py,docs/tutorials/09_Initiators_&_Deleters.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
-tutorial:docs/tutorials/07_PDATutorial.py,docs/tutorials/07_PDATutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
+tutorial:docs/tutorials/07_PDATutorial.py,docs/tutorials/07_PDATutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,validated,Lot3PdaTutorial,parity_lot3_pda
 tutorial:docs/tutorials/10_Simulation_&_Tracking_Components.py,docs/tutorials/10_Simulation_&_Tracking_Components.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
 tutorial:docs/tutorials/03_UnscentedKalmanFilterTutorial.py,docs/tutorials/03_UnscentedKalmanFilterTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot2_ukf.rs,validated,,
-tutorial:docs/tutorials/06_DataAssociation-MultiTargetTutorial.py,docs/tutorials/06_DataAssociation-MultiTargetTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
+tutorial:docs/tutorials/06_DataAssociation-MultiTargetTutorial.py,docs/tutorials/06_DataAssociation-MultiTargetTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,validated,Lot3MultiTargetTutorial,parity_lot3_multitarget
 tutorial:docs/tutorials/sampling/ResamplingTutorial.py,docs/tutorials/sampling/ResamplingTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
 tutorial:docs/tutorials/filters/ASDFilter.py,docs/tutorials/filters/ASDFilter.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
 tutorial:docs/tutorials/filters/GMPHDTutorial.py,docs/tutorials/filters/GMPHDTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,

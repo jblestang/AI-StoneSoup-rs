@@ -16,7 +16,12 @@ mod state;
 mod time;
 mod types;
 
-pub use associator::{associate_nearest_neighbour, AssociationOutcome, MeasurementHypothesis};
+pub use associator::{
+    associate_global_nearest_neighbour, associate_nearest_neighbour, gm_reduce_single,
+    jpda_associate, pda_hypotheses, pda_merged_update, AssociationOutcome, GnnTrackAssignment,
+    JpdaHypothesisSet, MeasurementHypothesis, ProbabilityHypothesis, MAX_GNN_TRACKS,
+    MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
+};
 pub use error::Error;
 pub use filter::ekf::ExtendedKalmanUpdater;
 pub use filter::kalman::{

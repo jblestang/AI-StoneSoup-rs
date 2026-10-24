@@ -5,6 +5,10 @@ mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;
 mod lot3_clutter;
+mod lot3_jpda;
+mod lot3_meas;
+mod lot3_multitarget;
+mod lot3_pda;
 mod particle_lot2;
 mod registry;
 pub mod scenario;
@@ -21,6 +25,9 @@ pub use lot2_ukf::Lot2UkfScenario;
 pub use lot3_clutter::{
     Lot3ClutterScenario, Lot3MeasPoint, Lot3Snapshot, Lot3StepOutcome, LOT3_GATE, MAX_LOT3_STEPS,
 };
+pub use lot3_jpda::{Lot3JpdaScenario, MAX_LOT3_JPDA_STEPS};
+pub use lot3_multitarget::{Lot3MultiTargetScenario, MAX_LOT3_MT_STEPS};
+pub use lot3_pda::{Lot3PdaScenario, MAX_LOT3_PDA_STEPS};
 pub use particle_lot2::{Lot2ParticleScenario, LOT2_PF_PARTICLES};
 pub use registry::{ScenarioDescriptor, ScenarioError, ScenarioId, ScenarioRegistry};
 pub use scenario::{AnyScenario, Scenario, ScenarioStepOutcome, ViewerSnapshot};
