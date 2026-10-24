@@ -35,7 +35,7 @@ pub use lot3_multitarget::{Lot3MultiTargetScenario, MAX_LOT3_MT_STEPS};
 pub use lot3_pda::{Lot3PdaScenario, MAX_LOT3_PDA_STEPS};
 pub use lot4_tutorial09::{Lot4Tutorial09Scenario, MAX_LOT4_T09_STEPS};
 pub use lot4_tutorial10::{Lot4Tutorial10Scenario, MAX_LOT4_T10_STEPS};
-pub use lot5_resampling::{Lot5ResamplingScenario, MAX_LOT5_RESAMPLING_STEPS};
+pub use lot5_resampling::{lot5_case_name, Lot5ResamplingScenario, MAX_LOT5_RESAMPLING_STEPS};
 pub use particle_lot2::{Lot2ParticleScenario, LOT2_PF_PARTICLES};
 pub use registry::{ScenarioDescriptor, ScenarioError, ScenarioId, ScenarioRegistry};
 pub use scenario::{AnyScenario, Scenario, ScenarioStepOutcome, ViewerSnapshot};

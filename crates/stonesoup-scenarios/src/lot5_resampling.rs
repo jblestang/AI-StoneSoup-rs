@@ -2,6 +2,7 @@
 
 use crate::lot5_resampling_fixtures as fx;
 use crate::registry::ScenarioError;
+use crate::scenario::{empty_resample_xy, ViewerSnapshot, MAX_VIEWER_RESAMPLE_PARTS};
 use stonesoup_sim::{
     ess_resample_if_needed_with, multinomial_resample, replay_resampling_tutorial_preamble,
     residual_resample, stratified_resample, systematic_resample, EssInnerResampler, NumpyRng,
@@ -133,5 +134,57 @@ impl Lot5ResamplingScenario {
 
     pub fn is_finished(&self) -> bool {
         self.finished
+    }
+
+    pub fn reset(&mut self) -> Result<(), ScenarioError> {
+        *self = Self::tutorial_defaults()?;
+        Ok(())
+    }
+
+    pub fn viewer_snapshot(&self) -> Result<ViewerSnapshot, ScenarioError> {
+        let case = self.step.saturating_sub(1);
+        let mut resample_xy = empty_resample_xy();
+        let nparts = self.nparts.min(MAX_VIEWER_RESAMPLE_PARTS);
+        for (i, slot) in resample_xy.iter_mut().enumerate().take(nparts) {
+            *slot = [i as f64, self.particles[i][0]];
+        }
+        let resample_case = if self.step == 0 {
+            u8::MAX
+        } else {
+            case.min(u8::MAX as usize) as u8
+        };
+        Ok(ViewerSnapshot {
+            step: self.step,
+            max_steps: MAX_LOT5_RESAMPLING_STEPS,
+            truth_xy: (0.0, 0.0),
+            estimate_xy: (0.0, 0.0),
+            measurement_xy: (0.0, 0.0),
+            bearing_range: None,
+            ellipse_semi: None,
+            ellipse_angle_rad: 0.0,
+            rmse: 0.0,
+            finished: self.finished,
+            det_count: 0,
+            det_xy: crate::scenario::empty_det_xy(),
+            det_is_true: crate::scenario::empty_det_flags(),
+            associated_xy: None,
+            truth_b_xy: None,
+            estimate_b_xy: None,
+            resample_case,
+            resample_nparts: nparts as u8,
+            resample_xy,
+        })
+    }
+}
+
+pub fn lot5_case_name(case: u8) -> &'static str {
+    match case {
+        0 => fx::LOT5_0_NAME,
+        1 => fx::LOT5_1_NAME,
+        2 => fx::LOT5_2_NAME,
+        3 => fx::LOT5_3_NAME,
+        4 => fx::LOT5_4_NAME,
+        5 => fx::LOT5_5_NAME,
+        _ => "—",
     }
 }
