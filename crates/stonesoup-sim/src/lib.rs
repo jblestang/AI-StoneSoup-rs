@@ -19,7 +19,9 @@ pub use lot2_tutorial::{
     Lot2TutorialData, LOT2_NUMPY_SEED, LOT2_NUM_STEPS,
 };
 pub use numpy_random::NumpyRng;
-pub use resampler::{effective_sample_size, systematic_resample, MAX_RESAMPLE_PARTICLES};
+pub use resampler::{
+    effective_sample_size, ess_resample_if_needed, systematic_resample, MAX_RESAMPLE_PARTICLES,
+};
 pub use rng::{Rng, SplitMix64};
 pub use sensor::{LinearPositionSensor, SensorSim};
 pub use truth::{GroundTruthPath, TruthStepConfig};

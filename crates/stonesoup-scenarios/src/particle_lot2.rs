@@ -6,7 +6,9 @@ include!("lot2_pf_fixtures.rs");
 use stonesoup_core::{
     mod_bearing, CartesianToBearingRange, ConstantVelocity2d, Duration, RmseAccumulator,
 };
-use stonesoup_sim::{mvn4_lot2_q, sample_lot2_pf_prior_particle, NumpyRng, LOT2_NUMPY_SEED};
+use stonesoup_sim::{
+    ess_resample_if_needed, mvn4_lot2_q, sample_lot2_pf_prior_particle, NumpyRng, LOT2_NUMPY_SEED,
+};
 
 use crate::lot2_ekf::{
     fixture_row, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MEASUREMENTS, NUM_STEPS, TRUTH,
@@ -14,6 +16,8 @@ use crate::lot2_ekf::{
 use crate::registry::ScenarioError;
 
 pub const LOT2_PF_PARTICLES: usize = 1000;
+/// Stone Soup ``ESSResampler`` default threshold (``len(particles) / 2``).
+pub const LOT2_PF_ESS_THRESHOLD: f64 = LOT2_PF_PARTICLES as f64 / 2.0;
 
 pub struct Lot2ParticleScenario {
     particles: [[f64; 4]; LOT2_PF_PARTICLES],
@@ -130,6 +134,14 @@ impl Lot2ParticleScenario {
             self.log_w[i] += ll;
         }
         self.normalize_log_weights()?;
+        ess_resample_if_needed(
+            &mut self.particles,
+            &mut self.log_w,
+            LOT2_PF_PARTICLES,
+            LOT2_PF_ESS_THRESHOLD,
+            &mut self.rng,
+        )
+        .map_err(ScenarioError::Core)?;
         let truth = fixture_row(&TRUTH, self.step)?;
         let mean = self.weighted_mean();
         self.rmse

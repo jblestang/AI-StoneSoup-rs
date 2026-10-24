@@ -95,3 +95,20 @@ pub fn systematic_resample<const D: usize>(
     particles[..nparts].copy_from_slice(&new_particles[..nparts]);
     Ok(())
 }
+
+/// ESS resampler wrapper (Stone Soup ``ESSResampler`` with default threshold ``nparts / 2``).
+pub fn ess_resample_if_needed<const D: usize>(
+    particles: &mut [[f64; D]],
+    log_weights: &mut [f64],
+    nparts: usize,
+    threshold: f64,
+    rng: &mut NumpyRng,
+) -> Result<bool, Error> {
+    let ess = effective_sample_size(&log_weights[..nparts]);
+    if ess < threshold {
+        systematic_resample(particles, log_weights, nparts, rng)?;
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
