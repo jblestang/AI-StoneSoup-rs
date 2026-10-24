@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export AKKF tutorial fixtures (Stone Soup v1.9.1 @ pinned SHA)."""
+"""Export AKKF tutorial oracle fixtures (Stone Soup v1.9.1 @ pinned SHA)."""
 from __future__ import annotations
 
 import hashlib
@@ -22,12 +22,8 @@ def write_rust(payload: dict) -> None:
         f"pub const LOT9_NUM_STEPS: usize = {steps};",
         f"pub const LOT9_Q: f64 = {payload['q']};",
         f"pub const LOT9_BEARING_NOISE_VAR: f64 = {payload['bearing_noise_var']};",
-        "pub const LOT9_INITIAL_PARTICLES: [[f64; 4]; LOT9_NUM_PARTICLES] = [",
+        "pub const LOT9_TRUTH_XY: [[f64; 2]; LOT9_NUM_STEPS] = [",
     ]
-    for row in payload["initial_particles"]:
-        lines.append(f"    {row},")
-    lines.append("];")
-    lines.append("pub const LOT9_TRUTH_XY: [[f64; 2]; LOT9_NUM_STEPS] = [")
     for row in payload["truth_xy"]:
         lines.append(f"    {row},")
     lines.append("];")
@@ -38,24 +34,6 @@ def write_rust(payload: dict) -> None:
     lines.append("pub const LOT9_REF_MEAN: [[f64; 4]; LOT9_NUM_STEPS] = [")
     for row in payload["ref_mean"]:
         lines.append(f"    {row},")
-    lines.append("];")
-    lines.append(
-        "pub const LOT9_PROCESS_NOISE: [[[f64; 4]; LOT9_NUM_PARTICLES]; LOT9_NUM_STEPS] = ["
-    )
-    for step in payload["process_noise"]:
-        lines.append("    [")
-        for row in step:
-            lines.append(f"        {row},")
-        lines.append("    ],")
-    lines.append("];")
-    lines.append(
-        "pub const LOT9_UPDATE_PROPOSAL: [[[f64; 4]; LOT9_NUM_PARTICLES]; LOT9_NUM_STEPS] = ["
-    )
-    for step in payload["update_proposal"]:
-        lines.append("    [")
-        for row in step:
-            lines.append(f"        {row},")
-        lines.append("    ],")
     lines.append("];")
     lines.append("")
     RUST.write_text("\n".join(lines), encoding="utf-8")
@@ -135,34 +113,14 @@ def main() -> int:
         measurement_model=measurement_model, kernel=QuadraticKernel(c=1, ialpha=1)
     )
 
-    # Instrument transition noise by replaying predict internals
-    process_noise = []
-    update_proposal = []
     ref_mean = []
-
     track = Track()
-    for step, measurement in enumerate(measurements):
-        if getattr(prior, "proposal", None) is not None:
-            proposal = prior.proposal
-        else:
-            proposal = prior.state_vector
-
+    for measurement in measurements:
         prediction = predictor.predict(prior, timestamp=measurement.timestamp)
-        dt = measurement.timestamp - prior.timestamp
-        f = transition_model.matrix(time_interval=dt)
-        noise_step = []
-        for i in range(number_particles):
-            fx = f @ proposal[:, i]
-            noise = prediction.state_vector[:, i] - fx
-            noise_step.append([float(v) for v in noise])
-        process_noise.append(noise_step)
         hypothesis = SingleHypothesis(prediction, measurement)
         post = updater.update(hypothesis)
         track.append(post)
         prior = track[-1]
-
-        prop = post.proposal.T.tolist()
-        update_proposal.append(prop)
         m = prior.state_vector @ prior.weight[:, np.newaxis]
         ref_mean.append([float(v) for v in m.ravel()])
 
@@ -172,12 +130,9 @@ def main() -> int:
         "num_steps": num_steps,
         "q": q_x,
         "bearing_noise_var": 0.005**2,
-        "initial_particles": samples.tolist(),
         "truth_xy": [[float(s.state_vector[0, 0]), float(s.state_vector[2, 0])] for s in truth],
         "bearings": [float(m.state_vector[0, 0]) for m in measurements],
         "ref_mean": ref_mean,
-        "process_noise": process_noise,
-        "update_proposal": update_proposal,
     }
     text = json.dumps(payload, indent=2, sort_keys=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
