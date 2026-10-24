@@ -1,32 +1,22 @@
 use stonesoup_scenarios::{
-    max_simulation_steps, DualRadarClutterSim, DT_S, PLOTS_PER_ROTATION, SIM_DURATION_S,
+    max_simulation_steps, DualRadarClutterSim, DT_S, SIM_DURATION_S, TARGETS_PER_ROTATION,
 };
 
 #[test]
-fn dual_radar_runs_full_duration_with_per_rotation_plot_cap() {
+fn dual_radar_runs_full_duration_with_per_rotation_target_cap() {
     let mut sim = DualRadarClutterSim::new().expect("new");
     let stats = sim.run().expect("run");
     assert_eq!(stats.simulation_steps, max_simulation_steps());
     assert!((stats.simulation_steps as f64 * DT_S - SIM_DURATION_S).abs() < 1e-6);
     assert!(
-        stats.radar_a_plots > PLOTS_PER_ROTATION,
-        "expect more than one rotation of plots on A: {}",
-        stats.radar_a_plots
+        stats.radar_a_max_targets_in_rotation <= TARGETS_PER_ROTATION,
+        "A exceeded per-rotation target cap: {}",
+        stats.radar_a_max_targets_in_rotation
     );
     assert!(
-        stats.radar_b_plots > PLOTS_PER_ROTATION,
-        "expect more than one rotation of plots on B: {}",
-        stats.radar_b_plots
-    );
-    assert!(
-        stats.radar_a_max_plots_in_rotation <= PLOTS_PER_ROTATION,
-        "A exceeded per-rotation cap: {}",
-        stats.radar_a_max_plots_in_rotation
-    );
-    assert!(
-        stats.radar_b_max_plots_in_rotation <= PLOTS_PER_ROTATION,
-        "B exceeded per-rotation cap: {}",
-        stats.radar_b_max_plots_in_rotation
+        stats.radar_b_max_targets_in_rotation <= TARGETS_PER_ROTATION,
+        "B exceeded per-rotation target cap: {}",
+        stats.radar_b_max_targets_in_rotation
     );
     assert!(
         (9..=11).contains(&stats.radar_a_rotations),

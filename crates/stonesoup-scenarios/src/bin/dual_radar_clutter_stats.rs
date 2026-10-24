@@ -7,7 +7,7 @@ use std::process::ExitCode;
 
 use stonesoup_scenarios::{
     max_simulation_steps, DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S,
-    FOV_DEG, OVERLAP_AREA_FRACTION, PLOTS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M,
+    FOV_DEG, OVERLAP_AREA_FRACTION, TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M,
     RANGE_B_M,
     SEED, SIM_DURATION_S, ScenarioError,
 };
@@ -63,7 +63,7 @@ fn run() -> Result<String, ScenarioError> {
     let payload = serde_json::json!({
         "parameters": {
             "implementation": "rust",
-            "plots_per_rotation_per_radar": PLOTS_PER_ROTATION,
+            "targets_per_rotation_per_radar": TARGETS_PER_ROTATION,
             "clutter_fraction_target": CLUTTER_FRACTION_TARGET,
             "clutter_lambda_poisson": CLUTTER_LAMBDA,
             "overlap_area_fraction_co_located_disks": OVERLAP_AREA_FRACTION,
@@ -84,8 +84,8 @@ fn run() -> Result<String, ScenarioError> {
             "radar_b_plots_total": stats.radar_b_plots,
             "radar_a_rotations": stats.radar_a_rotations,
             "radar_b_rotations": stats.radar_b_rotations,
-            "radar_a_max_plots_in_one_rotation": stats.radar_a_max_plots_in_rotation,
-            "radar_b_max_plots_in_one_rotation": stats.radar_b_max_plots_in_rotation,
+            "radar_a_max_targets_in_one_rotation": stats.radar_a_max_targets_in_rotation,
+            "radar_b_max_targets_in_one_rotation": stats.radar_b_max_targets_in_rotation,
             "total_true_detections": stats.total_true,
             "total_clutter_detections": stats.total_clutter,
             "true_plots_in_overlap_disk": stats.true_plots_in_overlap,
