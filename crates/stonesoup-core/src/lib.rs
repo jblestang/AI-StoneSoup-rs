@@ -13,6 +13,7 @@ mod deleter;
 mod error;
 mod filter;
 mod initiator;
+mod kernel;
 pub mod linalg;
 mod metric;
 mod models;
@@ -32,6 +33,10 @@ pub use associator::{
 };
 pub use deleter::{covariance_trace, should_delete_covariance_trace};
 pub use error::Error;
+pub use filter::akkf::{
+    transition_particles, AdaptiveKernelKalmanPredictor, AdaptiveKernelKalmanUpdater,
+    KernelParticleState, AKKF_MAX_PARTICLES,
+};
 pub use filter::asd::{
     AsdGaussianState, AsdKalmanPredictor, AsdKalmanUpdater, AsdMeasurementPrediction,
     AsdPrediction, ASD_DEFAULT_MAX_NSTEP, ASD_NDIM,
@@ -52,8 +57,10 @@ pub use filter::kalman::{
 };
 pub use filter::ukf::{UnscentedKalmanPredictor, UnscentedKalmanUpdater};
 pub use initiator::{initiate_from_detection, tutorial09_prior, tutorial10_prior};
+pub use kernel::QuadraticKernel;
 pub use linalg::{Mat, VecN};
 pub use metric::rmse::RmseAccumulator;
+pub use models::bearing_only::Cartesian2DToBearing;
 pub use models::bearing_range::CartesianToBearingRange;
 pub use models::measurement::LinearGaussianMeasurement;
 pub use models::transition::ConstantVelocity2d;
