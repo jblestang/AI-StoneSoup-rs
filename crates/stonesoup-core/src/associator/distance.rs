@@ -16,7 +16,8 @@ use crate::types::Detection;
 
 use super::nearest_neighbour::MeasurementHypothesis;
 
-pub const MAX_DISTANCE_HYPOTHESES: usize = 48;
+/// Missed hypothesis plus up to [`super::gnn_assignment::MAX_GNN_ASSIGN_DETS`] gated detections.
+pub const MAX_DISTANCE_HYPOTHESES: usize = super::gnn_assignment::MAX_GNN_ASSIGN_DETS + 1;
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn mahalanobis(

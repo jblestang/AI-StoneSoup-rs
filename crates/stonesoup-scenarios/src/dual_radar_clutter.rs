@@ -40,6 +40,7 @@ pub const COAST_SECONDS: f64 = 30.0;
 pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
 pub const SEED: u64 = 42;
 
+/// Concurrent fused tracks; [`MAX_GNN_ASSIGN_DETS`] matches this per-step detection budget.
 pub const MAX_ACTIVE: usize = 1000;
 const MAX_HOLDING: usize = 8192;
 const MAX_TRUE_PLOT_TRACKS: usize = 32_768;
@@ -597,7 +598,7 @@ impl DualRadarClutterSim {
         det_models: &[CartesianToBearingRange],
     ) -> Result<(), ScenarioError> {
         let ts = self.ts();
-        let mut det_used = [false; MAX_GNN_ASSIGN_DETS];
+        let mut det_used = alloc::vec![false; detections.len()];
         let n_hold = self.holding.len();
         if n_hold > 0 && !detections.is_empty() {
             let hold_tails: Vec<GaussianState> = self.holding.iter().map(|h| h.tail).collect();
@@ -664,7 +665,7 @@ impl DualRadarClutterSim {
         det_models: &[CartesianToBearingRange],
     ) -> Result<(), ScenarioError> {
         let ts = self.ts();
-        let mut det_used = [false; MAX_GNN_ASSIGN_DETS];
+        let mut det_used = alloc::vec![false; detections.len()];
         let n_act = self.active.len();
         if n_act > 0 && !detections.is_empty() {
             let act_tails: Vec<GaussianState> = self.active.iter().map(|t| t.tail).collect();
@@ -704,28 +705,16 @@ impl DualRadarClutterSim {
             }
         }
         self.delete_stale_active()?;
-        let mut unassoc = [Detection {
-            vector: stonesoup_core::VecN([0.0, 0.0]),
-            timestamp: ts,
-            sensor: SensorId(0),
-        }; MAX_GNN_ASSIGN_DETS];
-        let mut n_unassoc = 0usize;
+        let mut unassoc = Vec::new();
+        let mut un_models = Vec::new();
         for (i, det) in detections.iter().enumerate() {
-            if !det_used[i] && n_unassoc < MAX_GNN_ASSIGN_DETS {
-                unassoc[n_unassoc] = *det;
-                n_unassoc += 1;
+            if !det_used[i] {
+                unassoc.push(*det);
+                un_models.push(det_models[i]);
             }
         }
-        if n_unassoc > 0 {
-            let mut un_models = [det_models[0]; MAX_GNN_ASSIGN_DETS];
-            let mut ui = 0usize;
-            for (i, used) in det_used.iter().enumerate().take(detections.len()) {
-                if !*used {
-                    un_models[ui] = det_models[i];
-                    ui += 1;
-                }
-            }
-            self.multi_initiate(&unassoc[..n_unassoc], &un_models[..n_unassoc])?;
+        if !unassoc.is_empty() {
+            self.multi_initiate(&unassoc, &un_models)?;
         }
         self.snapshot_active_paths(ts);
         Ok(())
@@ -740,32 +729,29 @@ impl DualRadarClutterSim {
             let ts = self.ts();
             self.log_truths_at(ts);
             self.prior.timestamp = ts;
-            let mut det_buf = [Detection {
-                vector: stonesoup_core::VecN([0.0, 0.0]),
-                timestamp: ts,
-                sensor: SensorId(0),
-            }; MAX_GNN_ASSIGN_DETS];
-            let mut det_models = [radar_model(0.0)?; MAX_GNN_ASSIGN_DETS];
-            let mut n_dets = 0usize;
-            for ri in 0..2 {
-                let mut chunk = [Detection {
+            let mut det_buf = Vec::with_capacity(32);
+            let mut det_models = Vec::with_capacity(32);
+            let mut chunk = alloc::vec![
+                Detection {
                     vector: stonesoup_core::VecN([0.0, 0.0]),
                     timestamp: ts,
                     sensor: SensorId(0),
-                }; MAX_GNN_ASSIGN_DETS];
+                };
+                MAX_GNN_ASSIGN_DETS
+            ];
+            for ri in 0..2 {
                 let got = self.generate_sensor_dets(ri, ts, &mut chunk)?;
                 let model = radar_model(self.radar_rt[ri].dwell_rad)?;
                 for chunk_det in chunk.iter().take(got) {
-                    if n_dets >= MAX_GNN_ASSIGN_DETS {
+                    if det_buf.len() >= MAX_GNN_ASSIGN_DETS {
                         break;
                     }
-                    det_buf[n_dets] = *chunk_det;
-                    det_models[n_dets] = model;
-                    n_dets += 1;
+                    det_buf.push(*chunk_det);
+                    det_models.push(model);
                 }
             }
-            if n_dets > 0 {
-                self.tracker_update(&det_buf[..n_dets], &det_models[..n_dets])?;
+            if !det_buf.is_empty() {
+                self.tracker_update(&det_buf, &det_models)?;
             } else {
                 self.delete_stale_active()?;
                 self.snapshot_active_paths(ts);
