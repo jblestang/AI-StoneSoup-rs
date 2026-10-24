@@ -25,6 +25,7 @@ use crate::lot5_resampling::Lot5ResamplingScenario;
 use crate::lot6_information::{Lot6InformationScenario, Lot6StepOutcome, MAX_LOT6_STEPS};
 use crate::lot7_gm_phd::{Lot7GmPhdScenario, Lot7StepOutcome};
 use crate::lot8_asd::{Lot8AsdScenario, Lot8StepOutcome, MAX_LOT8_STEPS};
+use crate::lot9_akkf::{Lot9AkkfScenario, Lot9StepOutcome, MAX_LOT9_STEPS};
 use crate::particle_lot2::Lot2ParticleScenario;
 use crate::registry::{ScenarioError, ScenarioId};
 
@@ -111,6 +112,7 @@ pub enum AnyScenario {
     Lot8Asd(Lot8AsdScenario),
     Lot10SingleSensor(Lot10SingleSensorScenario),
     Lot11Kdtree(Lot11KdtreeScenario),
+    Lot12Akkf(Lot9AkkfScenario),
     Lot13MultiSensor(Lot13MultiSensorScenario),
 }
 
@@ -158,6 +160,9 @@ impl AnyScenario {
             ScenarioId::Lot10SingleSensorTutorial => Ok(Self::Lot10SingleSensor(
                 Lot10SingleSensorScenario::tutorial_defaults(Lot10SensorManagerMode::BruteForce)?,
             )),
+            ScenarioId::Lot12AkkfTutorial => {
+                Ok(Self::Lot12Akkf(Lot9AkkfScenario::tutorial_defaults()?))
+            }
             ScenarioId::Lot13MultiSensorTutorial => Ok(Self::Lot13MultiSensor(
                 Lot13MultiSensorScenario::tutorial_defaults(
                     crate::lot13_multi_sensor::Lot13SensorManagerMode::BruteForce,
@@ -185,6 +190,7 @@ impl AnyScenario {
             Self::Lot8Asd(_) => ScenarioId::Lot8AsdTutorial,
             Self::Lot10SingleSensor(_) => ScenarioId::Lot10SingleSensorTutorial,
             Self::Lot11Kdtree(_) => ScenarioId::Lot11KdtreeTutorial,
+            Self::Lot12Akkf(_) => ScenarioId::Lot12AkkfTutorial,
             Self::Lot13MultiSensor(_) => ScenarioId::Lot13MultiSensorTutorial,
         }
     }
@@ -209,6 +215,7 @@ impl Scenario for AnyScenario {
             Self::Lot8Asd(s) => s.reset(),
             Self::Lot10SingleSensor(s) => s.reset(),
             Self::Lot11Kdtree(s) => s.reset(),
+            Self::Lot12Akkf(s) => s.reset(),
             Self::Lot13MultiSensor(s) => s.reset(),
         }
     }
@@ -303,6 +310,10 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot12Akkf(s) => match s.step()? {
+                Lot9StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
+                Lot9StepOutcome::Finished => ScenarioStepOutcome::Finished,
+            },
             Self::Lot13MultiSensor(s) => {
                 if s.step()? {
                     ScenarioStepOutcome::Stepped
@@ -405,6 +416,30 @@ impl Scenario for AnyScenario {
             }
             Self::Lot10SingleSensor(s) => s.viewer_snapshot(),
             Self::Lot11Kdtree(s) => s.viewer_snapshot(),
+            Self::Lot12Akkf(s) => {
+                let snap = s.snapshot()?;
+                Ok(ViewerSnapshot {
+                    step: snap.step,
+                    max_steps: MAX_LOT9_STEPS,
+                    truth_xy: snap.truth_xy,
+                    estimate_xy: snap.estimate_xy,
+                    measurement_xy: snap.truth_xy,
+                    bearing_range: Some((snap.bearing_rad, 0.0)),
+                    ellipse_semi: Some(snap.ellipse_semi),
+                    ellipse_angle_rad: snap.ellipse_angle_rad,
+                    rmse: snap.rmse,
+                    finished: snap.finished,
+                    det_count: 0,
+                    det_xy: empty_det_xy(),
+                    det_is_true: empty_det_flags(),
+                    associated_xy: None,
+                    truth_b_xy: None,
+                    estimate_b_xy: None,
+                    resample_case: no_resample_view().0,
+                    resample_nparts: no_resample_view().1,
+                    resample_xy: no_resample_view().2,
+                })
+            }
             Self::Lot13MultiSensor(s) => s.viewer_snapshot(),
         }
     }

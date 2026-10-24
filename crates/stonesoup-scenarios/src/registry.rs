@@ -19,6 +19,7 @@ pub enum ScenarioId {
     Lot8AsdTutorial,
     Lot10SingleSensorTutorial,
     Lot11KdtreeTutorial,
+    Lot12AkkfTutorial,
     Lot13MultiSensorTutorial,
 }
 
@@ -37,7 +38,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 17] = [
+        static LIST: [ScenarioDescriptor; 18] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -151,8 +152,15 @@ impl ScenarioRegistry {
                 family: "tutorial",
             },
             ScenarioDescriptor {
+                id: ScenarioId::Lot12AkkfTutorial,
+                title: "17 — Adaptive kernel Kalman filter (AKKF)",
+                upstream_path: "docs/tutorials/filters/AKKF.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
+            ScenarioDescriptor {
                 id: ScenarioId::Lot13MultiSensorTutorial,
-                title: "17 — Multi-sensor management",
+                title: "18 — Multi-sensor management",
                 upstream_path: "docs/tutorials/sensormanagement/02_MultiSensorManagement.py",
                 upstream_sha: SHA,
                 family: "tutorial",
@@ -184,6 +192,7 @@ impl ScenarioRegistry {
             | ScenarioId::Lot8AsdTutorial
             | ScenarioId::Lot10SingleSensorTutorial
             | ScenarioId::Lot11KdtreeTutorial
+            | ScenarioId::Lot12AkkfTutorial
             | ScenarioId::Lot13MultiSensorTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
@@ -209,6 +218,7 @@ impl ScenarioRegistry {
             | ScenarioId::Lot8AsdTutorial
             | ScenarioId::Lot10SingleSensorTutorial
             | ScenarioId::Lot11KdtreeTutorial
+            | ScenarioId::Lot12AkkfTutorial
             | ScenarioId::Lot13MultiSensorTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
