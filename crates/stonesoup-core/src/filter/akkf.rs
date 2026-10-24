@@ -194,16 +194,13 @@ impl AdaptiveKernelKalmanUpdater {
         Ok(out)
     }
 
-    pub fn update(
+    /// Posterior kernel weights/covariance after a measurement (before proposal resampling).
+    pub fn measure_update(
         &self,
         predicted: &KernelParticleState,
         detection: &Detection,
-        proposal_cols: &[f64],
-    ) -> Result<KernelParticleState, Error> {
+    ) -> Result<(Vec<f64>, DynMat), Error> {
         let n = predicted.n_particles;
-        if proposal_cols.len() != 4 * n {
-            return Err(Error::InvalidDimension);
-        }
         let meas_particles = self.measurement_particles(&predicted.state_cols, n)?;
         let g_yy = self.kernel.gram_columns(1, &meas_particles, n)?;
         let z = detection.vector.0[0];
@@ -232,6 +229,20 @@ impl AdaptiveKernelKalmanUpdater {
         let q_gyy = q_akkf.mul(&g_yy)?;
         let updated_covariance = predicted.kernel_covar.sub(&q_gyy.mul(&predicted.kernel_covar)?)?;
 
+        Ok((updated_weights, updated_covariance))
+    }
+
+    pub fn update(
+        &self,
+        predicted: &KernelParticleState,
+        detection: &Detection,
+        proposal_cols: &[f64],
+    ) -> Result<KernelParticleState, Error> {
+        let n = predicted.n_particles;
+        if proposal_cols.len() != 4 * n {
+            return Err(Error::InvalidDimension);
+        }
+        let (updated_weights, updated_covariance) = self.measure_update(predicted, detection)?;
         Ok(KernelParticleState {
             n_particles: n,
             state_cols: predicted.state_cols.clone(),
@@ -241,17 +252,60 @@ impl AdaptiveKernelKalmanUpdater {
             timestamp: detection.timestamp,
         })
     }
+
+    /// Mean and diagonal covariance for proposal `multivariate_normal` (Stone Soup AKKF updater).
+    pub fn proposal_distribution(
+        predicted: &KernelParticleState,
+        weights: &[f64],
+        kernel_covar: &DynMat,
+    ) -> Result<([f64; 4], [[f64; 4]; 4]), Error> {
+        let n = predicted.n_particles;
+        if weights.len() != n || kernel_covar.n != n {
+            return Err(Error::InvalidDimension);
+        }
+        let mut mean = [0.0; 4];
+        for d in 0..4 {
+            let mut s = 0.0;
+            for i in 0..n {
+                s += predicted.state_cols[d * n + i] * weights[i];
+            }
+            require_finite(s)?;
+            mean[d] = s;
+        }
+        let mut m = [[0.0; 4]; 4];
+        for a in 0..4 {
+            for b in 0..4 {
+                let mut s = 0.0;
+                for i in 0..n {
+                    let mut t = 0.0;
+                    for j in 0..n {
+                        t += predicted.state_cols[a * n + i]
+                            * kernel_covar.get(i, j)?
+                            * predicted.state_cols[b * n + j];
+                    }
+                    s += t;
+                }
+                require_finite(s)?;
+                m[a][b] = s;
+            }
+        }
+        let mut cov = [[0.0; 4]; 4];
+        for i in 0..4 {
+            cov[i][i] = m[i][i];
+        }
+        Ok((mean, cov))
+    }
 }
 
-/// Propagate proposal particles one second with CV model and per-particle process noise.
+/// Propagate proposal particles with CV model and per-particle process noise columns.
 pub fn transition_particles(
     transition: &ConstantVelocity2d,
     dt: Duration,
     proposal_cols: &[f64],
     n: usize,
-    process_noise: &[[f64; 4]],
+    noise_cols: &[[f64; 4]],
 ) -> Result<Vec<f64>, Error> {
-    if proposal_cols.len() != 4 * n || process_noise.len() != n {
+    if proposal_cols.len() != 4 * n || noise_cols.len() != n {
         return Err(Error::InvalidDimension);
     }
     let f = transition.transition_matrix(dt)?;
@@ -269,7 +323,7 @@ pub fn transition_particles(
             for c in 0..4 {
                 s += f.get(r, c)? * x[c];
             }
-            y[r] = s + process_noise[i][r];
+            y[r] = s + noise_cols[i][r];
         }
         for d in 0..4 {
             out[d * n + i] = y[d];

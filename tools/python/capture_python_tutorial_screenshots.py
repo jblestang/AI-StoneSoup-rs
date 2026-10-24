@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(os.environ.get("OUT", ROOT / "screenshot" / "python"))
-TUTORIALS = tuple(f"{i:02d}" for i in range(1, 15))
+TUTORIALS = tuple(f"{i:02d}" for i in range(1, 16))
 
 
 def dump_bin() -> Path:

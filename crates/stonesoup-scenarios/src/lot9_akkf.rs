@@ -11,6 +11,7 @@ use stonesoup_core::{
     ConstantVelocity2d, Detection, Duration, KernelParticleState, Mat, RmseAccumulator, SensorId,
     Timestamp,
 };
+use stonesoup_sim::{initialise_lot9_filter_rng, multivariate_normal4_batch, NumpyRng};
 
 use crate::registry::ScenarioError;
 
@@ -39,6 +40,7 @@ pub struct Lot9AkkfScenario {
     updater: AdaptiveKernelKalmanUpdater,
     transition: ConstantVelocity2d,
     prior: KernelParticleState,
+    rng: NumpyRng,
     step: usize,
     rmse: RmseAccumulator,
     conf: f64,
@@ -49,13 +51,16 @@ impl Lot9AkkfScenario {
         let transition = ConstantVelocity2d::new(LOT9_Q, LOT9_Q).map_err(ScenarioError::Core)?;
         let predictor = AdaptiveKernelKalmanPredictor::tutorial_akkf().map_err(ScenarioError::Core)?;
         let updater = AdaptiveKernelKalmanUpdater::tutorial_akkf().map_err(ScenarioError::Core)?;
-        let prior = KernelParticleState::new_uniform(&LOT9_INITIAL_PARTICLES, Timestamp::ZERO)
+        let (rng, particles) =
+            initialise_lot9_filter_rng().map_err(ScenarioError::Core)?;
+        let prior = KernelParticleState::new_uniform(&array_from_particles(&particles), Timestamp::ZERO)
             .map_err(ScenarioError::Core)?;
         Ok(Self {
             predictor,
             updater,
             transition,
             prior,
+            rng,
             step: 0,
             rmse: RmseAccumulator::new(),
             conf: 2.0,
@@ -88,13 +93,14 @@ impl Lot9AkkfScenario {
             .map_err(|_| ScenarioError::Core(stonesoup_core::Error::InvalidTimeStep))?;
         let n = LOT9_NUM_PARTICLES;
         let proposal = Self::proposal_cols(&self.prior)?;
-        let noise = &LOT9_PROCESS_NOISE[self.step];
+        // Stone Soup `predict` applies `F @ proposal` with `noise=False`.
+        let zero_noise = vec![[0.0; 4]; n];
         let new_state = transition_particles(
             &self.transition,
             dt,
             &proposal,
             n,
-            noise,
+            &zero_noise,
         )
         .map_err(ScenarioError::Core)?;
         let predicted = self
@@ -105,16 +111,38 @@ impl Lot9AkkfScenario {
         let bearing = LOT9_BEARINGS[self.step];
         let det = Detection::new([bearing, 0.0], ts, SensorId(0)).map_err(ScenarioError::Core)?;
 
+        let (updated_weights, updated_covariance) = self
+            .updater
+            .measure_update(&predicted, &det)
+            .map_err(ScenarioError::Core)?;
+        let (prop_mean, prop_cov) = AdaptiveKernelKalmanUpdater::proposal_distribution(
+            &predicted,
+            &updated_weights,
+            &updated_covariance,
+        )
+        .map_err(ScenarioError::Core)?;
+        let proposals = multivariate_normal4_batch(
+            &mut self.rng,
+            prop_mean,
+            &prop_cov,
+            n,
+        )
+        .map_err(ScenarioError::Core)?;
         let mut proposal_cols = vec![0.0; 4 * n];
         for i in 0..n {
             for d in 0..4 {
-                proposal_cols[d * n + i] = LOT9_UPDATE_PROPOSAL[self.step][i][d];
+                proposal_cols[d * n + i] = proposals[i][d];
             }
         }
-        let post = self
-            .updater
-            .update(&predicted, &det, &proposal_cols)
-            .map_err(ScenarioError::Core)?;
+
+        let post = KernelParticleState::from_parts(
+            predicted.state_cols.clone(),
+            updated_weights,
+            updated_covariance,
+            Some(proposal_cols),
+            ts,
+        )
+        .map_err(ScenarioError::Core)?;
 
         let mean = post.weighted_mean().map_err(ScenarioError::Core)?;
         let truth = LOT9_TRUTH_XY[self.step];
@@ -189,4 +217,12 @@ impl Lot9AkkfScenario {
             .copied()
             .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))
     }
+}
+
+fn array_from_particles(particles: &[[f64; 4]]) -> [[f64; 4]; LOT9_NUM_PARTICLES] {
+    let mut out = [[0.0; 4]; LOT9_NUM_PARTICLES];
+    for (i, p) in particles.iter().enumerate().take(LOT9_NUM_PARTICLES) {
+        out[i] = *p;
+    }
+    out
 }

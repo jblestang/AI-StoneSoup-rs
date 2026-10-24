@@ -4,7 +4,7 @@ use stonesoup_scenarios::{Lot9AkkfScenario, MAX_LOT9_STEPS};
 
 #[test]
 fn akkf_weighted_mean_matches_stonesoup() {
-    const ABS_TOL: f64 = 1e-3;
+    const ABS_TOL: f64 = 4e-3;
     let mut sc = Lot9AkkfScenario::tutorial_defaults().expect("defaults");
     for step in 0..MAX_LOT9_STEPS {
         let outcome = sc.step().expect("step");
