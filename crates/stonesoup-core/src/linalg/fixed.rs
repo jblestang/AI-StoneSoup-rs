@@ -444,6 +444,430 @@ pub fn transpose2x4(m: Mat<2, 4>) -> Result<Mat<4, 2>, Error> {
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+/// Inverse of a 4×4 matrix (Gauss–Jordan with partial pivoting, fully unrolled).
+pub fn inv4(m: Mat<4, 4>) -> Result<Mat<4, 4>, Error> {
+    let mut a = [
+        [m.0[0][0], m.0[0][1], m.0[0][2], m.0[0][3]],
+        [m.0[1][0], m.0[1][1], m.0[1][2], m.0[1][3]],
+        [m.0[2][0], m.0[2][1], m.0[2][2], m.0[2][3]],
+        [m.0[3][0], m.0[3][1], m.0[3][2], m.0[3][3]],
+    ];
+    let mut inv = [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ];
+    // column 0
+    let mut pivot = 0;
+    let mut best = libm::fabs(a[0][0]);
+    {
+        let v = libm::fabs(a[1][0]);
+        if v > best {
+            best = v;
+            pivot = 1;
+        }
+    }
+    {
+        let v = libm::fabs(a[2][0]);
+        if v > best {
+            best = v;
+            pivot = 2;
+        }
+    }
+    {
+        let v = libm::fabs(a[3][0]);
+        if v > best {
+            best = v;
+            pivot = 3;
+        }
+    }
+    if best < 1e-18 {
+        return Err(Error::SingularInnovation);
+    }
+    if pivot == 1 {
+        {
+            let (ra, rb) = (a[0], a[1]);
+            a[0] = rb;
+            a[1] = ra;
+        }
+        {
+            let (ia, ib) = (inv[0], inv[1]);
+            inv[0] = ib;
+            inv[1] = ia;
+        }
+    }
+    if pivot == 2 {
+        {
+            let (ra, rb) = (a[0], a[2]);
+            a[0] = rb;
+            a[2] = ra;
+        }
+        {
+            let (ia, ib) = (inv[0], inv[2]);
+            inv[0] = ib;
+            inv[2] = ia;
+        }
+    }
+    if pivot == 3 {
+        {
+            let (ra, rb) = (a[0], a[3]);
+            a[0] = rb;
+            a[3] = ra;
+        }
+        {
+            let (ia, ib) = (inv[0], inv[3]);
+            inv[0] = ib;
+            inv[3] = ia;
+        }
+    }
+    let div = a[0][0];
+    a[0][0] /= div;
+    inv[0][0] /= div;
+    a[0][1] /= div;
+    inv[0][1] /= div;
+    a[0][2] /= div;
+    inv[0][2] /= div;
+    a[0][3] /= div;
+    inv[0][3] /= div;
+    {
+        let factor = a[1][0];
+        if factor != 0.0 {
+            a[1][0] -= factor * a[0][0];
+            inv[1][0] -= factor * inv[0][0];
+            a[1][1] -= factor * a[0][1];
+            inv[1][1] -= factor * inv[0][1];
+            a[1][2] -= factor * a[0][2];
+            inv[1][2] -= factor * inv[0][2];
+            a[1][3] -= factor * a[0][3];
+            inv[1][3] -= factor * inv[0][3];
+        }
+    }
+    {
+        let factor = a[2][0];
+        if factor != 0.0 {
+            a[2][0] -= factor * a[0][0];
+            inv[2][0] -= factor * inv[0][0];
+            a[2][1] -= factor * a[0][1];
+            inv[2][1] -= factor * inv[0][1];
+            a[2][2] -= factor * a[0][2];
+            inv[2][2] -= factor * inv[0][2];
+            a[2][3] -= factor * a[0][3];
+            inv[2][3] -= factor * inv[0][3];
+        }
+    }
+    {
+        let factor = a[3][0];
+        if factor != 0.0 {
+            a[3][0] -= factor * a[0][0];
+            inv[3][0] -= factor * inv[0][0];
+            a[3][1] -= factor * a[0][1];
+            inv[3][1] -= factor * inv[0][1];
+            a[3][2] -= factor * a[0][2];
+            inv[3][2] -= factor * inv[0][2];
+            a[3][3] -= factor * a[0][3];
+            inv[3][3] -= factor * inv[0][3];
+        }
+    }
+    // column 1
+    let mut pivot = 1;
+    let mut best = libm::fabs(a[1][1]);
+    {
+        let v = libm::fabs(a[2][1]);
+        if v > best {
+            best = v;
+            pivot = 2;
+        }
+    }
+    {
+        let v = libm::fabs(a[3][1]);
+        if v > best {
+            best = v;
+            pivot = 3;
+        }
+    }
+    if best < 1e-18 {
+        return Err(Error::SingularInnovation);
+    }
+    if pivot == 0 {
+        {
+            let (ra, rb) = (a[1], a[0]);
+            a[1] = rb;
+            a[0] = ra;
+        }
+        {
+            let (ia, ib) = (inv[1], inv[0]);
+            inv[1] = ib;
+            inv[0] = ia;
+        }
+    }
+    if pivot == 2 {
+        {
+            let (ra, rb) = (a[1], a[2]);
+            a[1] = rb;
+            a[2] = ra;
+        }
+        {
+            let (ia, ib) = (inv[1], inv[2]);
+            inv[1] = ib;
+            inv[2] = ia;
+        }
+    }
+    if pivot == 3 {
+        {
+            let (ra, rb) = (a[1], a[3]);
+            a[1] = rb;
+            a[3] = ra;
+        }
+        {
+            let (ia, ib) = (inv[1], inv[3]);
+            inv[1] = ib;
+            inv[3] = ia;
+        }
+    }
+    let div = a[1][1];
+    a[1][0] /= div;
+    inv[1][0] /= div;
+    a[1][1] /= div;
+    inv[1][1] /= div;
+    a[1][2] /= div;
+    inv[1][2] /= div;
+    a[1][3] /= div;
+    inv[1][3] /= div;
+    {
+        let factor = a[0][1];
+        if factor != 0.0 {
+            a[0][0] -= factor * a[1][0];
+            inv[0][0] -= factor * inv[1][0];
+            a[0][1] -= factor * a[1][1];
+            inv[0][1] -= factor * inv[1][1];
+            a[0][2] -= factor * a[1][2];
+            inv[0][2] -= factor * inv[1][2];
+            a[0][3] -= factor * a[1][3];
+            inv[0][3] -= factor * inv[1][3];
+        }
+    }
+    {
+        let factor = a[2][1];
+        if factor != 0.0 {
+            a[2][0] -= factor * a[1][0];
+            inv[2][0] -= factor * inv[1][0];
+            a[2][1] -= factor * a[1][1];
+            inv[2][1] -= factor * inv[1][1];
+            a[2][2] -= factor * a[1][2];
+            inv[2][2] -= factor * inv[1][2];
+            a[2][3] -= factor * a[1][3];
+            inv[2][3] -= factor * inv[1][3];
+        }
+    }
+    {
+        let factor = a[3][1];
+        if factor != 0.0 {
+            a[3][0] -= factor * a[1][0];
+            inv[3][0] -= factor * inv[1][0];
+            a[3][1] -= factor * a[1][1];
+            inv[3][1] -= factor * inv[1][1];
+            a[3][2] -= factor * a[1][2];
+            inv[3][2] -= factor * inv[1][2];
+            a[3][3] -= factor * a[1][3];
+            inv[3][3] -= factor * inv[1][3];
+        }
+    }
+    // column 2
+    let mut pivot = 2;
+    let mut best = libm::fabs(a[2][2]);
+    {
+        let v = libm::fabs(a[3][2]);
+        if v > best {
+            best = v;
+            pivot = 3;
+        }
+    }
+    if best < 1e-18 {
+        return Err(Error::SingularInnovation);
+    }
+    if pivot == 0 {
+        {
+            let (ra, rb) = (a[2], a[0]);
+            a[2] = rb;
+            a[0] = ra;
+        }
+        {
+            let (ia, ib) = (inv[2], inv[0]);
+            inv[2] = ib;
+            inv[0] = ia;
+        }
+    }
+    if pivot == 1 {
+        {
+            let (ra, rb) = (a[2], a[1]);
+            a[2] = rb;
+            a[1] = ra;
+        }
+        {
+            let (ia, ib) = (inv[2], inv[1]);
+            inv[2] = ib;
+            inv[1] = ia;
+        }
+    }
+    if pivot == 3 {
+        {
+            let (ra, rb) = (a[2], a[3]);
+            a[2] = rb;
+            a[3] = ra;
+        }
+        {
+            let (ia, ib) = (inv[2], inv[3]);
+            inv[2] = ib;
+            inv[3] = ia;
+        }
+    }
+    let div = a[2][2];
+    a[2][0] /= div;
+    inv[2][0] /= div;
+    a[2][1] /= div;
+    inv[2][1] /= div;
+    a[2][2] /= div;
+    inv[2][2] /= div;
+    a[2][3] /= div;
+    inv[2][3] /= div;
+    {
+        let factor = a[0][2];
+        if factor != 0.0 {
+            a[0][0] -= factor * a[2][0];
+            inv[0][0] -= factor * inv[2][0];
+            a[0][1] -= factor * a[2][1];
+            inv[0][1] -= factor * inv[2][1];
+            a[0][2] -= factor * a[2][2];
+            inv[0][2] -= factor * inv[2][2];
+            a[0][3] -= factor * a[2][3];
+            inv[0][3] -= factor * inv[2][3];
+        }
+    }
+    {
+        let factor = a[1][2];
+        if factor != 0.0 {
+            a[1][0] -= factor * a[2][0];
+            inv[1][0] -= factor * inv[2][0];
+            a[1][1] -= factor * a[2][1];
+            inv[1][1] -= factor * inv[2][1];
+            a[1][2] -= factor * a[2][2];
+            inv[1][2] -= factor * inv[2][2];
+            a[1][3] -= factor * a[2][3];
+            inv[1][3] -= factor * inv[2][3];
+        }
+    }
+    {
+        let factor = a[3][2];
+        if factor != 0.0 {
+            a[3][0] -= factor * a[2][0];
+            inv[3][0] -= factor * inv[2][0];
+            a[3][1] -= factor * a[2][1];
+            inv[3][1] -= factor * inv[2][1];
+            a[3][2] -= factor * a[2][2];
+            inv[3][2] -= factor * inv[2][2];
+            a[3][3] -= factor * a[2][3];
+            inv[3][3] -= factor * inv[2][3];
+        }
+    }
+    // column 3 (no pivot search — only one row left)
+    let best = libm::fabs(a[3][3]);
+    if best < 1e-18 {
+        return Err(Error::SingularInnovation);
+    }
+    let div = a[3][3];
+    a[3][0] /= div;
+    inv[3][0] /= div;
+    a[3][1] /= div;
+    inv[3][1] /= div;
+    a[3][2] /= div;
+    inv[3][2] /= div;
+    a[3][3] /= div;
+    inv[3][3] /= div;
+    {
+        let factor = a[0][3];
+        if factor != 0.0 {
+            a[0][0] -= factor * a[3][0];
+            inv[0][0] -= factor * inv[3][0];
+            a[0][1] -= factor * a[3][1];
+            inv[0][1] -= factor * inv[3][1];
+            a[0][2] -= factor * a[3][2];
+            inv[0][2] -= factor * inv[3][2];
+            a[0][3] -= factor * a[3][3];
+            inv[0][3] -= factor * inv[3][3];
+        }
+    }
+    {
+        let factor = a[1][3];
+        if factor != 0.0 {
+            a[1][0] -= factor * a[3][0];
+            inv[1][0] -= factor * inv[3][0];
+            a[1][1] -= factor * a[3][1];
+            inv[1][1] -= factor * inv[3][1];
+            a[1][2] -= factor * a[3][2];
+            inv[1][2] -= factor * inv[3][2];
+            a[1][3] -= factor * a[3][3];
+            inv[1][3] -= factor * inv[3][3];
+        }
+    }
+    {
+        let factor = a[2][3];
+        if factor != 0.0 {
+            a[2][0] -= factor * a[3][0];
+            inv[2][0] -= factor * inv[3][0];
+            a[2][1] -= factor * a[3][1];
+            inv[2][1] -= factor * inv[3][1];
+            a[2][2] -= factor * a[3][2];
+            inv[2][2] -= factor * inv[3][2];
+            a[2][3] -= factor * a[3][3];
+            inv[2][3] -= factor * inv[3][3];
+        }
+    }
+    let mut out = Mat::<4, 4>::zeros();
+    out.set(0, 0, inv[0][0])?;
+    out.set(0, 1, inv[0][1])?;
+    out.set(0, 2, inv[0][2])?;
+    out.set(0, 3, inv[0][3])?;
+    out.set(1, 0, inv[1][0])?;
+    out.set(1, 1, inv[1][1])?;
+    out.set(1, 2, inv[1][2])?;
+    out.set(1, 3, inv[1][3])?;
+    out.set(2, 0, inv[2][0])?;
+    out.set(2, 1, inv[2][1])?;
+    out.set(2, 2, inv[2][2])?;
+    out.set(2, 3, inv[2][3])?;
+    out.set(3, 0, inv[3][0])?;
+    out.set(3, 1, inv[3][1])?;
+    out.set(3, 2, inv[3][2])?;
+    out.set(3, 3, inv[3][3])?;
+    Ok(out)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+pub fn symmetrize4(m: Mat<4, 4>) -> Result<Mat<4, 4>, Error> {
+    let mut out = Mat::<4, 4>::zeros();
+    out.set(0, 0, mulf(0.5, add4(m.0[0][0], m.0[0][0])?)?)?;
+    out.set(0, 1, mulf(0.5, add4(m.0[0][1], m.0[1][0])?)?)?;
+    out.set(0, 2, mulf(0.5, add4(m.0[0][2], m.0[2][0])?)?)?;
+    out.set(0, 3, mulf(0.5, add4(m.0[0][3], m.0[3][0])?)?)?;
+    out.set(1, 0, mulf(0.5, add4(m.0[1][0], m.0[0][1])?)?)?;
+    out.set(1, 1, mulf(0.5, add4(m.0[1][1], m.0[1][1])?)?)?;
+    out.set(1, 2, mulf(0.5, add4(m.0[1][2], m.0[2][1])?)?)?;
+    out.set(1, 3, mulf(0.5, add4(m.0[1][3], m.0[3][1])?)?)?;
+    out.set(2, 0, mulf(0.5, add4(m.0[2][0], m.0[0][2])?)?)?;
+    out.set(2, 1, mulf(0.5, add4(m.0[2][1], m.0[1][2])?)?)?;
+    out.set(2, 2, mulf(0.5, add4(m.0[2][2], m.0[2][2])?)?)?;
+    out.set(2, 3, mulf(0.5, add4(m.0[2][3], m.0[3][2])?)?)?;
+    out.set(3, 0, mulf(0.5, add4(m.0[3][0], m.0[0][3])?)?)?;
+    out.set(3, 1, mulf(0.5, add4(m.0[3][1], m.0[1][3])?)?)?;
+    out.set(3, 2, mulf(0.5, add4(m.0[3][2], m.0[2][3])?)?)?;
+    out.set(3, 3, mulf(0.5, add4(m.0[3][3], m.0[3][3])?)?)?;
+    Ok(out)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn inv2(m: Mat<2, 2>) -> Result<Mat<2, 2>, Error> {
     let a = m.0[0][0];
     let b = m.0[0][1];

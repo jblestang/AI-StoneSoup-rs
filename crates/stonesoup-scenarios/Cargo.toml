@@ -14,6 +14,14 @@ stonesoup-core = { path = "../stonesoup-core" }
 stonesoup-sim = { path = "../stonesoup-sim" }
 libm = { workspace = true }
 no-panic = { version = "0.1.34", optional = true }
+serde_json = { workspace = true }
+
+[[bin]]
+name = "dump_viewer_trail"
+path = "src/bin/dump_viewer_trail.rs"
+
+[dev-dependencies]
+serde_json = { workspace = true }
 
 [lints.clippy]
 unwrap_used = "deny"
