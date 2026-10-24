@@ -321,7 +321,7 @@ impl Lot10SingleSensorScenario {
                 .meas_offsets
                 .get(idx + 1)
                 .copied()
-                .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+                .unwrap_or(self.meas_br.len());
             let count = (end - start).min(MAX_DETS_PER_STEP);
             for j in 0..count {
                 let br = self.meas_br[start + j];

@@ -331,7 +331,7 @@ impl Lot13MultiSensorScenario {
                 .meas_offsets
                 .get(idx + 1)
                 .copied()
-                .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+                .unwrap_or(self.meas_br_s.len());
             let count = (end - start).min(MAX_DETS_PER_STEP);
             for j in 0..count {
                 let row = self.meas_br_s[start + j];
