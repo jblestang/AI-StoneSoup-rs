@@ -13,14 +13,14 @@ perl -i -0777 -pe 's/#\[cfg_attr\(feature = "no-panic-cert", no_panic::no_panic\
 log="$(mktemp)"
 cargo run --manifest-path "$root/verification/no-panic-harness/Cargo.toml" --profile no-panic-test --locked >"$log" 2>&1 || true
 
-if rg -q 'Running.*stonesoup-no-panic-harness' "$log"; then
+if grep -qE 'Running.*stonesoup-no-panic-harness' "$log"; then
   echo "mutation_no_panic: harness linked after stripping predict cert (unexpected)"
   cat "$log"
   rm -f "$log"
   exit 1
 fi
 
-if rg -q 'ERROR\[no-panic\]' "$log"; then
+if grep -Fq 'ERROR[no-panic]' "$log"; then
   echo "mutation_no_panic: detected expected link failure"
   rm -f "$log"
   exit 0
