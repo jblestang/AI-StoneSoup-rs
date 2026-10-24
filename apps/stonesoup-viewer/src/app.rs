@@ -11,6 +11,7 @@ use stonesoup_scenarios::{
 const FIXTURE_SEED: u32 = 1991;
 
 /// Document title set when `?finish=1` run completes (WASM screenshot automation).
+#[cfg(target_arch = "wasm32")]
 pub const WASM_READY_TITLE: &str = "stonesoup-viewer-ready";
 
 pub struct ViewerApp {
@@ -64,6 +65,7 @@ impl Default for ViewerApp {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
     match code {
         "01" | "1" => Some(ScenarioId::Lot1KalmanTutorial),
