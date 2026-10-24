@@ -35,7 +35,10 @@ pub use associator::{
     associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack,
     TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
 };
-pub use deleter::{covariance_trace, should_delete_covariance_trace};
+pub use deleter::{
+    covariance_trace, holding_should_delete, should_delete_covariance_trace, HoldingDeleter,
+    UpdateTimeStepsDeleter,
+};
 pub use error::Error;
 pub use filter::akkf::{
     transition_particles, AdaptiveKernelKalmanPredictor, AdaptiveKernelKalmanUpdater,
@@ -60,7 +63,10 @@ pub use filter::kalman::{
     GaussianMeasurementPrediction, KalmanPredictor, KalmanUpdater, KalmanWorkspace,
 };
 pub use filter::ukf::{UnscentedKalmanPredictor, UnscentedKalmanUpdater};
-pub use initiator::{initiate_from_detection, tutorial09_prior, tutorial10_prior};
+pub use initiator::{
+    initiate_from_detection, tutorial09_prior, tutorial10_prior, HoldingGaussianTrack,
+    MultiMeasurementInitiator,
+};
 pub use kernel::QuadraticKernel;
 pub use linalg::{Mat, VecN};
 pub use metric::rmse::RmseAccumulator;

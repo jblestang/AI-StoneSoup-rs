@@ -12,6 +12,7 @@ use stonesoup_core::{
     SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
     MAX_GNN_ASSIGN_DETS, MAX_JPDA_EKF_TRACKS, MAX_PDA_HYPOTHESES,
     jpda_associate_ekf_det_models, jpda_detection_weights, ekf_pda_merged_update,
+    HoldingDeleter, MultiMeasurementInitiator,
 };
 use stonesoup_core::GroundTruthState;
 use stonesoup_sim::{SplitMix64, TruthStepConfig};
@@ -56,9 +57,14 @@ pub const JPDA_CLUTTER_DENSITY: f64 = {
 };
 const JPDA_DET_ASSOCIATED_THRESH: f64 = 0.35;
 const JPDA_MEAS_UPDATE_THRESH: f64 = 0.45;
-/// Promote tentative track after **M** JPDA measurement hits within **N** scan opportunities.
-pub const CONFIRM_HITS_M: u8 = 3;
-pub const CONFIRM_WINDOW_N: u8 = 5;
+/// Stone Soup ``MultiMeasurementInitiator.min_points`` (associated updates, ``updates_only``).
+pub const INITIATOR_MIN_POINTS: u8 = 3;
+/// Stone Soup ``UpdateTimeStepsDeleter`` on holding tracks.
+pub const HOLDING_TIME_STEPS_DELETER: usize = 5;
+
+fn holding_deleter() -> HoldingDeleter {
+    HoldingDeleter::update_time_steps(HOLDING_TIME_STEPS_DELETER)
+}
 pub const COAST_SECONDS: f64 = 30.0;
 pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
 pub const SEED: u64 = 42;
@@ -82,15 +88,6 @@ struct RadarRuntime {
     targets_this_rotation: usize,
     rotation_count: usize,
     max_targets_in_rotation: usize,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct HoldingTrack {
-    tail: GaussianState,
-    /// Associated-measurement hits in the current confirmation window.
-    hits: u8,
-    /// Scan opportunities since tentative birth (including birth scan).
-    scans: u8,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -363,7 +360,7 @@ pub struct DualRadarClutterSim {
     truths_plot_seen: Vec<bool>,
     step: usize,
     active: Vec<ActiveTrack>,
-    holding: Vec<HoldingTrack>,
+    tentative: MultiMeasurementInitiator,
     completed: Vec<CompletedTrack>,
     coast_steps: usize,
     rng: SplitMix64,
@@ -435,7 +432,11 @@ impl DualRadarClutterSim {
             truths_plot_seen,
             step: 0,
             active: Vec::with_capacity(16),
-            holding: Vec::with_capacity(32),
+            tentative: MultiMeasurementInitiator::new(
+                INITIATOR_MIN_POINTS,
+                true,
+                MAX_HOLDING,
+            ),
             completed: Vec::new(),
             coast_steps,
             rng: SplitMix64::new(SEED.wrapping_add(1)),
@@ -586,27 +587,14 @@ impl DualRadarClutterSim {
         Ok(())
     }
 
-    fn insert_holding(&mut self, tail: GaussianState) -> Result<(), ScenarioError> {
-        if self.holding.len() >= MAX_HOLDING {
-            return Err(ScenarioError::Core(Error::CapacityExceeded));
+    fn promote_confirmed_tentatives(
+        &mut self,
+        confirmed: Vec<GaussianState>,
+    ) -> Result<(), ScenarioError> {
+        for tail in confirmed {
+            self.insert_active(tail, self.step)?;
         }
-        self.holding.push(HoldingTrack {
-            tail,
-            hits: 1,
-            scans: 1,
-        });
         Ok(())
-    }
-
-    fn drop_unconfirmed_holdings(&mut self) {
-        self.holding.retain(|ht| ht.scans < CONFIRM_WINDOW_N || ht.hits >= CONFIRM_HITS_M);
-    }
-
-    fn age_holdings_without_measurements(&mut self) {
-        for ht in &mut self.holding {
-            ht.scans = ht.scans.saturating_add(1);
-        }
-        self.drop_unconfirmed_holdings();
     }
 
     fn finish_track(&mut self, t: ActiveTrack, step: usize) -> Result<(), ScenarioError> {
@@ -679,19 +667,24 @@ impl DualRadarClutterSim {
             .sum()
     }
 
-    /// JPDA update on tentatives using **all** plots this step; M-of-N promote / drop.
-    fn confirm_holdings_m_of_n(
+    /// ``MultiMeasurementInitiator`` + JPDA on all step plots.
+    fn update_tentative_initiator(
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
         clutter_density: f64,
     ) -> Result<(), ScenarioError> {
         let ts = self.ts();
-        let n_hold = self.holding.len();
+        let n_hold = self.tentative.holding_len();
         if n_hold == 0 || detections.is_empty() || n_hold > MAX_JPDA_EKF_TRACKS {
             return Ok(());
         }
-        let mut hold_tails: Vec<GaussianState> = self.holding.iter().map(|h| h.tail).collect();
+        let mut hold_tails: Vec<GaussianState> = self
+            .tentative
+            .holding_tracks()
+            .iter()
+            .map(|h| h.tail)
+            .collect();
         let template = hold_tails[0];
         let mut sets = alloc::vec![Self::empty_jpda_set(template); n_hold];
         jpda_associate_ekf_det_models(
@@ -708,41 +701,33 @@ impl DualRadarClutterSim {
         )
         .map_err(ScenarioError::Core)?;
         self.jpda_apply_sets(&mut hold_tails, &sets, detections, det_models)?;
-        for (slot, (tail, set)) in self
-            .holding
+        let updates_only = self.tentative.updates_only;
+        for (ht, (tail, set)) in self
+            .tentative
+            .holding_tracks_mut()
             .iter_mut()
             .zip(hold_tails.iter().zip(sets.iter()))
         {
-            slot.tail = *tail;
-            slot.scans = slot.scans.saturating_add(1);
-            if Self::meas_association_prob(set) >= JPDA_MEAS_UPDATE_THRESH {
-                slot.hits = slot.hits.saturating_add(1);
-            }
+            let got_update = Self::meas_association_prob(set) >= JPDA_MEAS_UPDATE_THRESH;
+            ht.finish_scan(*tail, got_update, updates_only);
         }
-        let mut promote = Vec::new();
-        self.holding.retain(|ht| {
-            if ht.hits >= CONFIRM_HITS_M {
-                promote.push(ht.tail);
-                false
-            } else {
-                true
-            }
-        });
-        self.drop_unconfirmed_holdings();
-        for tail in promote {
-            self.insert_active(tail, self.step)?;
-        }
-        Ok(())
+        let confirmed = self
+            .tentative
+            .confirm_and_prune(&holding_deleter())
+            .map_err(ScenarioError::Core)?;
+        self.promote_confirmed_tentatives(confirmed)
     }
 
-    fn initiate_holdings_from_unassoc(
+    fn initiate_tentatives_from_unassoc(
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
     ) -> Result<(), ScenarioError> {
         for (i, det) in detections.iter().enumerate() {
             let init = initiate_bearing_range(&self.prior, det, det_models[i])?;
-            let _ = self.insert_holding(init);
+            self.tentative
+                .try_add_holding(init)
+                .map_err(ScenarioError::Core)?;
         }
         Ok(())
     }
@@ -809,10 +794,10 @@ impl DualRadarClutterSim {
         let ts = self.ts();
         self.delete_stale_active()?;
         if !step_dets.is_empty() {
-            self.confirm_holdings_m_of_n(step_dets, step_models, clutter_density)?;
+            self.update_tentative_initiator(step_dets, step_models, clutter_density)?;
         }
         if !unassoc.is_empty() {
-            self.initiate_holdings_from_unassoc(unassoc, un_models)?;
+            self.initiate_tentatives_from_unassoc(unassoc, un_models)?;
         }
         self.snapshot_active_paths(ts);
         Ok(())
@@ -871,7 +856,11 @@ impl DualRadarClutterSim {
                 )?;
             } else {
                 self.delete_stale_active()?;
-                self.age_holdings_without_measurements();
+                let confirmed = self
+                    .tentative
+                    .predict_only_step(&holding_deleter())
+                    .map_err(ScenarioError::Core)?;
+                self.promote_confirmed_tentatives(confirmed)?;
                 self.snapshot_active_paths(ts);
             }
             self.step += 1;
