@@ -16,4 +16,30 @@ if ! grep -qE 'Lot1KalmanTutorial|01_KalmanFilterTutorial' "$csv"; then
   echo "catalogue: Lot 1 row not found in matrix"
   exit 1
 fi
-echo "catalogue: registry SHA and Lot 1 matrix row present"
+for tutorial in 02_ExtendedKalmanFilterTutorial.py 03_UnscentedKalmanFilterTutorial.py 04_ParticleFilter.py 05_DataAssociation-Clutter.py 06_DataAssociation-MultiTargetTutorial.py 07_PDATutorial.py 08_JPDATutorial.py 09_Initiators_\&_Deleters.py 10_Simulation_\&_Tracking_Components.py; do
+  if ! grep -q "$tutorial" "$csv"; then
+    echo "catalogue: $tutorial missing from PORTING_MATRIX.csv"
+    exit 1
+  fi
+done
+if ! grep -q 'ResamplingTutorial.py' "$csv"; then
+  echo "catalogue: ResamplingTutorial.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'InformationFilterTutorial.py' "$csv"; then
+  echo "catalogue: InformationFilterTutorial.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'GMPHDTutorial.py' "$csv"; then
+  echo "catalogue: GMPHDTutorial.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'ASDFilter.py' "$csv"; then
+  echo "catalogue: ASDFilter.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+if ! grep -q 'AKKF.py' "$csv"; then
+  echo "catalogue: AKKF.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD + AKKF)"

@@ -35,6 +35,8 @@ cargo run -p stonesoup-viewer --release --locked
 # WASM viewer (from app dir; unset NO_COLOR if Trunk errors)
 cd apps/stonesoup-viewer && unset NO_COLOR && trunk build --release
 
+Final-state UI captures (tutorials 01–15): [screenshot/wasm/](screenshot/wasm/README.md) (WASM viewer) and [screenshot/python/](screenshot/python/README.md) (viewer-style matplotlib). Regenerate with `bash tools/scripts/capture_wasm_tutorial_screenshots.sh` and `bash tools/scripts/capture_python_tutorial_screenshots.sh`.
+
 # No-panic harness (see docs/NO_PANIC.md)
 cargo run --manifest-path verification/no-panic-harness/Cargo.toml --profile no-panic-test --locked
 

@@ -55,6 +55,13 @@ impl KalmanPredictor {
     }
 }
 
+/// Predicted measurement :math:`z_{k|k-1}` with innovation covariance :math:`S_k`.
+#[derive(Debug, Clone, Copy)]
+pub struct GaussianMeasurementPrediction {
+    pub mean: crate::linalg::VecN<2>,
+    pub cov: Mat<2, 2>,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct KalmanUpdater {
     pub measurement: LinearGaussianMeasurement,
@@ -75,6 +82,22 @@ impl KalmanUpdater {
             measurement,
             use_joseph,
         }
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn predict_measurement(
+        &self,
+        predicted: &GaussianState,
+        ws: &mut KalmanWorkspace,
+    ) -> Result<GaussianMeasurementPrediction, Error> {
+        ws.h = self.measurement.matrix_h()?;
+        ws.r = self.measurement.r();
+        let mean = mul2x4_4x1(ws.h, predicted.mean)?;
+        let hp = mul2x4_4x4(ws.h, predicted.cov)?;
+        let ht = transpose2x4(ws.h)?;
+        let hph = mul2x4_4x2(hp, ht)?;
+        let cov = add2x2(hph, ws.r)?;
+        Ok(GaussianMeasurementPrediction { mean, cov })
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
