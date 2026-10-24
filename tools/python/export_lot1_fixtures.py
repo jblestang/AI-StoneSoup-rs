@@ -27,6 +27,7 @@ def main() -> int:
     from stonesoup.types.state import GaussianState
     from stonesoup.updater.kalman import KalmanUpdater
 
+    # Must match stonesoup_sim::LOT1_NUMPY_SEED and RandomKit (NumPy legacy RNG).
     np.random.seed(1991)
     start_time = datetime.now().replace(microsecond=0)
     q_x, q_y = 0.05, 0.05

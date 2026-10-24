@@ -8,6 +8,7 @@ Rust framework for target tracking and state estimation, porting [Stone Soup](ht
 
 - Strict **`no_std`** core: 2D nearly-constant velocity model, linear-Gaussian measurements, Kalman predict/update (Joseph form optional), RMSE, covariance ellipse helper.
 - Scenario **Tutorial 01 — Kalman filter** with fixtures exported from Python (seed 1991) and parity test (±1e-6 on state mean vs Stone Soup).
+- **`stonesoup_sim::generate_lot1_tutorial(1991)`** regenerates truth + measurements with the same NumPy/RandomKit stream as Stone Soup (not SplitMix64).
 - **Viewer** (`apps/stonesoup-viewer`): catalogue entry, play/pause/step/reset, 2D plot (truth, detections, track, covariance ellipse), fixture seed **1991**, export results JSON to clipboard.
 - **Headless** (`apps/stonesoup-headless`): run Lot 1 without GUI.
 - **No-panic** certification for Kalman + Lot 1 scenario path (native harness).
