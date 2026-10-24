@@ -13,6 +13,7 @@ pub enum ScenarioId {
     Lot3JpdaTutorial,
     Lot4InitiatorsTutorial,
     Lot4SimulationTutorial,
+    Lot5ResamplingTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -30,7 +31,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 10] = [
+        static LIST: [ScenarioDescriptor; 11] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -101,6 +102,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot5ResamplingTutorial,
+                title: "Sampling — Particle resamplers",
+                upstream_path: "docs/tutorials/sampling/ResamplingTutorial.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -121,7 +129,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot3PdaTutorial
             | ScenarioId::Lot3JpdaTutorial
             | ScenarioId::Lot4InitiatorsTutorial
-            | ScenarioId::Lot4SimulationTutorial => {
+            | ScenarioId::Lot4SimulationTutorial
+            | ScenarioId::Lot5ResamplingTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -139,7 +148,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot3PdaTutorial
             | ScenarioId::Lot3JpdaTutorial
             | ScenarioId::Lot4InitiatorsTutorial
-            | ScenarioId::Lot4SimulationTutorial => {
+            | ScenarioId::Lot4SimulationTutorial
+            | ScenarioId::Lot5ResamplingTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

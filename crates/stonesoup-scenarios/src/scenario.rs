@@ -113,6 +113,9 @@ impl AnyScenario {
             ScenarioId::Lot4SimulationTutorial => {
                 Ok(Self::Lot4T10(Lot4Tutorial10Scenario::tutorial_defaults()?))
             }
+            ScenarioId::Lot5ResamplingTutorial => {
+                Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
+            }
         }
     }
 
