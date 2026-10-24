@@ -7,6 +7,7 @@ use crate::lot14_optimised_sensor::Lot14OptimisedSensorScenario;
 use crate::lot15_network_info_arch::Lot15NetworkInfoArchScenario;
 use crate::lot16_data_incest::Lot16DataIncestScenario;
 use crate::lot17_arch_intro::Lot17ArchIntroScenario;
+use crate::lot18_simple_oosm::Lot18SimpleOosmScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
@@ -122,6 +123,7 @@ pub enum AnyScenario {
     Lot15NetworkInfoArch(Lot15NetworkInfoArchScenario),
     Lot16DataIncest(Lot16DataIncestScenario),
     Lot17ArchIntro(Lot17ArchIntroScenario),
+    Lot18SimpleOosm(Lot18SimpleOosmScenario),
 }
 
 impl AnyScenario {
@@ -194,6 +196,11 @@ impl AnyScenario {
             ScenarioId::Lot17ArchIntroTutorial => Ok(Self::Lot17ArchIntro(
                 Lot17ArchIntroScenario::tutorial_defaults()?,
             )),
+            ScenarioId::Lot18SimpleOosmExample => Ok(Self::Lot18SimpleOosm(
+                Lot18SimpleOosmScenario::tutorial_defaults(
+                    crate::lot18_simple_oosm::Lot18OosmMode::FixedLag,
+                )?,
+            )),
         }
     }
 
@@ -222,6 +229,7 @@ impl AnyScenario {
             Self::Lot15NetworkInfoArch(_) => ScenarioId::Lot15NetworkInfoArchTutorial,
             Self::Lot16DataIncest(_) => ScenarioId::Lot16DataIncestTutorial,
             Self::Lot17ArchIntro(_) => ScenarioId::Lot17ArchIntroTutorial,
+            Self::Lot18SimpleOosm(_) => ScenarioId::Lot18SimpleOosmExample,
         }
     }
 }
@@ -251,6 +259,7 @@ impl Scenario for AnyScenario {
             Self::Lot15NetworkInfoArch(s) => s.reset(),
             Self::Lot16DataIncest(s) => s.reset(),
             Self::Lot17ArchIntro(s) => s.reset(),
+            Self::Lot18SimpleOosm(s) => s.reset(),
         }
     }
 
@@ -383,6 +392,13 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot18SimpleOosm(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -507,6 +523,7 @@ impl Scenario for AnyScenario {
             Self::Lot15NetworkInfoArch(s) => s.viewer_snapshot(),
             Self::Lot16DataIncest(s) => s.viewer_snapshot(),
             Self::Lot17ArchIntro(s) => s.viewer_snapshot(),
+            Self::Lot18SimpleOosm(s) => s.viewer_snapshot(),
         }
     }
 }

@@ -222,7 +222,7 @@ tutorial:docs/tutorials/architecture/01_Introduction_to_Architectures.py,docs/tu
 example:docs/examples/oosm/KalmanFilterOOSMExample.py,docs/examples/oosm/KalmanFilterOOSMExample.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/oosm/PF_OOSM_example.py,docs/examples/oosm/PF_OOSM_example.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/oosm/example_oosm_algorithm.py,docs/examples/oosm/example_oosm_algorithm.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
-example:docs/examples/oosm/example_simple_oosm.py,docs/examples/oosm/example_simple_oosm.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
+example:docs/examples/oosm/example_simple_oosm.py,docs/examples/oosm/example_simple_oosm.py,example,stonesoup,crates/stonesoup-scenarios/src/lot18_simple_oosm.rs,std,native,crates/stonesoup-scenarios/tests/parity_lot18_simple_oosm.rs,validated,Lot18SimpleOosmExample,parity_lot18_simple_oosm
 example:docs/examples/classification/Classifying_Using_HMM.py,docs/examples/classification/Classifying_Using_HMM.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/classification/Disjoint_Tracking_Classification.py,docs/examples/classification/Disjoint_Tracking_Classification.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/filters/Multi_Tracker_Example.py,docs/examples/filters/Multi_Tracker_Example.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,

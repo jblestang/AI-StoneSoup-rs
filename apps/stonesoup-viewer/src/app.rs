@@ -115,6 +115,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         }
         "21" | "data-incest" | "incest" => Some(ScenarioId::Lot16DataIncestTutorial),
         "22" | "arch-intro" | "intro-arch" => Some(ScenarioId::Lot17ArchIntroTutorial),
+        "23" | "oosm" | "simple-oosm" => Some(ScenarioId::Lot18SimpleOosmExample),
         _ => None,
     }
 }
