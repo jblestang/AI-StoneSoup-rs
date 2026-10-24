@@ -1,17 +1,43 @@
-use stonesoup_scenarios::{max_simulation_steps, DualRadarClutterSim, SIM_DURATION_S, DT_S};
+use stonesoup_scenarios::{
+    max_simulation_steps, DualRadarClutterSim, DT_S, PLOTS_PER_ROTATION, SIM_DURATION_S,
+};
 
 #[test]
-fn dual_radar_runs_to_plot_budget() {
+fn dual_radar_runs_full_duration_with_per_rotation_plot_cap() {
     let mut sim = DualRadarClutterSim::new().expect("new");
     let stats = sim.run().expect("run");
-    assert_eq!(stats.radar_a_plots, stonesoup_scenarios::PLOTS_PER_RADAR);
-    assert_eq!(stats.radar_b_plots, stonesoup_scenarios::PLOTS_PER_RADAR);
-    assert_eq!(
-        stats.radar_a_plots + stats.radar_b_plots,
-        stonesoup_scenarios::PLOTS_PER_RADAR * 2
-    );
     assert_eq!(stats.simulation_steps, max_simulation_steps());
     assert!((stats.simulation_steps as f64 * DT_S - SIM_DURATION_S).abs() < 1e-6);
+    assert!(
+        stats.radar_a_plots > PLOTS_PER_ROTATION,
+        "expect more than one rotation of plots on A: {}",
+        stats.radar_a_plots
+    );
+    assert!(
+        stats.radar_b_plots > PLOTS_PER_ROTATION,
+        "expect more than one rotation of plots on B: {}",
+        stats.radar_b_plots
+    );
+    assert!(
+        stats.radar_a_max_plots_in_rotation <= PLOTS_PER_ROTATION,
+        "A exceeded per-rotation cap: {}",
+        stats.radar_a_max_plots_in_rotation
+    );
+    assert!(
+        stats.radar_b_max_plots_in_rotation <= PLOTS_PER_ROTATION,
+        "B exceeded per-rotation cap: {}",
+        stats.radar_b_max_plots_in_rotation
+    );
+    assert!(
+        (9..=11).contains(&stats.radar_a_rotations),
+        "A rotations {}",
+        stats.radar_a_rotations
+    );
+    assert!(
+        (19..=21).contains(&stats.radar_b_rotations),
+        "B rotations {}",
+        stats.radar_b_rotations
+    );
     let total = stats.total_true + stats.total_clutter;
     let clutter_frac = stats.total_clutter as f64 / total as f64;
     assert!(
@@ -25,7 +51,7 @@ fn dual_radar_runs_to_plot_budget() {
     );
     assert_eq!(stats.total_unique_tracks(), stats.total_true);
     assert!(
-        stats.fused_completed.len() < 64,
+        stats.fused_completed.len() < 128,
         "fused lifecycle count {}",
         stats.fused_completed.len()
     );

@@ -81,7 +81,8 @@ pub use lot24_ensemble_filter::{Lot24EnsembleFilterScenario, MAX_LOT24_STEPS};
 pub use dual_radar_clutter::{
     max_simulation_steps, CompletedTrack, DualRadarClutterSim, DualRadarStats,
     CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S, FOV_DEG, OVERLAP_AREA_FRACTION,
-    PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED, SIM_DURATION_S,
+    PLOTS_PER_RADAR, PLOTS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED,
+    SIM_DURATION_S,
 };
 pub use stonesoup_core::{ContinuousTruthTrack, TrackTruthAssociation};
 pub use lot2_ekf::{
