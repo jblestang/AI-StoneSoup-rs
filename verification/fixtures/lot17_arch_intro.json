@@ -1,0 +1,27 @@
+{
+  "edges": [
+    [
+      "Node B",
+      "Node A"
+    ],
+    [
+      "Node C",
+      "Node A"
+    ]
+  ],
+  "node_a_xy": [
+    0.0,
+    40.0
+  ],
+  "node_b_xy": [
+    -35.0,
+    0.0
+  ],
+  "node_c_xy": [
+    35.0,
+    0.0
+  ],
+  "num_edges": 2,
+  "num_nodes": 3,
+  "upstream_sha": "a4336b920a799cfe0a77ecb05867c5deeb371c7a"
+}

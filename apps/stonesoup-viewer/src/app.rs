@@ -114,6 +114,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
             Some(ScenarioId::Lot15NetworkInfoArchTutorial)
         }
         "21" | "data-incest" | "incest" => Some(ScenarioId::Lot16DataIncestTutorial),
+        "22" | "arch-intro" | "intro-arch" => Some(ScenarioId::Lot17ArchIntroTutorial),
         _ => None,
     }
 }
@@ -358,6 +359,7 @@ impl ViewerApp {
                 | ScenarioId::Lot14OptimisedSensorTutorial
                 | ScenarioId::Lot15NetworkInfoArchTutorial
                 | ScenarioId::Lot16DataIncestTutorial
+                | ScenarioId::Lot17ArchIntroTutorial
         )
     }
 
@@ -376,6 +378,7 @@ impl ViewerApp {
                 | ScenarioId::Lot14OptimisedSensorTutorial
                 | ScenarioId::Lot15NetworkInfoArchTutorial
                 | ScenarioId::Lot16DataIncestTutorial
+                | ScenarioId::Lot17ArchIntroTutorial
         )
     }
 

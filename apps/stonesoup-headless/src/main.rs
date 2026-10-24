@@ -7,14 +7,14 @@ use stonesoup_scenarios::{
     Lot10SensorManagerMode, Lot10SingleSensorScenario, Lot11KdtreeScenario,
     Lot13MultiSensorScenario, Lot13SensorManagerMode, Lot14OptimisedSensorMode,
     Lot14OptimisedSensorScenario, Lot15ArchitectureMode, Lot15NetworkInfoArchScenario,
-    Lot16DataIncestMode, Lot16DataIncestScenario, Lot2EkfScenario, Lot2ParticleScenario,
-    Lot2UkfScenario, Lot3JpdaScenario, Lot3MultiTargetScenario, Lot3PdaScenario,
-    Lot4Tutorial09Scenario, Lot4Tutorial10Scenario, Lot5ResamplingScenario,
+    Lot16DataIncestMode, Lot16DataIncestScenario, Lot17ArchIntroScenario, Lot2EkfScenario,
+    Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario, Lot3MultiTargetScenario,
+    Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario, Lot5ResamplingScenario,
     Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario, Lot9AkkfScenario, ScenarioId,
     ScenarioRegistry, MAX_LOT10_STEPS, MAX_LOT11_KDTREE_STEPS, MAX_LOT13_STEPS, MAX_LOT14_STEPS,
-    MAX_LOT15_STEPS, MAX_LOT16_STEPS, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS,
-    MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS,
-    MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
+    MAX_LOT15_STEPS, MAX_LOT16_STEPS, MAX_LOT17_STEPS, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
+    MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS,
+    MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -42,6 +42,7 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
             ScenarioKind::Lot15NetworkInfoArch
         }
         Some("lot16_data_incest") | Some("lot16_architecture") => ScenarioKind::Lot16DataIncest,
+        Some("lot17_arch_intro") | Some("lot17_architecture") => ScenarioKind::Lot17ArchIntro,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -68,6 +69,7 @@ enum ScenarioKind {
     Lot14OptimisedSensor,
     Lot15NetworkInfoArch,
     Lot16DataIncest,
+    Lot17ArchIntro,
 }
 
 fn main() -> ExitCode {
@@ -421,6 +423,30 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot16_data_incest steps={} finished=true mean_cov_trace={:.6}",
                 MAX_LOT16_STEPS, snap.rmse
+            );
+        }
+        ScenarioKind::Lot17ArchIntro => {
+            let mut scenario = match Lot17ArchIntroScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let snap = match scenario.viewer_snapshot() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("snapshot: {e:?}");
+                    return ExitCode::from(4);
+                }
+            };
+            println!(
+                "scenario=lot17_arch_intro steps={} finished=true edges={:.0}",
+                MAX_LOT17_STEPS, snap.rmse
             );
         }
         ScenarioKind::Lot7Gmphd => {

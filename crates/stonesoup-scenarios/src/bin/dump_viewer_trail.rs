@@ -108,6 +108,7 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "19" | "optimised" => Some(ScenarioId::Lot14OptimisedSensorTutorial),
         "20" | "architecture" => Some(ScenarioId::Lot15NetworkInfoArchTutorial),
         "21" | "data-incest" => Some(ScenarioId::Lot16DataIncestTutorial),
+        "22" | "arch-intro" => Some(ScenarioId::Lot17ArchIntroTutorial),
         _ => None,
     }
 }
@@ -136,6 +137,7 @@ fn is_lot3_meas(id: ScenarioId) -> bool {
             | ScenarioId::Lot14OptimisedSensorTutorial
             | ScenarioId::Lot15NetworkInfoArchTutorial
             | ScenarioId::Lot16DataIncestTutorial
+            | ScenarioId::Lot17ArchIntroTutorial
     )
 }
 
