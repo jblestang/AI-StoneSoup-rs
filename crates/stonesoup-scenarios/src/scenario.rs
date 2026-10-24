@@ -8,6 +8,7 @@ use crate::lot15_network_info_arch::Lot15NetworkInfoArchScenario;
 use crate::lot16_data_incest::Lot16DataIncestScenario;
 use crate::lot17_arch_intro::Lot17ArchIntroScenario;
 use crate::lot18_simple_oosm::Lot18SimpleOosmScenario;
+use crate::lot19_kalman_oosm::Lot19KalmanOosmScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
@@ -124,6 +125,7 @@ pub enum AnyScenario {
     Lot16DataIncest(Lot16DataIncestScenario),
     Lot17ArchIntro(Lot17ArchIntroScenario),
     Lot18SimpleOosm(Lot18SimpleOosmScenario),
+    Lot19KalmanOosm(Lot19KalmanOosmScenario),
 }
 
 impl AnyScenario {
@@ -201,6 +203,11 @@ impl AnyScenario {
                     crate::lot18_simple_oosm::Lot18OosmMode::FixedLag,
                 )?,
             )),
+            ScenarioId::Lot19KalmanOosmExample => Ok(Self::Lot19KalmanOosm(
+                Lot19KalmanOosmScenario::tutorial_defaults(
+                    crate::lot19_kalman_oosm::Lot19KalmanOosmMode::Tracker2,
+                )?,
+            )),
         }
     }
 
@@ -230,6 +237,7 @@ impl AnyScenario {
             Self::Lot16DataIncest(_) => ScenarioId::Lot16DataIncestTutorial,
             Self::Lot17ArchIntro(_) => ScenarioId::Lot17ArchIntroTutorial,
             Self::Lot18SimpleOosm(_) => ScenarioId::Lot18SimpleOosmExample,
+            Self::Lot19KalmanOosm(_) => ScenarioId::Lot19KalmanOosmExample,
         }
     }
 }
@@ -260,6 +268,7 @@ impl Scenario for AnyScenario {
             Self::Lot16DataIncest(s) => s.reset(),
             Self::Lot17ArchIntro(s) => s.reset(),
             Self::Lot18SimpleOosm(s) => s.reset(),
+            Self::Lot19KalmanOosm(s) => s.reset(),
         }
     }
 
@@ -399,6 +408,13 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot19KalmanOosm(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -524,6 +540,7 @@ impl Scenario for AnyScenario {
             Self::Lot16DataIncest(s) => s.viewer_snapshot(),
             Self::Lot17ArchIntro(s) => s.viewer_snapshot(),
             Self::Lot18SimpleOosm(s) => s.viewer_snapshot(),
+            Self::Lot19KalmanOosm(s) => s.viewer_snapshot(),
         }
     }
 }

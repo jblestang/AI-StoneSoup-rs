@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build WASM viewer and capture final-state UI for catalogue 01–23 into screenshot/wasm/.
+# Build WASM viewer and capture final-state UI for catalogue 01–24 into screenshot/wasm/.
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 export PORT="${PORT:-8765}"
