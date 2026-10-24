@@ -1,6 +1,6 @@
 # WASM viewer — tutorial final states
 
-PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) running as **WebAssembly**, each catalogue entry stepped to completion (**01–28**).
+PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) running as **WebAssembly**, each catalogue entry stepped to completion (**01–29**).
 
 | File | Catalogue | Title (registry) |
 |------|-----------|------------------|
@@ -32,6 +32,7 @@ PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) ru
 | `tutorial_26.png` | 26 | OOSM Algorithm C |
 | `tutorial_27.png` | 27 | Bearings-only EKF (moving platform) |
 | `tutorial_28.png` | 28 | Multi-tracker comparison (manoeuvring targets) |
+| `tutorial_29.png` | 29 | Ensemble Kalman filter |
 
 ## Regenerate
 
@@ -46,7 +47,7 @@ Requires [Trunk](https://trunkrs.dev/), Python 3, and Playwright (installed auto
 ## Deep links (local `trunk serve` or `dist/`)
 
 ```text
-http://localhost:8080/?tutorial=28&finish=1
+http://localhost:8080/?tutorial=29&finish=1
 ```
 
 When stepping completes, the page title becomes `stonesoup-viewer-ready` (for automation).

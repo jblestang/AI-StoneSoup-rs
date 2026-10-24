@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Viewer-style matplotlib PNGs for catalogue 01–28 (plot panel; matches WASM trails).
+# Viewer-style matplotlib PNGs for catalogue 01–29 (plot panel; matches WASM trails).
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 export OUT="${OUT:-$root/screenshot/python}"

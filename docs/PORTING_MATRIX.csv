@@ -229,7 +229,7 @@ example:docs/examples/filters/Multi_Tracker_Example.py,docs/examples/filters/Mul
 example:docs/examples/filters/ELPF_multitarget_example.py,docs/examples/filters/ELPF_multitarget_example.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/filters/ParticleFlow.py,docs/examples/filters/ParticleFlow.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/filters/bearing_only_example.py,docs/examples/filters/bearing_only_example.py,example,stonesoup,crates/stonesoup-scenarios/src/lot22_bearing_only.rs,std,native,crates/stonesoup-scenarios/tests/parity_lot22_bearing_only.rs,validated,Lot22BearingOnlyExample,parity_lot22_bearing_only
-example:docs/examples/filters/EnsembleFilterExample.py,docs/examples/filters/EnsembleFilterExample.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
+example:docs/examples/filters/EnsembleFilterExample.py,docs/examples/filters/EnsembleFilterExample.py,example,stonesoup,crates/stonesoup-scenarios/src/lot24_ensemble_filter.rs,std,native,crates/stonesoup-scenarios/tests/parity_lot24_ensemble_filter.rs,validated,Lot24EnsembleFilterExample,parity_lot24_ensemble_filter
 example:docs/examples/metrics/CLEAR_MOT.py,docs/examples/metrics/CLEAR_MOT.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/metrics/Metrics.py,docs/examples/metrics/Metrics.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
 example:docs/examples/plotting/Animated_Plotters.py,docs/examples/plotting/Animated_Plotters.py,example,stonesoup,crates/stonesoup-scenarios,std,native,,todo,,
