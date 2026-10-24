@@ -17,6 +17,7 @@ impl RmseAccumulator {
         }
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn push(&mut self, ex: f64, ey: f64) -> Result<(), Error> {
         require_finite(ex)?;
         require_finite(ey)?;
@@ -27,6 +28,7 @@ impl RmseAccumulator {
         Ok(())
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn rmse(&self) -> Result<f64, Error> {
         if self.count == 0 {
             return Err(Error::InvalidParameter);
@@ -38,6 +40,7 @@ impl RmseAccumulator {
         Ok(r)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn count(&self) -> u32 {
         self.count
     }

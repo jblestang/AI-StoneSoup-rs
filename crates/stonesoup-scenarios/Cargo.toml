@@ -6,9 +6,14 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[features]
+no-panic-cert = ["stonesoup-core/no-panic-cert", "dep:no-panic"]
+
 [dependencies]
 stonesoup-core = { path = "../stonesoup-core" }
 stonesoup-sim = { path = "../stonesoup-sim" }
+libm = { workspace = true }
+no-panic = { version = "0.1.34", optional = true }
 
 [lints.clippy]
 unwrap_used = "deny"

@@ -8,7 +8,9 @@ Rust framework for target tracking and state estimation, porting [Stone Soup](ht
 
 - Strict **`no_std`** core: 2D nearly-constant velocity model, linear-Gaussian measurements, Kalman predict/update (Joseph form optional), RMSE, covariance ellipse helper.
 - Scenario **Tutorial 01 — Kalman filter** with fixtures exported from Python (seed 1991) and parity test (±1e-6 on state mean vs Stone Soup).
-- **Viewer** (`apps/stonesoup-viewer`): catalogue entry, play/pause/step/reset, 2D plot (truth, detections, track) via **egui_plot**.
+- **Viewer** (`apps/stonesoup-viewer`): catalogue entry, play/pause/step/reset, 2D plot (truth, detections, track, covariance ellipse), fixture seed **1991**, export results JSON to clipboard.
+- **Headless** (`apps/stonesoup-headless`): run Lot 1 without GUI.
+- **No-panic** certification for Kalman + Lot 1 scenario path (native harness).
 - **WASM** build via Trunk (`apps/stonesoup-viewer/dist/`).
 
 **Coverage (inventory at pinned SHA):** 271 tracked rows — components **~5/198** validated or adapted for Lot 1; scenarios **1/73** validated. See [docs/PORTING_MATRIX.csv](docs/PORTING_MATRIX.csv).
@@ -32,8 +34,11 @@ cargo run -p stonesoup-viewer --release --locked
 # WASM viewer (from app dir; unset NO_COLOR if Trunk errors)
 cd apps/stonesoup-viewer && unset NO_COLOR && trunk build --release
 
-# No-panic harness (partial manifest — see docs/NO_PANIC.md)
-cargo run -p stonesoup-no-panic-harness --profile no-panic-test --locked
+# No-panic harness (see docs/NO_PANIC.md)
+cargo run --manifest-path verification/no-panic-harness/Cargo.toml --profile no-panic-test --locked
+
+# Headless Lot 1 (stdout RMSE)
+cargo run -p stonesoup-headless --release --locked -- lot1
 
 # Aggregated verification
 cargo run -p xtask -- verify

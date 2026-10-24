@@ -17,6 +17,7 @@ pub struct ScenarioDescriptor {
 pub struct ScenarioRegistry;
 
 impl ScenarioRegistry {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
         static LIST: [ScenarioDescriptor; 1] = [ScenarioDescriptor {
@@ -29,6 +30,7 @@ impl ScenarioRegistry {
         &LIST
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn spawn(id: ScenarioId) -> Result<Lot1KalmanScenario, ScenarioError> {
         match id {
             ScenarioId::Lot1KalmanTutorial => Lot1KalmanScenario::tutorial_defaults(),
@@ -44,6 +46,7 @@ pub enum ScenarioError {
 }
 
 impl From<stonesoup_core::Error> for ScenarioError {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     fn from(e: stonesoup_core::Error) -> Self {
         Self::Core(e)
     }

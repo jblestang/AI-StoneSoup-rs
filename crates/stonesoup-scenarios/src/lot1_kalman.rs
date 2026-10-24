@@ -10,6 +10,7 @@ use crate::registry::ScenarioError;
 
 pub const MAX_LOT1_STEPS: usize = NUM_STEPS;
 
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 pub fn tutorial_cov() -> Result<Mat<4, 4>, ScenarioError> {
     let mut cov = Mat::<4, 4>::zeros();
     cov.set(0, 0, 1.5)?;
@@ -19,6 +20,7 @@ pub fn tutorial_cov() -> Result<Mat<4, 4>, ScenarioError> {
     Ok(cov)
 }
 
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 fn fixture_row<const N: usize>(
     table: &[[f64; N]; NUM_STEPS],
     i: usize,
@@ -36,6 +38,8 @@ pub struct Lot1Snapshot {
     pub measurement_xy: (f64, f64),
     pub estimate_xy: (f64, f64),
     pub ellipse_semi: (f64, f64),
+    /// Orientation (rad) of the major axis in the x–y plane.
+    pub ellipse_angle_rad: f64,
     pub rmse: f64,
     pub finished: bool,
 }
@@ -57,6 +61,8 @@ pub struct Lot1KalmanScenario {
 }
 
 impl Lot1KalmanScenario {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn tutorial_defaults() -> Result<Self, ScenarioError> {
         let transition = match ConstantVelocity2d::new(0.05, 0.05) {
             Ok(v) => v,
@@ -97,15 +103,19 @@ impl Lot1KalmanScenario {
         })
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     fn timestamp_for(step: usize) -> Timestamp {
         Timestamp::from_nanos((step as i64) * Duration::SEC.0)
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn reset(&mut self) -> Result<(), ScenarioError> {
         *self = Self::tutorial_defaults()?;
         Ok(())
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn step(&mut self) -> Result<Lot1StepOutcome, ScenarioError> {
         if self.step >= NUM_STEPS {
             return Ok(Lot1StepOutcome::Finished);
@@ -116,8 +126,8 @@ impl Lot1KalmanScenario {
         let det = Detection::new(m, ts, SensorId(0))?;
         let post = self.updater.update(&predicted, &det, &mut self.ws)?;
         let truth = fixture_row(&TRUTH, self.step)?;
-        let ex = post.mean.get(0)? - truth[0];
-        let ey = post.mean.get(2)? - truth[2];
+        let ex = post.mean.0[0] - truth[0];
+        let ey = post.mean.0[2] - truth[2];
         self.rmse.push(ex, ey)?;
         self.prior = post;
         self.step = self
@@ -131,6 +141,8 @@ impl Lot1KalmanScenario {
         }
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn run_to_end(&mut self) -> Result<(), ScenarioError> {
         while self.step < NUM_STEPS {
             match self.step()? {
@@ -141,6 +153,8 @@ impl Lot1KalmanScenario {
         Ok(())
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn snapshot(&self) -> Result<Lot1Snapshot, ScenarioError> {
         let idx = if self.step == 0 { 0 } else { self.step - 1 };
         let truth = fixture_row(&TRUTH, idx)?;
@@ -148,6 +162,7 @@ impl Lot1KalmanScenario {
         let (ex, ey) = self.prior.position_xy()?;
         let (c00, c01, c11) = self.prior.position_cov_block()?;
         let ellipse = ellipse_from_cov2(c00, c01, c11, self.conf)?;
+        let ellipse_angle_rad = libm::atan2(2.0 * c01, c00 - c11) * 0.5;
         let rmse = self.rmse.rmse().unwrap_or(0.0);
         Ok(Lot1Snapshot {
             step: self.step,
@@ -155,19 +170,26 @@ impl Lot1KalmanScenario {
             measurement_xy: (m[0], m[1]),
             estimate_xy: (ex, ey),
             ellipse_semi: ellipse,
+            ellipse_angle_rad,
             rmse,
             finished: self.step >= NUM_STEPS,
         })
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn estimate_state(&self) -> &GaussianState {
         &self.prior
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn step_index(&self) -> usize {
         self.step
     }
 
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn reference_track_at(&self, i: usize) -> Option<[f64; 4]> {
         TRACK_REF.get(i).copied()
     }

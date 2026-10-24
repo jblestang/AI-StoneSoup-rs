@@ -2865,6 +2865,7 @@ version = "0.1.0"
 dependencies = [
  "approx",
  "libm",
+ "no-panic",
 ]
 
 [[package]]
@@ -2872,6 +2873,13 @@ name = "stonesoup-embedded-harness"
 version = "0.1.0"
 dependencies = [
  "stonesoup-core",
+ "stonesoup-scenarios",
+]
+
+[[package]]
+name = "stonesoup-headless"
+version = "0.1.0"
+dependencies = [
  "stonesoup-scenarios",
 ]
 
@@ -2885,18 +2893,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "stonesoup-no-panic-harness"
-version = "0.1.0"
-dependencies = [
- "no-panic",
- "stonesoup-core",
- "stonesoup-scenarios",
-]
-
-[[package]]
 name = "stonesoup-scenarios"
 version = "0.1.0"
 dependencies = [
+ "libm",
+ "no-panic",
  "stonesoup-core",
  "stonesoup-sim",
 ]
@@ -2916,6 +2917,7 @@ dependencies = [
  "eframe",
  "egui",
  "egui_plot",
+ "serde_json",
  "stonesoup-core",
  "stonesoup-scenarios",
  "wasm-bindgen-futures",

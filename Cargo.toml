@@ -1,12 +1,13 @@
 [workspace]
 resolver = "2"
+exclude = ["verification/no-panic-harness"]
 members = [
     "crates/stonesoup-core",
     "crates/stonesoup-sim",
     "crates/stonesoup-scenarios",
     "crates/stonesoup-io",
     "apps/stonesoup-viewer",
-    "verification/no-panic-harness",
+    "apps/stonesoup-headless",
     "verification/embedded-harness",
     "xtask",
 ]

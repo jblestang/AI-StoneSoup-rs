@@ -1,4 +1,5 @@
 /target/
+/verification/no-panic-harness/target/
 **/dist/
 .DS_Store
 *.profraw

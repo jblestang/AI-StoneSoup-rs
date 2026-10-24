@@ -1,7 +1,7 @@
 [package]
 name = "stonesoup-no-panic-harness"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 publish = false
 
 [[bin]]
@@ -9,6 +9,10 @@ name = "stonesoup-no-panic-harness"
 path = "src/main.rs"
 
 [dependencies]
-stonesoup-core = { path = "../../crates/stonesoup-core" }
-stonesoup-scenarios = { path = "../../crates/stonesoup-scenarios" }
+stonesoup-core = { path = "../../crates/stonesoup-core", features = ["no-panic-cert"] }
+stonesoup-scenarios = { path = "../../crates/stonesoup-scenarios", features = ["no-panic-cert"] }
 no-panic = "0.1.34"
+
+[profile.no-panic-test]
+inherits = "release"
+panic = "unwind"
