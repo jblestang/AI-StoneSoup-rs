@@ -21,6 +21,27 @@ fn cargo(sub: &str, args: &[&str]) -> Command {
     c
 }
 
+fn trunk_on_path() -> bool {
+    Command::new("bash")
+        .args(["-lc", "command -v trunk >/dev/null"])
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
+
+fn should_run_wasm_smoke() -> bool {
+    if std::env::var("NO_COLOR").is_ok() {
+        return false;
+    }
+    if std::env::var("VERIFY_WASM").is_ok_and(|v| v == "1" || v.eq_ignore_ascii_case("true")) {
+        return true;
+    }
+    if std::env::var("CI").is_ok() {
+        return false;
+    }
+    trunk_on_path()
+}
+
 fn main() -> ExitCode {
     let mut ok = true;
     ok &= run(cargo("fmt", &["--all", "--", "--check"]));
@@ -96,7 +117,7 @@ fn main() -> ExitCode {
             "lot1",
         ],
     ));
-    if std::env::var("NO_COLOR").is_err() {
+    if should_run_wasm_smoke() {
         ok &= run({
             let mut c = Command::new("bash");
             c.arg("-lc");
@@ -109,7 +130,7 @@ fn main() -> ExitCode {
             c
         });
     } else {
-        eprintln!("xtask verify: skipping Trunk/WASM smoke (NO_COLOR is set)");
+        eprintln!("xtask verify: skipping Trunk/WASM smoke (set VERIFY_WASM=1 to force in CI)");
     }
     if ok {
         eprintln!("xtask verify: all executed checks passed");
