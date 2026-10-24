@@ -48,8 +48,8 @@ fn dual_radar_runs_full_duration_with_per_rotation_target_cap() {
     );
     assert_eq!(NUM_TRUTHS, 1000);
     assert!(
-        stats.truths_with_any_plot > 400,
-        "most simulated targets should get at least one plot: {}",
+        stats.truths_with_any_plot >= 990,
+        "each truth should be plotted at least once over 60 s: {}",
         stats.truths_with_any_plot
     );
     assert!(

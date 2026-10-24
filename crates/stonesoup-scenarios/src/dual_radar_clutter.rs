@@ -91,15 +91,18 @@ struct RadarConfig {
     sensor: SensorId,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct RadarRuntime {
     dwell_rad: f64,
     last_ts: Option<Timestamp>,
-    targets_this_rotation: usize,
+    /// Distinct truths reported this 360° rotation (≤ [`TARGETS_PER_ROTATION`]).
+    unique_targets_this_rotation: usize,
     rotation_count: usize,
     max_targets_in_rotation: usize,
     /// Round-robin offset when applying the per-rotation plot cap (realistic scan scheduling).
     plot_scan_cursor: usize,
+    /// At most one true plot per truth index per rotation (beam dwell may revisit FOV many steps).
+    rotation_plotted: Vec<bool>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -251,10 +254,11 @@ fn advance_dwell(cfg: RadarConfig, rt: &mut RadarRuntime, ts: Timestamp) -> Resu
     let angle = prev_dwell + dt * rps * 2.0 * core::f64::consts::PI;
     rt.dwell_rad = mod_bearing(angle).map_err(ScenarioError::Core)?;
     if rt.dwell_rad + 1e-12 < prev_dwell {
-        if rt.targets_this_rotation > rt.max_targets_in_rotation {
-            rt.max_targets_in_rotation = rt.targets_this_rotation;
+        if rt.unique_targets_this_rotation > rt.max_targets_in_rotation {
+            rt.max_targets_in_rotation = rt.unique_targets_this_rotation;
         }
-        rt.targets_this_rotation = 0;
+        rt.unique_targets_this_rotation = 0;
+        rt.rotation_plotted.fill(false);
         rt.rotation_count += 1;
         rt.plot_scan_cursor = (rt.plot_scan_cursor + PLOT_SCAN_CURSOR_STRIDE) % NUM_TRUTHS;
     }
@@ -508,18 +512,20 @@ impl DualRadarClutterSim {
                 RadarRuntime {
                     dwell_rad: 0.0,
                     last_ts: None,
-                    targets_this_rotation: 0,
+                    unique_targets_this_rotation: 0,
                     rotation_count: 0,
                     max_targets_in_rotation: 0,
                     plot_scan_cursor: 0,
+                    rotation_plotted: alloc::vec![false; NUM_TRUTHS],
                 },
                 RadarRuntime {
                     dwell_rad: 0.0,
                     last_ts: None,
-                    targets_this_rotation: 0,
+                    unique_targets_this_rotation: 0,
                     rotation_count: 0,
                     max_targets_in_rotation: 0,
                     plot_scan_cursor: 63,
+                    rotation_plotted: alloc::vec![false; NUM_TRUTHS],
                 },
             ],
             plot_counts: [0, 0],
@@ -626,14 +632,23 @@ impl DualRadarClutterSim {
         for k in 0..n_truths {
             let ti = (cursor + k) % n_truths;
             let gt = self.truths[ti];
-            if self.radar_rt[radar_idx].targets_this_rotation >= TARGETS_PER_ROTATION {
-                break;
+            if self.radar_rt[radar_idx]
+                .rotation_plotted
+                .get(ti)
+                .copied()
+                .unwrap_or(false)
+            {
+                continue;
+            }
+            if self.radar_rt[radar_idx].unique_targets_this_rotation >= TARGETS_PER_ROTATION {
+                continue;
             }
             if is_in_fov(&model, gt.state, cfg.max_range_m)? {
                 let det = measure_truth(&model, gt, cfg.sensor, &mut self.rng)?;
                 if n < out.len() {
                     out[n] = det;
                     n += 1;
+                    self.radar_rt[radar_idx].rotation_plotted[ti] = true;
                     self.bump_radar_target(radar_idx);
                     self.total_true += 1;
                     if ti < NUM_TRUTHS {
@@ -667,9 +682,9 @@ impl DualRadarClutterSim {
     fn bump_radar_target(&mut self, radar_idx: usize) {
         self.plot_counts[radar_idx] += 1;
         let rt = &mut self.radar_rt[radar_idx];
-        rt.targets_this_rotation += 1;
-        if rt.targets_this_rotation > rt.max_targets_in_rotation {
-            rt.max_targets_in_rotation = rt.targets_this_rotation;
+        rt.unique_targets_this_rotation += 1;
+        if rt.unique_targets_this_rotation > rt.max_targets_in_rotation {
+            rt.max_targets_in_rotation = rt.unique_targets_this_rotation;
         }
     }
 
@@ -1038,8 +1053,8 @@ impl DualRadarClutterSim {
 
         for ri in 0..2 {
             let rt = &mut self.radar_rt[ri];
-            if rt.targets_this_rotation > rt.max_targets_in_rotation {
-                rt.max_targets_in_rotation = rt.targets_this_rotation;
+            if rt.unique_targets_this_rotation > rt.max_targets_in_rotation {
+                rt.max_targets_in_rotation = rt.unique_targets_this_rotation;
             }
         }
 
