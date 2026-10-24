@@ -15,6 +15,7 @@ mod lot4_tutorial10;
 mod lot5_resampling;
 pub mod lot5_resampling_fixtures;
 mod lot6_information;
+mod lot7_gm_phd;
 mod particle_lot2;
 mod registry;
 pub mod scenario;
@@ -40,6 +41,7 @@ pub use lot5_resampling::{lot5_case_name, Lot5ResamplingScenario, MAX_LOT5_RESAM
 pub use lot6_information::{
     Lot6InformationScenario, Lot6Snapshot, Lot6StepOutcome, MAX_LOT6_STEPS,
 };
+pub use lot7_gm_phd::{Lot7GmPhdScenario, Lot7StepOutcome, LOT7_REDUCED, MAX_LOT7_STEPS};
 pub use particle_lot2::{Lot2ParticleScenario, LOT2_PF_PARTICLES};
 pub use registry::{ScenarioDescriptor, ScenarioError, ScenarioId, ScenarioRegistry};
 pub use scenario::{AnyScenario, Scenario, ScenarioStepOutcome, ViewerSnapshot};

@@ -107,6 +107,14 @@ def main() -> int:
             )
             page.close()
 
+            page = browser.new_page(viewport={"width": 1280, "height": 800})
+            page.goto(f"{base}/?tutorial=13&finish=1", wait_until="networkidle", timeout=120_000)
+            page.wait_for_function(
+                f"document.title === '{READY_TITLE}'",
+                timeout=120_000,
+            )
+            page.close()
+
             browser.close()
     finally:
         server.terminate()
