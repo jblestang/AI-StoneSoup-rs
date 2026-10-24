@@ -110,6 +110,51 @@ struct ActiveTrack {
     birth_step: usize,
 }
 
+/// How many **simulated truths** received ≥1 true plot from each radar (detection layer).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct TruthSensorPlotCounts {
+    pub radar_a_only: usize,
+    pub radar_b_only: usize,
+    pub both_radars: usize,
+    pub no_plots: usize,
+}
+
+fn truth_sensor_plot_counts(seen_a: &[bool], seen_b: &[bool]) -> TruthSensorPlotCounts {
+    let mut out = TruthSensorPlotCounts::default();
+    for (&a, &b) in seen_a.iter().zip(seen_b.iter()) {
+        match (a, b) {
+            (true, true) => out.both_radars += 1,
+            (true, false) => out.radar_a_only += 1,
+            (false, true) => out.radar_b_only += 1,
+            (false, false) => out.no_plots += 1,
+        }
+    }
+    out
+}
+
+fn continuous_tracks_by_plot_visibility(
+    continuous: &[ContinuousTruthTrack],
+    seen_a: &[bool],
+    seen_b: &[bool],
+) -> TruthSensorPlotCounts {
+    let mut out = TruthSensorPlotCounts::default();
+    for ct in continuous {
+        let i = ct.truth_id as usize;
+        if i >= seen_a.len() {
+            continue;
+        }
+        let a = seen_a[i];
+        let b = seen_b[i];
+        match (a, b) {
+            (true, true) => out.both_radars += 1,
+            (true, false) => out.radar_a_only += 1,
+            (false, true) => out.radar_b_only += 1,
+            (false, false) => {}
+        }
+    }
+    out
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct CompletedTrack {
     pub birth_step: usize,
@@ -140,6 +185,8 @@ pub struct DualRadarStats {
     pub true_plots_in_overlap: usize,
     pub track_to_truth: Vec<TrackTruthAssociation>,
     pub continuous_truth_tracks: Vec<ContinuousTruthTrack>,
+    pub truth_plot_sensor_counts: TruthSensorPlotCounts,
+    pub continuous_track_sensor_counts: TruthSensorPlotCounts,
 }
 
 fn half_fov_rad() -> f64 {
@@ -371,6 +418,8 @@ pub struct DualRadarClutterSim {
     total_true: usize,
     total_clutter: usize,
     truths_plot_seen: Vec<bool>,
+    truths_plot_seen_a: Vec<bool>,
+    truths_plot_seen_b: Vec<bool>,
     step: usize,
     active: Vec<ActiveTrack>,
     tentative: MultiMeasurementInitiator,
@@ -397,6 +446,8 @@ impl DualRadarClutterSim {
         let mut rng = SplitMix64::new(SEED);
         let truths = init_truths(ts0, &mut rng)?;
         let truths_plot_seen = alloc::vec![false; NUM_TRUTHS];
+        let truths_plot_seen_a = alloc::vec![false; NUM_TRUTHS];
+        let truths_plot_seen_b = alloc::vec![false; NUM_TRUTHS];
         let truth_log = alloc::vec![Vec::new(); NUM_TRUTHS];
         let coast_steps = libm::ceil(COAST_SECONDS / DT_S) as usize;
         Ok(Self {
@@ -445,6 +496,8 @@ impl DualRadarClutterSim {
             total_true: 0,
             total_clutter: 0,
             truths_plot_seen,
+            truths_plot_seen_a,
+            truths_plot_seen_b,
             step: 0,
             active: Vec::with_capacity(16),
             tentative: MultiMeasurementInitiator::new(
@@ -553,6 +606,11 @@ impl DualRadarClutterSim {
                     self.total_true += 1;
                     if ti < NUM_TRUTHS {
                         self.truths_plot_seen[ti] = true;
+                        if radar_idx == 0 {
+                            self.truths_plot_seen_a[ti] = true;
+                        } else {
+                            self.truths_plot_seen_b[ti] = true;
+                        }
                     }
                     if det.vector.0[1] <= RANGE_B_M {
                         self.true_plots_in_overlap += 1;
@@ -923,6 +981,15 @@ impl DualRadarClutterSim {
             associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config);
         let continuous_truth_tracks =
             continuous_tracks_per_truth(&track_to_truth, NUM_TRUTHS as u16);
+        let truth_plot_sensor_counts = truth_sensor_plot_counts(
+            &self.truths_plot_seen_a,
+            &self.truths_plot_seen_b,
+        );
+        let continuous_track_sensor_counts = continuous_tracks_by_plot_visibility(
+            &continuous_truth_tracks,
+            &self.truths_plot_seen_a,
+            &self.truths_plot_seen_b,
+        );
 
         for ri in 0..2 {
             let rt = &mut self.radar_rt[ri];
@@ -949,6 +1016,8 @@ impl DualRadarClutterSim {
             true_plots_in_overlap: self.true_plots_in_overlap,
             track_to_truth,
             continuous_truth_tracks,
+            truth_plot_sensor_counts,
+            continuous_track_sensor_counts,
         })
     }
 }

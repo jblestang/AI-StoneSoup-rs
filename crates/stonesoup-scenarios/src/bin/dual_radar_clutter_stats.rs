@@ -99,6 +99,17 @@ fn run() -> Result<String, ScenarioError> {
             "with_any_plot": stats.truths_with_any_plot,
             "with_labeled_fused_track": stats.truths_with_labeled_fused_track,
             "with_continuous_track_to_truth": stats.continuous_truth_track_count,
+            "plot_visibility": {
+                "radar_a_only": stats.truth_plot_sensor_counts.radar_a_only,
+                "radar_b_only": stats.truth_plot_sensor_counts.radar_b_only,
+                "both_radars": stats.truth_plot_sensor_counts.both_radars,
+                "no_plots": stats.truth_plot_sensor_counts.no_plots,
+            },
+            "continuous_track_by_plot_visibility": {
+                "radar_a_only": stats.continuous_track_sensor_counts.radar_a_only,
+                "radar_b_only": stats.continuous_track_sensor_counts.radar_b_only,
+                "both_radars": stats.continuous_track_sensor_counts.both_radars,
+            },
         },
         "tracks": {
             "description": "total_unique_tracks = one fused-network row per true plot. fused_lifecycle_tracks = long-coast JPDA+EKF segments (sequential per-sensor).",

@@ -9705,6 +9705,17 @@
     "true_plot_tracks": 21822
   },
   "truths": {
+    "continuous_track_by_plot_visibility": {
+      "both_radars": 140,
+      "radar_a_only": 609,
+      "radar_b_only": 42
+    },
+    "plot_visibility": {
+      "both_radars": 140,
+      "no_plots": 206,
+      "radar_a_only": 612,
+      "radar_b_only": 42
+    },
     "simulated": 1000,
     "with_any_plot": 794,
     "with_continuous_track_to_truth": 793,
