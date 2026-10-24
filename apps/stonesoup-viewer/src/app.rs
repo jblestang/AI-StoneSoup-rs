@@ -107,6 +107,9 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "16" | "sensor" | "sensormanagement" => Some(ScenarioId::Lot10SingleSensorTutorial),
         "17" | "akkf" | "kernel" => Some(ScenarioId::Lot12AkkfTutorial),
         "18" | "multisensor" | "multi-sensor" => Some(ScenarioId::Lot13MultiSensorTutorial),
+        "19" | "optimised" | "optimized" | "opt-sensor" => {
+            Some(ScenarioId::Lot14OptimisedSensorTutorial)
+        }
         _ => None,
     }
 }
@@ -348,6 +351,7 @@ impl ViewerApp {
                 | ScenarioId::Lot10SingleSensorTutorial
                 | ScenarioId::Lot12AkkfTutorial
                 | ScenarioId::Lot13MultiSensorTutorial
+                | ScenarioId::Lot14OptimisedSensorTutorial
         )
     }
 
@@ -363,6 +367,7 @@ impl ViewerApp {
                 | ScenarioId::Lot10SingleSensorTutorial
                 | ScenarioId::Lot11KdtreeTutorial
                 | ScenarioId::Lot13MultiSensorTutorial
+                | ScenarioId::Lot14OptimisedSensorTutorial
         )
     }
 

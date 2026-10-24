@@ -24,9 +24,11 @@
 
 **Lot 13:** complete — **Multi-sensor management** tutorial (`02_MultiSensorManagement.py`: two rotating radars, random vs brute-force managers, per-detection EKF geometry via `associate_gnn_2d_ekf_det_models`). Headless: `lot13_multi_sensor`. WASM viewer: `?tutorial=18` (aliases `multisensor`, `multi-sensor`). Parity: `parity_lot13_multi_sensor` (random + brute, 20 steps).
 
+**Lot 14:** complete — **Optimised sensor management** tutorial (`03_OptimisedSensorManagement.py`: SciPy `OptimizeBrute` and `OptimizeBasinHopping` managers vs brute-force baseline; replay parity). Headless: `lot14_optimised_sensor`. WASM viewer: `?tutorial=19` (aliases `optimised`, `opt-sensor`). Parity: `parity_lot14_optimised_sensor` (three manager modes, 20 steps).
+
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (tutorials **01–18**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (tutorials **01–19**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
@@ -40,5 +42,5 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated catalogue tutorials at pinned SHA: **01–18** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management).
-- **Next feature lots:** optimised sensor management, architecture, etc. (`PORTING_MATRIX.csv` `todo` rows).
+- Validated catalogue tutorials at pinned SHA: **01–19** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management).
+- **Next feature lots:** architecture tutorials, etc. (`PORTING_MATRIX.csv` `todo` rows).

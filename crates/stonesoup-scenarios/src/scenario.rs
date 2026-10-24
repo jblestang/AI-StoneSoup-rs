@@ -3,6 +3,7 @@
 use crate::lot10_single_sensor::{Lot10SensorManagerMode, Lot10SingleSensorScenario};
 use crate::lot11_kdtree::Lot11KdtreeScenario;
 use crate::lot13_multi_sensor::Lot13MultiSensorScenario;
+use crate::lot14_optimised_sensor::Lot14OptimisedSensorScenario;
 use crate::lot1_kalman::{Lot1KalmanScenario, Lot1StepOutcome, MAX_LOT1_STEPS};
 use crate::lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,
@@ -114,6 +115,7 @@ pub enum AnyScenario {
     Lot11Kdtree(Lot11KdtreeScenario),
     Lot12Akkf(Lot9AkkfScenario),
     Lot13MultiSensor(Lot13MultiSensorScenario),
+    Lot14OptimisedSensor(Lot14OptimisedSensorScenario),
 }
 
 impl AnyScenario {
@@ -168,6 +170,11 @@ impl AnyScenario {
                     crate::lot13_multi_sensor::Lot13SensorManagerMode::BruteForce,
                 )?,
             )),
+            ScenarioId::Lot14OptimisedSensorTutorial => Ok(Self::Lot14OptimisedSensor(
+                Lot14OptimisedSensorScenario::tutorial_defaults(
+                    crate::lot14_optimised_sensor::Lot14OptimisedSensorMode::OptimizeBrute,
+                )?,
+            )),
         }
     }
 
@@ -192,6 +199,7 @@ impl AnyScenario {
             Self::Lot11Kdtree(_) => ScenarioId::Lot11KdtreeTutorial,
             Self::Lot12Akkf(_) => ScenarioId::Lot12AkkfTutorial,
             Self::Lot13MultiSensor(_) => ScenarioId::Lot13MultiSensorTutorial,
+            Self::Lot14OptimisedSensor(_) => ScenarioId::Lot14OptimisedSensorTutorial,
         }
     }
 }
@@ -217,6 +225,7 @@ impl Scenario for AnyScenario {
             Self::Lot11Kdtree(s) => s.reset(),
             Self::Lot12Akkf(s) => s.reset(),
             Self::Lot13MultiSensor(s) => s.reset(),
+            Self::Lot14OptimisedSensor(s) => s.reset(),
         }
     }
 
@@ -315,6 +324,13 @@ impl Scenario for AnyScenario {
                 Lot9StepOutcome::Finished => ScenarioStepOutcome::Finished,
             },
             Self::Lot13MultiSensor(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
+            Self::Lot14OptimisedSensor(s) => {
                 if s.step()? {
                     ScenarioStepOutcome::Stepped
                 } else {
@@ -441,6 +457,7 @@ impl Scenario for AnyScenario {
                 })
             }
             Self::Lot13MultiSensor(s) => s.viewer_snapshot(),
+            Self::Lot14OptimisedSensor(s) => s.viewer_snapshot(),
         }
     }
 }

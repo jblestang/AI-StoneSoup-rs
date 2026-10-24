@@ -21,6 +21,7 @@ pub enum ScenarioId {
     Lot11KdtreeTutorial,
     Lot12AkkfTutorial,
     Lot13MultiSensorTutorial,
+    Lot14OptimisedSensorTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -38,7 +39,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 18] = [
+        static LIST: [ScenarioDescriptor; 19] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -165,6 +166,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot14OptimisedSensorTutorial,
+                title: "19 — Optimised sensor management",
+                upstream_path: "docs/tutorials/sensormanagement/03_OptimisedSensorManagement.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -193,7 +201,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot10SingleSensorTutorial
             | ScenarioId::Lot11KdtreeTutorial
             | ScenarioId::Lot12AkkfTutorial
-            | ScenarioId::Lot13MultiSensorTutorial => {
+            | ScenarioId::Lot13MultiSensorTutorial
+            | ScenarioId::Lot14OptimisedSensorTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -219,7 +228,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot10SingleSensorTutorial
             | ScenarioId::Lot11KdtreeTutorial
             | ScenarioId::Lot12AkkfTutorial
-            | ScenarioId::Lot13MultiSensorTutorial => {
+            | ScenarioId::Lot13MultiSensorTutorial
+            | ScenarioId::Lot14OptimisedSensorTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
