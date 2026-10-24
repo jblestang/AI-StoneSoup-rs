@@ -36,3 +36,15 @@ http://localhost:8080/?tutorial=11&finish=1
 ```
 
 When stepping completes, the page title becomes `stonesoup-viewer-ready` (for automation).
+
+## Tutorial 11 vs Stone Soup (Python)
+
+The upstream notebook [`ResamplingTutorial.py`](https://github.com/dstl/Stone-Soup/blob/a4336b920a799cfe0a77ecb05867c5deeb371c7a/docs/tutorials/sampling/ResamplingTutorial.py) is mostly **CDF / resampler explanation** plots. The Rust viewer matches the tutorial’s **“Example in Stone Soup”** resampler calls (same sequence as `tools/python/export_lot5_resampling.py`): scatter **index → 1-D state** after each demo step.
+
+Compare graphics:
+
+```bash
+python3 tools/python/plot_lot5_resampling_reference.py   # screenshot/python/tutorial_11_step_*.png
+bash tools/scripts/capture_wasm_tutorial11_steps.sh      # screenshot/wasm/tutorial_11_steps/step_*.png
+python3 verification/scripts/compare_lot5_graphics.py    # numeric (index, state) table for all 6 steps
+```
