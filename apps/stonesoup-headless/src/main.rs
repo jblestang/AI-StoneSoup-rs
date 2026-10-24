@@ -6,10 +6,10 @@ use stonesoup_scenarios::scenario::{AnyScenario, Scenario};
 use stonesoup_scenarios::{
     Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario,
     Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario,
-    Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario, ScenarioId,
-    ScenarioRegistry, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS,
+    Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario,
+    ScenarioId, ScenarioRegistry, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS,
     MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS,
-    MAX_LOT7_STEPS,
+    MAX_LOT7_STEPS, MAX_LOT8_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -27,6 +27,7 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot5_resampling") => ScenarioKind::Lot5Resampling,
         Some("lot6_information") => ScenarioKind::Lot6Information,
         Some("lot7_gm_phd") => ScenarioKind::Lot7Gmphd,
+        Some("lot8_asd") => ScenarioKind::Lot8Asd,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -45,6 +46,7 @@ enum ScenarioKind {
     Lot5Resampling,
     Lot6Information,
     Lot7Gmphd,
+    Lot8Asd,
 }
 
 fn main() -> ExitCode {
@@ -267,6 +269,24 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot7_gm_phd steps={} finished=true components={} top_weight_xy=({:.3}, {:.3})",
                 MAX_LOT7_STEPS, n, ex, ey
+            );
+        }
+        ScenarioKind::Lot8Asd => {
+            let mut scenario = match Lot8AsdScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            while matches!(
+                scenario.step(),
+                Ok(stonesoup_scenarios::Lot8StepOutcome::Stepped)
+            ) {}
+            let snap = scenario.snapshot().expect("snapshot");
+            println!(
+                "scenario=lot8_asd steps={} finished={} rmse={:.6} estimate_xy=({:.3}, {:.3})",
+                MAX_LOT8_STEPS, snap.finished, snap.rmse, snap.estimate_xy.0, snap.estimate_xy.1
             );
         }
         ScenarioKind::Lot6Information => {

@@ -29,6 +29,10 @@ pub use associator::{
 };
 pub use deleter::{covariance_trace, should_delete_covariance_trace};
 pub use error::Error;
+pub use filter::asd::{
+    AsdGaussianState, AsdKalmanPredictor, AsdKalmanUpdater, AsdMeasurementPrediction,
+    AsdPrediction, ASD_DEFAULT_MAX_NSTEP, ASD_NDIM,
+};
 pub use filter::ekf::ExtendedKalmanUpdater;
 pub use filter::gm_phd::{
     gm_phd_append_detection_update, gm_phd_append_missed_update, gm_phd_collect_missed,

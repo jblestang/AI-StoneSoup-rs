@@ -34,4 +34,8 @@ if ! grep -q 'GMPHDTutorial.py' "$csv"; then
   echo "catalogue: GMPHDTutorial.py missing from PORTING_MATRIX.csv"
   exit 1
 fi
-echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD)"
+if ! grep -q 'ASDFilter.py' "$csv"; then
+  echo "catalogue: ASDFilter.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling + IF + GM-PHD + ASD)"
