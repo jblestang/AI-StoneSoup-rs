@@ -113,6 +113,7 @@ fn tutorial_to_id(code: &str) -> Option<ScenarioId> {
         "24" | "kalman-oosm" => Some(ScenarioId::Lot19KalmanOosmExample),
         "25" | "pf-oosm" => Some(ScenarioId::Lot20PfOosmExample),
         "26" | "algorithm-c" => Some(ScenarioId::Lot21OosmAlgorithmExample),
+        "27" | "bearing-only" => Some(ScenarioId::Lot22BearingOnlyExample),
         _ => None,
     }
 }
