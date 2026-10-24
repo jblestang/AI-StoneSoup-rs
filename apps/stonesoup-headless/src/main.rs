@@ -7,10 +7,10 @@ use stonesoup_scenarios::{
     Lot10SensorManagerMode, Lot10SingleSensorScenario, Lot11KdtreeScenario, Lot2EkfScenario,
     Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario, Lot3MultiTargetScenario,
     Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario, Lot5ResamplingScenario,
-    Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario, ScenarioId, ScenarioRegistry,
-    MAX_LOT10_STEPS, MAX_LOT11_KDTREE_STEPS, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS,
-    MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS,
-    MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS,
+    Lot6InformationScenario, Lot7GmPhdScenario, Lot8AsdScenario, Lot9AkkfScenario, ScenarioId,
+    ScenarioRegistry, MAX_LOT10_STEPS, MAX_LOT11_KDTREE_STEPS, MAX_LOT3_JPDA_STEPS,
+    MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS,
+    MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS, MAX_LOT7_STEPS, MAX_LOT8_STEPS, MAX_LOT9_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -31,6 +31,7 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot8_asd") => ScenarioKind::Lot8Asd,
         Some("lot11_kdtree") => ScenarioKind::Lot11Kdtree,
         Some("lot10_single_sensor") => ScenarioKind::Lot10SingleSensor,
+        Some("lot12_akkf") | Some("lot9_akkf") => ScenarioKind::Lot12Akkf,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -52,6 +53,7 @@ enum ScenarioKind {
     Lot8Asd,
     Lot10SingleSensor,
     Lot11Kdtree,
+    Lot12Akkf,
 }
 
 fn main() -> ExitCode {
@@ -342,6 +344,24 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot8_asd steps={} finished={} rmse={:.6} estimate_xy=({:.3}, {:.3})",
                 MAX_LOT8_STEPS, snap.finished, snap.rmse, snap.estimate_xy.0, snap.estimate_xy.1
+            );
+        }
+        ScenarioKind::Lot12Akkf => {
+            let mut scenario = match Lot9AkkfScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            while matches!(
+                scenario.step(),
+                Ok(stonesoup_scenarios::Lot9StepOutcome::Stepped)
+            ) {}
+            let snap = scenario.snapshot().expect("snapshot");
+            println!(
+                "scenario=lot12_akkf steps={} finished={} rmse={:.6} estimate_xy=({:.3}, {:.3})",
+                MAX_LOT9_STEPS, snap.finished, snap.rmse, snap.estimate_xy.0, snap.estimate_xy.1
             );
         }
         ScenarioKind::Lot6Information => {
