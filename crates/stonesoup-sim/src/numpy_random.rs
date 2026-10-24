@@ -43,20 +43,15 @@ impl NumpyRng {
         if self.pos == RK_STATE_LEN {
             for i in 0..N - M {
                 let y = (self.key[i] & UPPER_MASK) | (self.key[i + 1] & LOWER_MASK);
-                self.key[i] = self.key[i + M]
-                    ^ (y >> 1)
-                    ^ (if y & 1 != 0 { MATRIX_A } else { 0 });
+                self.key[i] = self.key[i + M] ^ (y >> 1) ^ (if y & 1 != 0 { MATRIX_A } else { 0 });
             }
             for i in N - M..N - 1 {
                 let y = (self.key[i] & UPPER_MASK) | (self.key[i + 1] & LOWER_MASK);
-                self.key[i] = self.key[i - (N - M)]
-                    ^ (y >> 1)
-                    ^ (if y & 1 != 0 { MATRIX_A } else { 0 });
+                self.key[i] =
+                    self.key[i - (N - M)] ^ (y >> 1) ^ (if y & 1 != 0 { MATRIX_A } else { 0 });
             }
             let y = (self.key[N - 1] & UPPER_MASK) | (self.key[0] & LOWER_MASK);
-            self.key[N - 1] = self.key[M - 1]
-                ^ (y >> 1)
-                ^ (if y & 1 != 0 { MATRIX_A } else { 0 });
+            self.key[N - 1] = self.key[M - 1] ^ (y >> 1) ^ (if y & 1 != 0 { MATRIX_A } else { 0 });
             self.pos = 0;
         }
         let mut y = self.key[self.pos];
