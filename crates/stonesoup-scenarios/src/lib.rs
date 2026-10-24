@@ -8,6 +8,7 @@ mod lot11_kdtree;
 mod lot13_multi_sensor;
 mod lot14_optimised_sensor;
 mod lot15_network_info_arch;
+mod lot16_data_incest;
 mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;
@@ -44,6 +45,9 @@ pub use lot14_optimised_sensor::{
 };
 pub use lot15_network_info_arch::{
     Lot15ArchitectureMode, Lot15NetworkInfoArchScenario, MAX_LOT15_STEPS, MAX_LOT15_TRACKS,
+};
+pub use lot16_data_incest::{
+    Lot16DataIncestMode, Lot16DataIncestScenario, MAX_LOT16_STEPS, MAX_LOT16_TRACKS,
 };
 pub use lot1_kalman::{
     tutorial_cov, Lot1KalmanScenario, Lot1Snapshot, Lot1StepOutcome, MAX_LOT1_STEPS, MEASUREMENTS,

@@ -28,9 +28,11 @@
 
 **Lot 15:** complete — **Information vs network architectures** tutorial (`02_Information_and_Network_Architectures.py`: hierarchical generator, top fusion-node track replay from Stone Soup export; network/information agreement + edge-removal modes). Headless: `lot15_network_info_arch`. WASM viewer: `?tutorial=20` (aliases `architecture`, `network-arch`). Parity: `parity_lot15_network_info_arch` (fixture replay + network/information track alignment).
 
+**Lot 16:** complete — **Avoiding data incest** tutorial (`03_Avoiding_Data_Incest.py`: NH vs hierarchical information architectures, Fusion Node 1 tracks + mean covariance trace replay). Headless: `lot16_data_incest`. WASM viewer: `?tutorial=21` (aliases `data-incest`, `incest`). Parity: `parity_lot16_data_incest` (fixture replay; NH lower mean cov trace vs hierarchical).
+
 ## Screenshots & viewer catalogue
 
-- **WASM** final states (tutorials **01–20**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
+- **WASM** final states (tutorials **01–21**): [screenshot/wasm/README.md](../screenshot/wasm/README.md) — `bash tools/scripts/capture_wasm_tutorial_screenshots.sh`
 - **Python** viewer-style plots (same trails via `dump_viewer_trail`): [screenshot/python/README.md](../screenshot/python/README.md) — `bash tools/scripts/capture_python_tutorial_screenshots.sh`
 
 ## Optional polish
@@ -44,5 +46,5 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated catalogue tutorials at pinned SHA: **01–20** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management; **20** = network/information architectures).
-- **Next feature lots:** remaining architecture tutorials (`01_Introduction`, `03_Avoiding_Data_Incest`), etc. (`PORTING_MATRIX.csv` `todo` rows).
+- Validated catalogue tutorials at pinned SHA: **01–21** (viewer **11** = resampling; **12** = information filter; **13** = GM-PHD; **14** = ASD; **15** = KD-tree GNN; **16** = single sensor management; **17** = AKKF; **18** = multi-sensor management; **19** = optimised sensor management; **20** = network/information architectures; **21** = data incest architectures).
+- **Next feature lots:** architecture intro tutorial (`01_Introduction_to_Architectures.py`), native `stonesoup.architecture` components, etc. (`PORTING_MATRIX.csv` `todo` rows).
