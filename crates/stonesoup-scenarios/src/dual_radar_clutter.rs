@@ -56,18 +56,27 @@ pub const JPDA_CLUTTER_DENSITY: f64 = {
     CLUTTER_LAMBDA / (FOV * RANGE_A_M * CLUTTER_RANGE_EXTENT_FRAC)
 };
 const JPDA_DET_ASSOCIATED_THRESH: f64 = 0.35;
-const JPDA_MEAS_UPDATE_THRESH: f64 = 0.45;
+const JPDA_MEAS_UPDATE_THRESH: f64 = 0.35;
 /// Stone Soup ``MultiMeasurementInitiator.min_points`` (associated updates, ``updates_only``).
-/// With ``from_init`` counting as 1: **2** ⇒ one initiation detection plus one associated update.
-pub const INITIATOR_MIN_POINTS: u8 = 2;
-/// Stone Soup ``UpdateTimeStepsDeleter`` on holding tracks.
-pub const HOLDING_TIME_STEPS_DELETER: usize = 5;
+/// Confirm when ``update_count ≥ 1`` after ``from_init`` (next scan); deleter removes stale tentatives.
+pub const INITIATOR_MIN_POINTS: u8 = 1;
+/// Stone Soup ``UpdateTimeStepsDeleter`` on holding tracks (~4 s at 0.25 s steps).
+pub const HOLDING_TIME_STEPS_DELETER: usize = 16;
 
 fn holding_deleter() -> HoldingDeleter {
     HoldingDeleter::update_time_steps(HOLDING_TIME_STEPS_DELETER)
 }
-pub const COAST_SECONDS: f64 = 30.0;
-pub const TRUTH_ASSOC_METERS: f64 = 2_000.0;
+/// ~2.5× radar A rotation: coast through out-of-FOV gaps between beam passes.
+pub const COAST_SECONDS: f64 = 60.0;
+/// ~3σ cross-range from 0.5° bearing σ at max truth range (init + filter lag margin).
+pub const TRUTH_ASSOC_METERS: f64 = {
+    const BEARING_SIGMA_RAD: f64 = 0.5 * core::f64::consts::PI / 180.0;
+    3.0 * BEARING_SIGMA_RAD * TRUTH_MAX_RANGE_M
+};
+pub const TRACK_TO_TRUTH_CONSEC_PAIRS: u8 = 1;
+pub const TRACK_TO_TRUTH_CONSEC_MISSES: u8 = 4;
+/// Coprime stride to rotate truth scan order each 360° (fair plot budget at cap).
+pub const PLOT_SCAN_CURSOR_STRIDE: usize = 127;
 pub const SEED: u64 = 42;
 
 /// Concurrent fused tracks; [`MAX_GNN_ASSIGN_DETS`] matches this per-step detection budget.
@@ -89,6 +98,8 @@ struct RadarRuntime {
     targets_this_rotation: usize,
     rotation_count: usize,
     max_targets_in_rotation: usize,
+    /// Round-robin offset when applying the per-rotation plot cap (realistic scan scheduling).
+    plot_scan_cursor: usize,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -168,6 +179,7 @@ fn advance_dwell(cfg: RadarConfig, rt: &mut RadarRuntime, ts: Timestamp) -> Resu
         }
         rt.targets_this_rotation = 0;
         rt.rotation_count += 1;
+        rt.plot_scan_cursor = (rt.plot_scan_cursor + PLOT_SCAN_CURSOR_STRIDE) % NUM_TRUTHS;
     }
     rt.last_ts = Some(ts);
     Ok(rt.dwell_rad)
@@ -374,7 +386,7 @@ pub struct DualRadarClutterSim {
 
 impl DualRadarClutterSim {
     pub fn new() -> Result<Self, ScenarioError> {
-        let transition = ConstantVelocity2d::new(0.5, 0.5).map_err(ScenarioError::Core)?;
+        let transition = ConstantVelocity2d::new(1.0, 1.0).map_err(ScenarioError::Core)?;
         let predictor = KalmanPredictor::new(transition);
         let updater = ExtendedKalmanUpdater::new(radar_model(0.0)?);
         let truth_cfg = TruthStepConfig {
@@ -418,6 +430,7 @@ impl DualRadarClutterSim {
                     targets_this_rotation: 0,
                     rotation_count: 0,
                     max_targets_in_rotation: 0,
+                    plot_scan_cursor: 0,
                 },
                 RadarRuntime {
                     dwell_rad: 0.0,
@@ -425,6 +438,7 @@ impl DualRadarClutterSim {
                     targets_this_rotation: 0,
                     rotation_count: 0,
                     max_targets_in_rotation: 0,
+                    plot_scan_cursor: 63,
                 },
             ],
             plot_counts: [0, 0],
@@ -523,7 +537,9 @@ impl DualRadarClutterSim {
         let model = radar_model(dwell)?;
         let mut n = 0usize;
         let n_truths = self.truths.len();
-        for ti in 0..n_truths {
+        let cursor = self.radar_rt[radar_idx].plot_scan_cursor;
+        for k in 0..n_truths {
+            let ti = (cursor + k) % n_truths;
             let gt = self.truths[ti];
             if self.radar_rt[radar_idx].targets_this_rotation >= TARGETS_PER_ROTATION {
                 break;
@@ -900,8 +916,8 @@ impl DualRadarClutterSim {
             .collect();
         let tt_config = TrackToTruthConfig {
             association_threshold_m: TRUTH_ASSOC_METERS,
-            consec_pairs_confirm: 3,
-            consec_misses_end: 2,
+            consec_pairs_confirm: TRACK_TO_TRUTH_CONSEC_PAIRS,
+            consec_misses_end: TRACK_TO_TRUTH_CONSEC_MISSES,
         };
         let track_to_truth =
             associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config);
