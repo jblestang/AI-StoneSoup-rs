@@ -12,7 +12,9 @@
 
 **Lot 6:** complete — **Information filter** tutorial (information-form predict/update, parity vs Kalman-equivalent Stone Soup track). Headless: `lot6_information`. WASM viewer: `?tutorial=12`. Parity: `parity_lot6_information` (21 steps through end).
 
-**Next:** Lot 7+ per `PORTING_MATRIX.csv` (GM-PHD, metrics, …).
+**Lot 7:** complete — **GM-PHD** tutorial (`PHDUpdater`, mixture hypothesise/update, prune/merge reducer; seed 42 replay). Headless: `lot7_gm_phd`. WASM viewer: `?tutorial=13`. Parity: `parity_lot7_gm_phd` (reduced mixture cardinality + strong-mode positions vs Stone Soup export).
+
+**Next:** Lot 8+ per `PORTING_MATRIX.csv` (metrics, ASD, …).
 
 ## Optional polish
 

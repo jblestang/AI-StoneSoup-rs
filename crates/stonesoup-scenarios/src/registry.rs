@@ -15,6 +15,7 @@ pub enum ScenarioId {
     Lot4SimulationTutorial,
     Lot5ResamplingTutorial,
     Lot6InformationFilterTutorial,
+    Lot7GmphdTutorial,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -32,7 +33,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 12] = [
+        static LIST: [ScenarioDescriptor; 13] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -117,6 +118,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "tutorial",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot7GmphdTutorial,
+                title: "13 — Gaussian mixture PHD",
+                upstream_path: "docs/tutorials/filters/GMPHDTutorial.py",
+                upstream_sha: SHA,
+                family: "tutorial",
+            },
         ];
         &LIST
     }
@@ -139,7 +147,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot4InitiatorsTutorial
             | ScenarioId::Lot4SimulationTutorial
             | ScenarioId::Lot5ResamplingTutorial
-            | ScenarioId::Lot6InformationFilterTutorial => {
+            | ScenarioId::Lot6InformationFilterTutorial
+            | ScenarioId::Lot7GmphdTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -159,7 +168,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot4InitiatorsTutorial
             | ScenarioId::Lot4SimulationTutorial
             | ScenarioId::Lot5ResamplingTutorial
-            | ScenarioId::Lot6InformationFilterTutorial => {
+            | ScenarioId::Lot6InformationFilterTutorial
+            | ScenarioId::Lot7GmphdTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }

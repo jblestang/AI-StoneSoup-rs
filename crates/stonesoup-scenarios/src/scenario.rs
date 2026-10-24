@@ -20,6 +20,7 @@ use crate::lot4_tutorial09::Lot4Tutorial09Scenario;
 use crate::lot4_tutorial10::Lot4Tutorial10Scenario;
 use crate::lot5_resampling::Lot5ResamplingScenario;
 use crate::lot6_information::{Lot6InformationScenario, Lot6StepOutcome, MAX_LOT6_STEPS};
+use crate::lot7_gm_phd::{Lot7GmPhdScenario, Lot7StepOutcome};
 use crate::particle_lot2::Lot2ParticleScenario;
 use crate::registry::{ScenarioError, ScenarioId};
 
@@ -102,6 +103,7 @@ pub enum AnyScenario {
     Lot4T10(Lot4Tutorial10Scenario),
     Lot5Resampling(Lot5ResamplingScenario),
     Lot6Information(Lot6InformationScenario),
+    Lot7Gmphd(Lot7GmPhdScenario),
 }
 
 impl AnyScenario {
@@ -138,6 +140,9 @@ impl AnyScenario {
             ScenarioId::Lot6InformationFilterTutorial => Ok(Self::Lot6Information(
                 Lot6InformationScenario::tutorial_defaults()?,
             )),
+            ScenarioId::Lot7GmphdTutorial => {
+                Ok(Self::Lot7Gmphd(Lot7GmPhdScenario::tutorial_defaults()?))
+            }
         }
     }
 
@@ -156,6 +161,7 @@ impl AnyScenario {
             Self::Lot4T10(_) => ScenarioId::Lot4SimulationTutorial,
             Self::Lot5Resampling(_) => ScenarioId::Lot5ResamplingTutorial,
             Self::Lot6Information(_) => ScenarioId::Lot6InformationFilterTutorial,
+            Self::Lot7Gmphd(_) => ScenarioId::Lot7GmphdTutorial,
         }
     }
 }
@@ -175,6 +181,7 @@ impl Scenario for AnyScenario {
             Self::Lot4T10(s) => s.reset(),
             Self::Lot5Resampling(s) => s.reset(),
             Self::Lot6Information(s) => s.reset(),
+            Self::Lot7Gmphd(s) => s.reset(),
         }
     }
 
@@ -246,6 +253,10 @@ impl Scenario for AnyScenario {
                 Lot6StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
                 Lot6StepOutcome::Finished => ScenarioStepOutcome::Finished,
             },
+            Self::Lot7Gmphd(s) => match s.step()? {
+                Lot7StepOutcome::Stepped => ScenarioStepOutcome::Stepped,
+                Lot7StepOutcome::Finished => ScenarioStepOutcome::Finished,
+            },
         };
         Ok(outcome)
     }
@@ -314,6 +325,7 @@ impl Scenario for AnyScenario {
                     resample_xy: no_resample_view().2,
                 })
             }
+            Self::Lot7Gmphd(s) => s.viewer_snapshot(),
         }
     }
 }

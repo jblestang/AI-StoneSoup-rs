@@ -1,6 +1,6 @@
 # WASM viewer — tutorial final states
 
-PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) running as **WebAssembly**, each tutorial stepped to completion.
+PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) running as **WebAssembly**, each tutorial stepped to completion (catalogue tutorials 01–13).
 
 | File | Tutorial |
 |------|----------|
@@ -15,6 +15,8 @@ PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) ru
 | `tutorial_09.png` | 09 — Initiators & deleters |
 | `tutorial_10.png` | 10 — Simulation & tracking stack |
 | `tutorial_11.png` | Sampling — Particle resamplers |
+| `tutorial_12.png` | 12 — Information filter |
+| `tutorial_13.png` | 13 — GM-PHD |
 
 ## Regenerate
 
@@ -36,6 +38,10 @@ http://localhost:8080/?tutorial=11&finish=1
 ```
 
 When stepping completes, the page title becomes `stonesoup-viewer-ready` (for automation).
+
+## Python reference plots
+
+Viewer-style matplotlib PNGs for the same catalogue (plot panel only): [../python/README.md](../python/README.md). Regenerate with `bash tools/scripts/capture_python_tutorial_screenshots.sh`.
 
 ## Tutorial 11 vs Stone Soup (Python)
 

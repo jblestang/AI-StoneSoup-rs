@@ -101,6 +101,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "10" => Some(ScenarioId::Lot4SimulationTutorial),
         "11" | "resampling" | "sample" => Some(ScenarioId::Lot5ResamplingTutorial),
         "12" | "information" | "if" => Some(ScenarioId::Lot6InformationFilterTutorial),
+        "13" | "gmphd" | "phd" | "gm-phd" => Some(ScenarioId::Lot7GmphdTutorial),
         _ => None,
     }
 }

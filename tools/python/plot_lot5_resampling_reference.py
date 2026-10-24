@@ -125,7 +125,6 @@ def plot_cases(cases: list[dict]) -> None:
         plt.close(fig)
         print("wrote", path)
 
-
 def compare_to_fixture(cases: list[dict]) -> int:
     data = json.loads(FIXTURE.read_text(encoding="utf-8"))
     fx_cases = data["cases"]

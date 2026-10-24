@@ -6,9 +6,10 @@ use stonesoup_scenarios::scenario::{AnyScenario, Scenario};
 use stonesoup_scenarios::{
     Lot2EkfScenario, Lot2ParticleScenario, Lot2UkfScenario, Lot3JpdaScenario,
     Lot3MultiTargetScenario, Lot3PdaScenario, Lot4Tutorial09Scenario, Lot4Tutorial10Scenario,
-    Lot5ResamplingScenario, Lot6InformationScenario, ScenarioId, ScenarioRegistry,
-    MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS, MAX_LOT4_T09_STEPS,
-    MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS,
+    Lot5ResamplingScenario, Lot6InformationScenario, Lot7GmPhdScenario, ScenarioId,
+    ScenarioRegistry, MAX_LOT3_JPDA_STEPS, MAX_LOT3_MT_STEPS, MAX_LOT3_PDA_STEPS,
+    MAX_LOT4_T09_STEPS, MAX_LOT4_T10_STEPS, MAX_LOT5_RESAMPLING_STEPS, MAX_LOT6_STEPS,
+    MAX_LOT7_STEPS,
 };
 
 fn parse_scenario(arg: Option<String>) -> ScenarioKind {
@@ -25,6 +26,7 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot4_simulation") => ScenarioKind::Lot4Simulation,
         Some("lot5_resampling") => ScenarioKind::Lot5Resampling,
         Some("lot6_information") => ScenarioKind::Lot6Information,
+        Some("lot7_gm_phd") => ScenarioKind::Lot7Gmphd,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -42,6 +44,7 @@ enum ScenarioKind {
     Lot4Simulation,
     Lot5Resampling,
     Lot6Information,
+    Lot7Gmphd,
 }
 
 fn main() -> ExitCode {
@@ -241,6 +244,29 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot4_simulation steps={} finished=true tracks={} primary_xy=({:.3}, {:.3})",
                 MAX_LOT4_T10_STEPS, n, xy.0, xy.1
+            );
+        }
+        ScenarioKind::Lot7Gmphd => {
+            let mut scenario = match Lot7GmPhdScenario::tutorial_defaults() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            while matches!(
+                scenario.step(),
+                Ok(stonesoup_scenarios::Lot7StepOutcome::Stepped)
+            ) {}
+            let (comps, n) = scenario.snapshot_components();
+            let (ex, ey) = if n > 0 {
+                (comps[0].state.mean.0[0], comps[0].state.mean.0[2])
+            } else {
+                (0.0, 0.0)
+            };
+            println!(
+                "scenario=lot7_gm_phd steps={} finished=true components={} top_weight_xy=({:.3}, {:.3})",
+                MAX_LOT7_STEPS, n, ex, ey
             );
         }
         ScenarioKind::Lot6Information => {

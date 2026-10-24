@@ -5,6 +5,7 @@ mod jpda;
 mod nearest_neighbour;
 mod pda;
 
+pub use distance::{distance_hypotheses, squared_mahalanobis};
 pub use global_neighbour::{
     associate_global_nearest_neighbour, GnnTrackAssignment, MAX_GNN_TRACKS,
 };
