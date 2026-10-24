@@ -12,7 +12,7 @@ use crate::registry::ScenarioError;
 pub const MAX_LOT2_STEPS: usize = NUM_STEPS;
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-fn fixture_row<const N: usize>(
+pub(crate) fn fixture_row<const N: usize>(
     table: &[[f64; N]; NUM_STEPS],
     i: usize,
 ) -> Result<[f64; N], ScenarioError> {
@@ -77,7 +77,7 @@ impl Lot2EkfScenario {
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-    fn timestamp_for(step: usize) -> Timestamp {
+    pub(crate) fn timestamp_for(step: usize) -> Timestamp {
         Timestamp::from_nanos((step as i64) * Duration::SEC.0)
     }
 

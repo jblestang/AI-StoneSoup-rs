@@ -24,7 +24,9 @@ impl AnyScenario {
             ScenarioId::Lot1KalmanTutorial => {
                 Ok(Self::Lot1(Lot1KalmanScenario::tutorial_defaults()?))
             }
-            ScenarioId::Lot2EkfTutorial => {
+            ScenarioId::Lot2EkfTutorial
+            | ScenarioId::Lot2UkfTutorial
+            | ScenarioId::Lot2ParticleTutorial => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
