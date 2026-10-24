@@ -12,13 +12,17 @@
     "range_a_km": 400.0,
     "range_b_km": 178.88543819998318,
     "seed": 42,
+    "simulation_duration_s": 60.0,
+    "time_step_s": 0.25,
     "truth_layout": "four targets at 80 km on cardinal bearings"
   },
   "plots": {
     "clutter_fraction_actual": 0.094,
+    "max_simulation_steps": 240,
     "radar_a_plots": 250,
     "radar_b_plots": 250,
-    "simulation_steps": 232,
+    "simulation_steps": 240,
+    "simulation_time_s": 60.0,
     "total_clutter_detections": 47,
     "total_plots": 500,
     "total_true_detections": 453,
@@ -30,39 +34,39 @@
     "continuous_track_count": 4,
     "continuous_tracks": [
       {
-        "covered_duration_s": 57.25,
+        "covered_duration_s": 59.25,
         "linked_filter_track_ids": [
           0,
           4
         ],
         "truth_id": 0,
-        "wall_duration_s": 57.25
+        "wall_duration_s": 59.25
       },
       {
-        "covered_duration_s": 56.75,
+        "covered_duration_s": 58.75,
         "linked_filter_track_ids": [
           1,
           5
         ],
         "truth_id": 1,
-        "wall_duration_s": 56.75
+        "wall_duration_s": 58.75
       },
       {
-        "covered_duration_s": 56.0,
+        "covered_duration_s": 58.0,
         "linked_filter_track_ids": [
           2
         ],
         "truth_id": 2,
-        "wall_duration_s": 56.0
+        "wall_duration_s": 58.0
       },
       {
-        "covered_duration_s": 55.25,
+        "covered_duration_s": 57.25,
         "linked_filter_track_ids": [
           3,
           6
         ],
         "truth_id": 3,
-        "wall_duration_s": 55.25
+        "wall_duration_s": 57.25
       }
     ]
   },
@@ -70,22 +74,22 @@
     "description": "total_unique_tracks = one fused-network row per true plot (~450). fused_lifecycle_tracks = long-coast GNN+EKF segments.",
     "durations_s_false": [],
     "durations_s_true": [
+      59.5,
+      59.0,
+      58.25,
       57.5,
-      57.0,
-      56.25,
-      55.5,
-      52.25,
-      51.25,
-      41.0
+      54.25,
+      53.25,
+      43.0
     ],
     "false_tracks": 0,
     "fused_false_tracks": 0,
     "fused_lifecycle_tracks": 7,
     "fused_truth_associated_tracks": 7,
     "mean_duration_s_false": 0.0,
-    "mean_duration_s_true": 52.964285714285715,
+    "mean_duration_s_true": 54.964285714285715,
     "median_duration_s_false": 0.0,
-    "median_duration_s_true": 55.5,
+    "median_duration_s_true": 57.5,
     "total_unique_tracks": 453,
     "true_plot_tracks": 453
   },

@@ -17,7 +17,7 @@ Writes `verification/reports/dual_radar_clutter_stats.json`.
 
 Co-located **90° FOV** rotating bearing–range sensors, **fused** `MultiTargetTracker`-style loop (GNN + EKF, **3-point** initiation, **30 s** coast delete). Post-run **TrackToTruth** (2 km, 3-of-3 confirm) builds **one continuous track per target**.
 
-- **500 plots** (250 per radar), **~10% clutter** (~50 clutter measurements).
+- **60 s** simulation (`Δt = 0.25 s`, 240 steps); **500 plots** cap (250 per radar), **~10% clutter** (~50 clutter measurements). After the plot budget is exhausted, radars go quiet but the fused tracker still coasts to the end of the run.
 - Four truths at **80 km** on cardinal bearings.
 
 ## Plots vs tracks

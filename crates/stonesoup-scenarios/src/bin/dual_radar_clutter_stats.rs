@@ -6,8 +6,9 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use stonesoup_scenarios::{
-    DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, FOV_DEG, OVERLAP_AREA_FRACTION,
-    PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED, ScenarioError,
+    max_simulation_steps, DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S,
+    FOV_DEG, OVERLAP_AREA_FRACTION, PLOTS_PER_RADAR, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M,
+    SEED, SIM_DURATION_S, ScenarioError,
 };
 
 const NUM_TRUTHS: usize = 4;
@@ -73,6 +74,8 @@ fn run() -> Result<String, ScenarioError> {
             "num_truths": NUM_TRUTHS,
             "truth_layout": "four targets at 80 km on cardinal bearings",
             "seed": SEED,
+            "simulation_duration_s": SIM_DURATION_S,
+            "time_step_s": DT_S,
         },
         "plots": {
             "total_plots": total,
@@ -84,6 +87,8 @@ fn run() -> Result<String, ScenarioError> {
             "true_plots_in_overlap_fraction": overlap_fraction_of_true,
             "clutter_fraction_actual": if total == 0 { 0.0 } else { stats.total_clutter as f64 / total as f64 },
             "simulation_steps": stats.simulation_steps,
+            "simulation_time_s": stats.simulation_steps as f64 * DT_S,
+            "max_simulation_steps": max_simulation_steps(),
         },
         "truths": {
             "simulated": NUM_TRUTHS,

@@ -1,4 +1,4 @@
-use stonesoup_scenarios::DualRadarClutterSim;
+use stonesoup_scenarios::{max_simulation_steps, DualRadarClutterSim, SIM_DURATION_S, DT_S};
 
 #[test]
 fn dual_radar_runs_to_plot_budget() {
@@ -10,6 +10,8 @@ fn dual_radar_runs_to_plot_budget() {
         stats.radar_a_plots + stats.radar_b_plots,
         stonesoup_scenarios::PLOTS_PER_RADAR * 2
     );
+    assert_eq!(stats.simulation_steps, max_simulation_steps());
+    assert!((stats.simulation_steps as f64 * DT_S - SIM_DURATION_S).abs() < 1e-6);
     let total = stats.total_true + stats.total_clutter;
     let clutter_frac = stats.total_clutter as f64 / total as f64;
     assert!(

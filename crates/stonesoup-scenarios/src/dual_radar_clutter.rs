@@ -28,6 +28,8 @@ pub const PERIOD_A_S: f64 = 6.0;
 pub const PERIOD_B_S: f64 = 3.0;
 pub const FOV_DEG: f64 = 90.0;
 pub const DT_S: f64 = 0.25;
+/// Wall-clock simulation length (radars stop emitting after plot budget; tracker still runs).
+pub const SIM_DURATION_S: f64 = 60.0;
 pub const NUM_TRUTHS: usize = 4;
 pub const GATE: f64 = 6.0;
 pub const MIN_POINTS: u8 = 3;
@@ -735,7 +737,8 @@ impl DualRadarClutterSim {
     }
 
     pub fn run(&mut self) -> Result<DualRadarStats, ScenarioError> {
-        while self.plot_counts[0] < PLOTS_PER_RADAR || self.plot_counts[1] < PLOTS_PER_RADAR {
+        let max_steps = max_simulation_steps();
+        while self.step < max_steps {
             if self.step > 0 {
                 self.advance_truths()?;
             }
@@ -768,11 +771,11 @@ impl DualRadarClutterSim {
             }
             if n_dets > 0 {
                 self.tracker_update(&det_buf[..n_dets], &det_models[..n_dets])?;
+            } else {
+                self.delete_stale_active()?;
+                self.snapshot_active_paths(ts);
             }
             self.step += 1;
-            if self.step > 10_000 {
-                break;
-            }
         }
         let step = self.step;
         let remaining: [Option<ActiveTrack>; MAX_ACTIVE] = self.active;
@@ -841,6 +844,10 @@ impl DualRadarClutterSim {
 
 fn truth_step_nanos() -> i64 {
     (DT_S * 1e9) as i64
+}
+
+pub fn max_simulation_steps() -> usize {
+    libm::ceil(SIM_DURATION_S / DT_S) as usize
 }
 
 fn count_bits(x: u8) -> u8 {
