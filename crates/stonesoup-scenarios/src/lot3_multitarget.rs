@@ -135,4 +135,10 @@ impl Lot3MultiTargetScenario {
     pub fn step_index(&self) -> usize {
         self.step
     }
+
+    pub fn rmse_value(&self) -> f64 {
+        let a = self.rmse[0].rmse().unwrap_or(0.0);
+        let b = self.rmse[1].rmse().unwrap_or(0.0);
+        libm::sqrt(0.5 * (a * a + b * b))
+    }
 }

@@ -13,6 +13,20 @@ const FIXTURE_SEED: u32 = 1991;
 /// Document title set when `?finish=1` run completes (WASM screenshot automation).
 #[cfg(target_arch = "wasm32")]
 pub const WASM_READY_TITLE: &str = "stonesoup-viewer-ready";
+#[cfg(target_arch = "wasm32")]
+pub const WASM_RESET_TITLE: &str = "stonesoup-viewer-reset";
+#[cfg(target_arch = "wasm32")]
+pub const WASM_STEP_TITLE_PREFIX: &str = "stonesoup-viewer-step-";
+
+#[cfg(target_arch = "wasm32")]
+fn set_wasm_document_title(title: &str) {
+    if let Some(window) = web_sys::window() {
+        let _ = window.document().and_then(|d| {
+            d.set_title(title);
+            Some(())
+        });
+    }
+}
 
 pub struct ViewerApp {
     active_id: ScenarioId,
@@ -36,6 +50,8 @@ pub struct ViewerApp {
     wasm_query_handled: bool,
     #[cfg(target_arch = "wasm32")]
     pending_auto_finish: bool,
+    #[cfg(target_arch = "wasm32")]
+    pending_partial_steps: usize,
 }
 
 impl Default for ViewerApp {
@@ -61,6 +77,8 @@ impl Default for ViewerApp {
             wasm_query_handled: false,
             #[cfg(target_arch = "wasm32")]
             pending_auto_finish: false,
+            #[cfg(target_arch = "wasm32")]
+            pending_partial_steps: 0,
         }
     }
 }
@@ -150,6 +168,8 @@ impl ViewerApp {
                 self.error = Some(format!("{e:?}"));
             }
         }
+        #[cfg(target_arch = "wasm32")]
+        set_wasm_document_title(WASM_RESET_TITLE);
     }
 
     fn apply_snapshot(&mut self, snap: ViewerSnapshot) {
@@ -213,12 +233,7 @@ impl ViewerApp {
             }
         }
         #[cfg(target_arch = "wasm32")]
-        if let Some(window) = web_sys::window() {
-            let _ = window.document().and_then(|d| {
-                d.set_title(WASM_READY_TITLE);
-                Some(())
-            });
-        }
+        set_wasm_document_title(WASM_READY_TITLE);
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -235,6 +250,8 @@ impl ViewerApp {
         };
         let mut tutorial: Option<String> = None;
         let mut finish = false;
+        let mut reset = false;
+        let mut partial_steps: Option<usize> = None;
         for pair in search.trim_start_matches('?').split('&') {
             let Some((key, value)) = pair.split_once('=') else {
                 continue;
@@ -242,14 +259,21 @@ impl ViewerApp {
             match key {
                 "tutorial" => tutorial = Some(value.to_string()),
                 "finish" if value == "1" || value.eq_ignore_ascii_case("true") => finish = true,
+                "reset" if value == "1" || value.eq_ignore_ascii_case("true") => reset = true,
+                "steps" => partial_steps = value.parse().ok(),
                 _ => {}
             }
         }
         if let Some(code) = tutorial.as_deref().and_then(scenario_id_from_tutorial) {
             self.load_scenario(code);
         }
+        if reset {
+            self.reset();
+        }
         if finish {
             self.pending_auto_finish = true;
+        } else if let Some(n) = partial_steps {
+            self.pending_partial_steps = n;
         }
     }
 
@@ -303,7 +327,17 @@ impl ViewerApp {
         )
     }
 
-    fn is_lot3(&self) -> bool {
+    fn is_lot3_meas(&self) -> bool {
+        matches!(
+            self.active_id,
+            ScenarioId::Lot3ClutterTutorial
+                | ScenarioId::Lot3MultiTargetTutorial
+                | ScenarioId::Lot3PdaTutorial
+                | ScenarioId::Lot3JpdaTutorial
+        )
+    }
+
+    fn is_lot3_nn(&self) -> bool {
         matches!(self.active_id, ScenarioId::Lot3ClutterTutorial)
     }
 }
@@ -317,6 +351,21 @@ impl eframe::App for ViewerApp {
         if self.pending_auto_finish {
             self.pending_auto_finish = false;
             self.finish_to_end();
+        }
+        #[cfg(target_arch = "wasm32")]
+        if self.pending_partial_steps > 0 {
+            let n = self.pending_partial_steps;
+            self.pending_partial_steps = 0;
+            for _ in 0..n {
+                self.step_once();
+            }
+            let step = self
+                .scenario
+                .as_ref()
+                .and_then(|s| s.viewer_snapshot().ok())
+                .map(|snap| snap.step)
+                .unwrap_or(0);
+            set_wasm_document_title(&format!("{WASM_STEP_TITLE_PREFIX}{step}"));
         }
         if self.playing {
             let now = ctx.input(|i| i.time);
@@ -430,7 +479,7 @@ impl eframe::App for ViewerApp {
                                 .color(egui::Color32::LIGHT_GRAY),
                         );
                     }
-                    if self.is_lot3() && !self.step_clutter.is_empty() {
+                    if self.is_lot3_meas() && !self.step_clutter.is_empty() {
                         let clutter: PlotPoints =
                             self.step_clutter.iter().map(|p| [p[0], p[1]]).collect();
                         plot_ui.points(
@@ -440,7 +489,7 @@ impl eframe::App for ViewerApp {
                                 .color(egui::Color32::from_rgb(180, 120, 80)),
                         );
                     }
-                    if self.is_lot3() && !self.step_true_dets.is_empty() {
+                    if self.is_lot3_meas() && !self.step_true_dets.is_empty() {
                         let truth_dets: PlotPoints =
                             self.step_true_dets.iter().map(|p| [p[0], p[1]]).collect();
                         plot_ui.points(
@@ -450,7 +499,7 @@ impl eframe::App for ViewerApp {
                                 .color(egui::Color32::LIGHT_BLUE),
                         );
                     }
-                    if !self.is_lot3() && !self.meas_trail.is_empty() {
+                    if !self.is_lot3_meas() && !self.meas_trail.is_empty() {
                         plot_ui.points(
                             Points::new(meas_pts)
                                 .name("Detections (Cartesian)")
@@ -458,7 +507,7 @@ impl eframe::App for ViewerApp {
                                 .color(egui::Color32::LIGHT_BLUE),
                         );
                     }
-                    if self.is_lot3() {
+                    if self.is_lot3_nn() {
                         if let Some(p) = self.step_associated {
                             plot_ui.points(
                                 Points::new(vec![[p[0], p[1]]])

@@ -10,9 +10,11 @@
 
 ## Optional polish
 
-- Browser smoke test (load WASM, step scenario, reset) in CI when headless WASM runner is available.
-- Particle filter: ESS/systematic resampler parity with Stone Soup (reference PF track omits resampling for strict Rust parity).
-- `xtask verify`: optional Trunk step when `NO_COLOR` unset.
+Done on Lot 3 branch:
+
+- **WASM smoke:** `verification/scripts/wasm_viewer_smoke.sh` (Playwright: `?steps=3`, Reset, `?finish=1`); runs from `xtask verify` on local machines with `trunk` installed (`VERIFY_WASM=1` to force in CI).
+- **Resampler:** `stonesoup_sim::systematic_resample` / `ess_resample_if_needed` with fixture parity; Tutorial 04 PF uses ESS + systematic resampling (Stone Soup tutorial 04).
+- **Viewer:** Lot 3 tutorials 06–08 show per-step clutter/true detections and RMSE in the WASM viewer (`?steps=N` for partial automation).
 
 ## Inventory
 

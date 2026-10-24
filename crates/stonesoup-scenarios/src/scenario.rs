@@ -10,6 +10,7 @@ use crate::lot3_clutter::{
 };
 use crate::lot3_jpda::Lot3JpdaScenario;
 use crate::lot3_jpda::MAX_LOT3_JPDA_STEPS;
+use crate::lot3_meas::fill_step_detection_view;
 use crate::lot3_multitarget::Lot3MultiTargetScenario;
 use crate::lot3_multitarget::MAX_LOT3_MT_STEPS;
 use crate::lot3_pda::Lot3PdaScenario;
@@ -280,20 +281,40 @@ fn lot3_pda_viewer_snapshot(s: &Lot3PdaScenario) -> Result<ViewerSnapshot, Scena
         .copied()
         .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
     let est = s.estimate_state();
+    let mut det_xy = empty_det_xy();
+    let mut det_is_true = empty_det_flags();
+    let det_count = if step == 0 {
+        0
+    } else {
+        fill_step_detection_view(
+            &crate::lot3_pda::MEAS_OFFSETS,
+            &crate::lot3_pda::MEAS_XY,
+            &crate::lot3_pda::_MEAS_IS_TRUE,
+            idx,
+            &mut det_xy,
+            &mut det_is_true,
+            MAX_DETS_PER_STEP,
+        )?
+    };
+    let measurement_xy = if det_count > 0 {
+        (det_xy[0][0], det_xy[0][1])
+    } else {
+        (0.0, 0.0)
+    };
     Ok(ViewerSnapshot {
         step,
         max_steps: MAX_LOT3_PDA_STEPS,
         truth_xy: (truth[0], truth[2]),
         estimate_xy: (est.mean.0[0], est.mean.0[2]),
-        measurement_xy: (0.0, 0.0),
+        measurement_xy,
         bearing_range: None,
         ellipse_semi: None,
         ellipse_angle_rad: 0.0,
-        rmse: 0.0,
+        rmse: s.rmse_value(),
         finished: step >= MAX_LOT3_PDA_STEPS,
-        det_count: 0,
-        det_xy: empty_det_xy(),
-        det_is_true: empty_det_flags(),
+        det_count: det_count as u8,
+        det_xy,
+        det_is_true,
         associated_xy: None,
         truth_b_xy: None,
         estimate_b_xy: None,
@@ -317,20 +338,40 @@ fn lot3_mt_viewer_snapshot(s: &Lot3MultiTargetScenario) -> Result<ViewerSnapshot
     let b = s
         .track_state(1)
         .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let mut det_xy = empty_det_xy();
+    let mut det_is_true = empty_det_flags();
+    let det_count = if step == 0 {
+        0
+    } else {
+        fill_step_detection_view(
+            &crate::lot3_multitarget::MEAS_OFFSETS,
+            &crate::lot3_multitarget::MEAS_XY,
+            &crate::lot3_multitarget::_MEAS_IS_TRUE,
+            idx,
+            &mut det_xy,
+            &mut det_is_true,
+            MAX_DETS_PER_STEP,
+        )?
+    };
+    let measurement_xy = if det_count > 0 {
+        (det_xy[0][0], det_xy[0][1])
+    } else {
+        (0.0, 0.0)
+    };
     Ok(ViewerSnapshot {
         step,
         max_steps: MAX_LOT3_MT_STEPS,
         truth_xy: (ta[0], ta[2]),
         estimate_xy: (a.mean.0[0], a.mean.0[2]),
-        measurement_xy: (0.0, 0.0),
+        measurement_xy,
         bearing_range: None,
         ellipse_semi: None,
         ellipse_angle_rad: 0.0,
-        rmse: 0.0,
+        rmse: s.rmse_value(),
         finished: step >= MAX_LOT3_MT_STEPS,
-        det_count: 0,
-        det_xy: empty_det_xy(),
-        det_is_true: empty_det_flags(),
+        det_count: det_count as u8,
+        det_xy,
+        det_is_true,
         associated_xy: None,
         truth_b_xy: Some((tb[0], tb[2])),
         estimate_b_xy: Some((b.mean.0[0], b.mean.0[2])),
@@ -354,20 +395,40 @@ fn lot3_jpda_viewer_snapshot(s: &Lot3JpdaScenario) -> Result<ViewerSnapshot, Sce
     let b = s
         .track_state(1)
         .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+    let mut det_xy = empty_det_xy();
+    let mut det_is_true = empty_det_flags();
+    let det_count = if step == 0 {
+        0
+    } else {
+        fill_step_detection_view(
+            &crate::lot3_jpda::MEAS_OFFSETS,
+            &crate::lot3_jpda::MEAS_XY,
+            &crate::lot3_jpda::_MEAS_IS_TRUE,
+            idx,
+            &mut det_xy,
+            &mut det_is_true,
+            MAX_DETS_PER_STEP,
+        )?
+    };
+    let measurement_xy = if det_count > 0 {
+        (det_xy[0][0], det_xy[0][1])
+    } else {
+        (0.0, 0.0)
+    };
     Ok(ViewerSnapshot {
         step,
         max_steps: MAX_LOT3_JPDA_STEPS,
         truth_xy: (ta[0], ta[2]),
         estimate_xy: (a.mean.0[0], a.mean.0[2]),
-        measurement_xy: (0.0, 0.0),
+        measurement_xy,
         bearing_range: None,
         ellipse_semi: None,
         ellipse_angle_rad: 0.0,
-        rmse: 0.0,
+        rmse: s.rmse_value(),
         finished: step >= MAX_LOT3_JPDA_STEPS,
-        det_count: 0,
-        det_xy: empty_det_xy(),
-        det_is_true: empty_det_flags(),
+        det_count: det_count as u8,
+        det_xy,
+        det_is_true,
         associated_xy: None,
         truth_b_xy: Some((tb[0], tb[2])),
         estimate_b_xy: Some((b.mean.0[0], b.mean.0[2])),
