@@ -1076,16 +1076,37 @@ pub fn max_simulation_steps() -> usize {
     libm::ceil(SIM_DURATION_S / DT_S) as usize
 }
 
+const VIZ_TRUTH_PATH_STRIDE: usize = 2;
+const VIZ_FILTER_PATH_STRIDE: usize = 1;
+
+fn states_to_points_km(states: &[(Timestamp, [f64; 4])], stride: usize) -> alloc::vec::Vec<[f64; 2]> {
+    if states.is_empty() {
+        return alloc::vec::Vec::new();
+    }
+    let last = states.len() - 1;
+    states
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| i % stride == 0 || *i == last)
+        .map(|(_, (_, mean))| [mean[0] / 1000.0, mean[2] / 1000.0])
+        .collect()
+}
+
 /// Lightweight snapshot for x–y tracking plots (see `dual_radar_clutter_viz` bin).
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct DualRadarVizExport {
     pub range_a_km: f64,
     pub range_b_km: f64,
+    pub fov_deg: f64,
+    /// Antenna boresight bearing from north, degrees clockwise (at end of sim).
+    pub radar_beam_deg: [f64; 2],
     pub num_truths: usize,
     pub truths_with_any_plot: usize,
     pub continuous_track_count: usize,
+    pub plotted_without_continuous_count: usize,
     pub truths: alloc::vec::Vec<TruthVizPoint>,
-    pub track_polylines: alloc::vec::Vec<TrackVizPolyline>,
+    pub truth_trajectories: alloc::vec::Vec<TruthTrajectoryViz>,
+    pub filter_tracks: alloc::vec::Vec<FilterTrackViz>,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -1096,74 +1117,141 @@ pub struct TruthVizPoint {
     /// `none` | `a_only` | `b_only` | `both`
     pub plot_visibility: &'static str,
     pub has_continuous_track: bool,
+    /// Received ≥1 plot but no continuous track-to-truth segment.
+    pub plotted_untracked: bool,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
-pub struct TrackVizPolyline {
-    pub truth_id: u16,
+pub struct TruthTrajectoryViz {
+    pub id: u16,
+    pub points_km: alloc::vec::Vec<[f64; 2]>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct FilterTrackViz {
+    pub track_id: u32,
+    pub truth_id: Option<u16>,
+    pub continuous: bool,
+    pub is_false_track: bool,
     pub points_km: alloc::vec::Vec<[f64; 2]>,
 }
 
 impl DualRadarClutterSim {
     pub fn build_viz_export(&self, stats: &DualRadarStats) -> DualRadarVizExport {
-        let mut continuous = alloc::vec![false; NUM_TRUTHS];
+        let mut continuous_truth = alloc::vec![false; NUM_TRUTHS];
+        let mut continuous_track_ids = alloc::vec::Vec::new();
         for ct in &stats.continuous_truth_tracks {
             let i = ct.truth_id as usize;
             if i < NUM_TRUTHS {
-                continuous[i] = true;
+                continuous_truth[i] = true;
+            }
+            for fid in &ct.linked_filter_track_ids {
+                continuous_track_ids.push(*fid);
             }
         }
+        continuous_track_ids.sort_unstable();
+        continuous_track_ids.dedup();
+
+        let mut assoc_truth_by_track = alloc::vec::Vec::new();
+        for assoc in &stats.track_to_truth {
+            assoc_truth_by_track.push((assoc.track_id, assoc.truth_id));
+        }
+        assoc_truth_by_track.sort_unstable_by_key(|(id, _)| *id);
+
+        let mut false_track_ids = alloc::vec::Vec::new();
+        for c in &stats.fused_completed {
+            if c.truth_id.is_none() {
+                false_track_ids.push(c.filter_track_id);
+            }
+        }
+        false_track_ids.sort_unstable();
+        false_track_ids.dedup();
+
+        let mut plotted_without_continuous = 0usize;
         let truths = self
             .truths
             .iter()
             .enumerate()
             .map(|(i, gt)| {
-                let vis = match (
-                    self.truths_plot_seen_a.get(i).copied().unwrap_or(false),
-                    self.truths_plot_seen_b.get(i).copied().unwrap_or(false),
-                ) {
+                let seen_a = self.truths_plot_seen_a.get(i).copied().unwrap_or(false);
+                let seen_b = self.truths_plot_seen_b.get(i).copied().unwrap_or(false);
+                let vis = match (seen_a, seen_b) {
                     (true, true) => "both",
                     (true, false) => "a_only",
                     (false, true) => "b_only",
                     _ => "none",
                 };
+                let has_cont = continuous_truth.get(i).copied().unwrap_or(false);
+                let plotted = seen_a || seen_b;
+                let plotted_untracked = plotted && !has_cont;
+                if plotted_untracked {
+                    plotted_without_continuous += 1;
+                }
                 TruthVizPoint {
                     id: i as u16,
                     x_km: gt.state[0] / 1000.0,
                     y_km: gt.state[2] / 1000.0,
                     plot_visibility: vis,
-                    has_continuous_track: continuous.get(i).copied().unwrap_or(false),
+                    has_continuous_track: has_cont,
+                    plotted_untracked,
                 }
             })
             .collect();
-        let mut track_polylines = alloc::vec::Vec::new();
-        for ct in &stats.continuous_truth_tracks {
-            let mut points = alloc::vec::Vec::new();
-            for fid in &ct.linked_filter_track_ids {
-                let Some(path) = self.filter_paths.iter().find(|p| p.id == *fid) else {
-                    continue;
-                };
-                for (idx, (_, mean)) in path.states.iter().enumerate() {
-                    if idx % 6 == 0 {
-                        points.push([mean[0] / 1000.0, mean[2] / 1000.0]);
-                    }
+
+        let truth_trajectories = self
+            .truth_log
+            .iter()
+            .enumerate()
+            .map(|(i, log)| TruthTrajectoryViz {
+                id: i as u16,
+                points_km: states_to_points_km(log, VIZ_TRUTH_PATH_STRIDE),
+            })
+            .collect();
+
+        let filter_tracks = self
+            .filter_paths
+            .iter()
+            .filter_map(|path| {
+                let points_km = states_to_points_km(&path.states, VIZ_FILTER_PATH_STRIDE);
+                if points_km.len() < 2 {
+                    return None;
                 }
-            }
-            if points.len() >= 2 {
-                track_polylines.push(TrackVizPolyline {
-                    truth_id: ct.truth_id,
-                    points_km: points,
-                });
-            }
-        }
+                let continuous = continuous_track_ids
+                    .binary_search(&path.id)
+                    .is_ok();
+                let truth_id = assoc_truth_by_track
+                    .iter()
+                    .find(|(tid, _)| *tid == path.id)
+                    .map(|(_, truth)| *truth);
+                let is_false_track = false_track_ids.binary_search(&path.id).is_ok();
+                Some(FilterTrackViz {
+                    track_id: path.id,
+                    truth_id,
+                    continuous,
+                    is_false_track,
+                    points_km,
+                })
+            })
+            .collect();
+
+        let rad_to_deg = 180.0 / core::f64::consts::PI;
+        let radar_beam_deg = [
+            self.radar_rt[0].dwell_rad * rad_to_deg,
+            self.radar_rt[1].dwell_rad * rad_to_deg,
+        ];
+
         DualRadarVizExport {
             range_a_km: RANGE_A_M / 1000.0,
             range_b_km: RANGE_B_M / 1000.0,
+            fov_deg: FOV_DEG,
+            radar_beam_deg,
             num_truths: NUM_TRUTHS,
             truths_with_any_plot: stats.truths_with_any_plot,
             continuous_track_count: stats.continuous_truth_track_count,
+            plotted_without_continuous_count: plotted_without_continuous,
             truths,
-            track_polylines,
+            truth_trajectories,
+            filter_tracks,
         }
     }
 }
