@@ -120,6 +120,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "25" | "pf-oosm" | "particle-oosm" => Some(ScenarioId::Lot20PfOosmExample),
         "26" | "algorithm-c" | "oosm-algorithm" => Some(ScenarioId::Lot21OosmAlgorithmExample),
         "27" | "bearing-only" | "bot" => Some(ScenarioId::Lot22BearingOnlyExample),
+        "28" | "multi-tracker" | "multi_tracker" => Some(ScenarioId::Lot23MultiTrackerExample),
         _ => None,
     }
 }

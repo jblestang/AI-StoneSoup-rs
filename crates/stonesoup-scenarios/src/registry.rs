@@ -30,6 +30,7 @@ pub enum ScenarioId {
     Lot20PfOosmExample,
     Lot21OosmAlgorithmExample,
     Lot22BearingOnlyExample,
+    Lot23MultiTrackerExample,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -47,7 +48,7 @@ impl ScenarioRegistry {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn all() -> &'static [ScenarioDescriptor] {
         const SHA: &str = "a4336b920a799cfe0a77ecb05867c5deeb371c7a";
-        static LIST: [ScenarioDescriptor; 27] = [
+        static LIST: [ScenarioDescriptor; 28] = [
             ScenarioDescriptor {
                 id: ScenarioId::Lot1KalmanTutorial,
                 title: "01 — Kalman filter introduction",
@@ -238,6 +239,13 @@ impl ScenarioRegistry {
                 upstream_sha: SHA,
                 family: "example",
             },
+            ScenarioDescriptor {
+                id: ScenarioId::Lot23MultiTrackerExample,
+                title: "28 — Multi-tracker comparison (manoeuvring targets)",
+                upstream_path: "docs/examples/filters/Multi_Tracker_Example.py",
+                upstream_sha: SHA,
+                family: "example",
+            },
         ];
         &LIST
     }
@@ -275,7 +283,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot19KalmanOosmExample
             | ScenarioId::Lot20PfOosmExample
             | ScenarioId::Lot21OosmAlgorithmExample
-            | ScenarioId::Lot22BearingOnlyExample => {
+            | ScenarioId::Lot22BearingOnlyExample
+            | ScenarioId::Lot23MultiTrackerExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
@@ -310,7 +319,8 @@ impl ScenarioRegistry {
             | ScenarioId::Lot19KalmanOosmExample
             | ScenarioId::Lot20PfOosmExample
             | ScenarioId::Lot21OosmAlgorithmExample
-            | ScenarioId::Lot22BearingOnlyExample => {
+            | ScenarioId::Lot22BearingOnlyExample
+            | ScenarioId::Lot23MultiTrackerExample => {
                 Err(ScenarioError::Core(stonesoup_core::Error::InvalidParameter))
             }
         }
