@@ -225,6 +225,31 @@ pub fn inv2(m: Mat<2, 2>) -> Result<Mat<2, 2>, Error> {
     fixed::inv2(m)
 }
 
+/// Cholesky factorization of 2×2 SPD matrix; returns lower triangular L with A ≈ L Lᵀ.
+pub fn cholesky2(a: Mat<2, 2>) -> Result<Mat<2, 2>, Error> {
+    let mut l = Mat::<2, 2>::zeros();
+    let c00 = a.get(0, 0)?;
+    let c10 = a.get(1, 0)?;
+    let c11 = a.get(1, 1)?;
+    if c00 <= 0.0 {
+        return Err(Error::InvalidCovariance);
+    }
+    let l00 = sqrt(c00);
+    require_finite(l00)?;
+    l.set(0, 0, l00)?;
+    let l10 = c10 / l00;
+    require_finite(l10)?;
+    l.set(1, 0, l10)?;
+    let rem = c11 - l10 * l10;
+    if rem <= 0.0 {
+        return Err(Error::InvalidCovariance);
+    }
+    let l11 = sqrt(rem);
+    require_finite(l11)?;
+    l.set(1, 1, l11)?;
+    Ok(l)
+}
+
 /// Cholesky factorization of 4×4 SPD matrix; returns lower triangular L with A ≈ L Lᵀ.
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
