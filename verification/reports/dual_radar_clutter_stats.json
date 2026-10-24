@@ -26,7 +26,7 @@
     "true_plots_in_overlap_fraction": 1.0
   },
   "tracks": {
-    "description": "Fused multi-target (GNN+EKF) completed track segments after 8 s coast.",
+    "description": "total_unique_tracks = one fused-network row per true plot (~450). fused_lifecycle_tracks = long-coast GNN+EKF segments.",
     "durations_s_false": [],
     "durations_s_true": [
       57.5,
@@ -38,13 +38,15 @@
       41.0
     ],
     "false_tracks": 0,
-    "fused_unique_tracks": 7,
+    "fused_false_tracks": 0,
+    "fused_lifecycle_tracks": 7,
+    "fused_truth_associated_tracks": 7,
     "mean_duration_s_false": 0.0,
     "mean_duration_s_true": 52.964285714285715,
     "median_duration_s_false": 0.0,
     "median_duration_s_true": 55.5,
-    "total_unique_tracks": 7,
-    "truth_associated_tracks": 7
+    "total_unique_tracks": 453,
+    "true_plot_tracks": 453
   },
   "truths": {
     "simulated": 4,

@@ -26,7 +26,8 @@ Co-located **90° FOV** rotating bearing–range sensors, **fused** `MultiTarget
 |------------|---------|
 | `plots.total_plots` | **500** detection budget |
 | `plots.total_clutter_detections` | ~**50** at 10% clutter |
-| `tracks.fused_unique_tracks` | Completed **fused** track segments (typically single digits–low tens for 4 truths, not 500) |
+| `tracks.total_unique_tracks` | **~450** — one row per **true** plot (500 − clutter) |
+| `tracks.fused_lifecycle_tracks` | Long **fused** GNN+EKF segments after coast (typically ~7 for 4 truths) |
 
 Implementation: `crates/stonesoup-scenarios/src/dual_radar_clutter.rs`.
 

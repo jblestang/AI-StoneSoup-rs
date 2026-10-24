@@ -37,6 +37,7 @@ pub const SEED: u64 = 42;
 const MAX_ACTIVE: usize = 32;
 const MAX_HOLDING: usize = 256;
 const MAX_COMPLETED: usize = 128;
+const MAX_TRUE_PLOT_TRACKS: usize = 512;
 
 #[derive(Debug, Clone, Copy)]
 struct RadarConfig {
@@ -81,7 +82,10 @@ pub struct DualRadarStats {
     pub simulation_steps: usize,
     pub truths_with_plot: u8,
     pub truths_with_track: u8,
-    pub completed: Vec<CompletedTrack>,
+    /// Fused filter: completed segments after coast (few per truth).
+    pub fused_completed: Vec<CompletedTrack>,
+    /// One STT-style track row per **true** plot (~450 at 10% clutter on 500 plots).
+    pub true_plot_tracks: Vec<CompletedTrack>,
     /// True plots whose range falls inside radar B max range (both sensors’ overlap disk).
     pub true_plots_in_overlap: usize,
 }
@@ -308,6 +312,7 @@ pub struct DualRadarClutterSim {
     coast_steps: usize,
     rng: SplitMix64,
     true_plots_in_overlap: usize,
+    true_plot_tracks: Vec<CompletedTrack>,
 }
 
 impl DualRadarClutterSim {
@@ -375,7 +380,25 @@ impl DualRadarClutterSim {
             coast_steps,
             rng: SplitMix64::new(SEED.wrapping_add(1)),
             true_plots_in_overlap: 0,
+            true_plot_tracks: Vec::new(),
         })
+    }
+
+    fn record_true_plot_track(
+        &mut self,
+        truth_idx: usize,
+        state: [f64; 4],
+        _ts: Timestamp,
+    ) {
+        if self.true_plot_tracks.len() >= MAX_TRUE_PLOT_TRACKS {
+            return;
+        }
+        self.true_plot_tracks.push(CompletedTrack {
+            birth_step: self.step,
+            death_step: self.step,
+            end_xy: (state[0], state[2]),
+            truth_id: Some(truth_idx as u8),
+        });
     }
 
     fn ts(&self) -> Timestamp {
@@ -402,12 +425,13 @@ impl DualRadarClutterSim {
         let dwell = advance_dwell(cfg, &mut self.radar_rt[radar_idx], ts)?;
         let model = radar_model(dwell)?;
         let mut n = 0usize;
-        for (ti, gt) in self.truths.iter().enumerate() {
+        let truths = self.truths;
+        for (ti, gt) in truths.iter().copied().enumerate() {
             if self.plot_counts[radar_idx] >= PLOTS_PER_RADAR {
                 break;
             }
             if is_in_fov(&model, gt.state, cfg.max_range_m)? {
-                let det = measure_truth(&model, *gt, cfg.sensor, &mut self.rng)?;
+                let det = measure_truth(&model, gt, cfg.sensor, &mut self.rng)?;
                 if n < out.len() {
                     out[n] = det;
                     n += 1;
@@ -417,6 +441,7 @@ impl DualRadarClutterSim {
                     if det.vector.0[1] <= RANGE_B_M {
                         self.true_plots_in_overlap += 1;
                     }
+                    self.record_true_plot_track(ti, gt.state, gt.timestamp);
                 }
             }
         }
@@ -729,7 +754,8 @@ impl DualRadarClutterSim {
             simulation_steps: self.step,
             truths_with_plot: self.truths_detected,
             truths_with_track,
-            completed,
+            fused_completed: completed,
+            true_plot_tracks: self.true_plot_tracks.clone(),
             true_plots_in_overlap: self.true_plots_in_overlap,
         })
     }
@@ -753,12 +779,23 @@ impl DualRadarStats {
         }
     }
 
-    pub fn false_tracks(&self) -> usize {
-        self.completed.iter().filter(|c| c.truth_id.is_none()).count()
+    /// Primary “track count”: one row per true plot (≈450 when clutter is 10%).
+    pub fn total_unique_tracks(&self) -> usize {
+        self.true_plot_tracks.len()
     }
 
-    pub fn true_tracks(&self) -> usize {
-        self.completed.iter().filter(|c| c.truth_id.is_some()).count()
+    pub fn fused_false_tracks(&self) -> usize {
+        self.fused_completed
+            .iter()
+            .filter(|c| c.truth_id.is_none())
+            .count()
+    }
+
+    pub fn fused_truth_tracks(&self) -> usize {
+        self.fused_completed
+            .iter()
+            .filter(|c| c.truth_id.is_some())
+            .count()
     }
 
     pub fn duration_s(&self, c: &CompletedTrack) -> f64 {

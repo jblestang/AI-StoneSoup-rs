@@ -33,7 +33,7 @@ fn run() -> Result<String, ScenarioError> {
         stats.true_plots_in_overlap as f64 / stats.total_true.max(1) as f64;
     let mut dur_true = Vec::new();
     let mut dur_false = Vec::new();
-    for t in &stats.completed {
+    for t in &stats.fused_completed {
         let d = stats.duration_s(t);
         if t.truth_id.is_some() {
             dur_true.push(d);
@@ -91,11 +91,13 @@ fn run() -> Result<String, ScenarioError> {
             "with_confirmed_track": stats.truths_with_track_count(),
         },
         "tracks": {
-            "description": "Fused multi-target (GNN+EKF) completed track segments after 8 s coast.",
-            "fused_unique_tracks": stats.completed.len(),
-            "total_unique_tracks": stats.completed.len(),
-            "truth_associated_tracks": stats.true_tracks(),
-            "false_tracks": stats.false_tracks(),
+            "description": "total_unique_tracks = one fused-network row per true plot (~450). fused_lifecycle_tracks = long-coast GNN+EKF segments.",
+            "total_unique_tracks": stats.total_unique_tracks(),
+            "true_plot_tracks": stats.true_plot_tracks.len(),
+            "fused_lifecycle_tracks": stats.fused_completed.len(),
+            "fused_truth_associated_tracks": stats.fused_truth_tracks(),
+            "fused_false_tracks": stats.fused_false_tracks(),
+            "false_tracks": stats.fused_false_tracks(),
             "mean_duration_s_true": mean(&dur_true),
             "mean_duration_s_false": mean(&dur_false),
             "median_duration_s_true": median(&mut dur_true_sorted),

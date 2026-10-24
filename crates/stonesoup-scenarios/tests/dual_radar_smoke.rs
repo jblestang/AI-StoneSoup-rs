@@ -16,9 +16,15 @@ fn dual_radar_runs_to_plot_budget() {
         (0.07..=0.13).contains(&clutter_frac),
         "clutter fraction {clutter_frac}"
     );
+    assert_eq!(
+        stats.true_plot_tracks.len(),
+        stats.total_true,
+        "expect one track row per true plot"
+    );
+    assert_eq!(stats.total_unique_tracks(), stats.total_true);
     assert!(
-        stats.completed.len() < 64,
-        "fused track count {}",
-        stats.completed.len()
+        stats.fused_completed.len() < 64,
+        "fused lifecycle count {}",
+        stats.fused_completed.len()
     );
 }
