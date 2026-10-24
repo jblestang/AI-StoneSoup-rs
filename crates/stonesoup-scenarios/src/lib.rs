@@ -4,6 +4,7 @@
 mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;
+mod lot3_clutter;
 mod particle_lot2;
 mod registry;
 pub mod scenario;
@@ -17,6 +18,9 @@ pub use lot2_ekf::{
     TUTORIAL02_SENSOR_XY,
 };
 pub use lot2_ukf::Lot2UkfScenario;
+pub use lot3_clutter::{
+    Lot3ClutterScenario, Lot3MeasPoint, Lot3Snapshot, Lot3StepOutcome, LOT3_GATE, MAX_LOT3_STEPS,
+};
 pub use particle_lot2::{Lot2ParticleScenario, LOT2_PF_PARTICLES};
 pub use registry::{ScenarioDescriptor, ScenarioError, ScenarioId, ScenarioRegistry};
 pub use scenario::{AnyScenario, Scenario, ScenarioStepOutcome, ViewerSnapshot};

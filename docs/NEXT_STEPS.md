@@ -4,7 +4,9 @@
 
 **Lot 2:** complete — Tutorials **02 EKF**, **03 UKF**, and **04 particle filter** (bearing–range, parity vs Stone Soup v1.9.1 @ pinned SHA). Headless CLI: `lot2_ekf`, `lot2_ukf`, `lot2_pf`.
 
-**Next (Lot 3+):** data association / multi-target tutorials; extend viewer catalogue beyond Lot 1 GUI path.
+**Lot 3a:** Tutorial **05 clutter + nearest neighbour** — `Lot3ClutterScenario`, Mahalanobis gate, parity `parity_lot3`, headless `lot3_clutter`, viewer shows true vs clutter detections.
+
+**Next (Lot 3b+):** tutorials **06–08** (multi-target, PDA, JPDA).
 
 ## Optional polish
 
@@ -15,4 +17,4 @@
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated tutorials at pinned SHA: 01, 02, 03, 04.
+- Validated tutorials at pinned SHA: 01, 02, 03, 04, 05.

@@ -13,6 +13,7 @@ fn parse_scenario(arg: Option<String>) -> ScenarioKind {
         Some("lot2_ekf") => ScenarioKind::Lot2Ekf,
         Some("lot2_ukf") => ScenarioKind::Lot2Ukf,
         Some("lot2_pf") => ScenarioKind::Lot2Particle,
+        Some("lot3_clutter") => ScenarioKind::Lot3Clutter,
         _ => ScenarioKind::Lot1,
     }
 }
@@ -22,6 +23,7 @@ enum ScenarioKind {
     Lot2Ekf,
     Lot2Ukf,
     Lot2Particle,
+    Lot3Clutter,
 }
 
 fn main() -> ExitCode {
@@ -94,6 +96,31 @@ fn main() -> ExitCode {
             println!(
                 "scenario=lot2_ukf finished=true estimate_xy=({:.3}, {:.3})",
                 state[0], state[2]
+            );
+        }
+        ScenarioKind::Lot3Clutter => {
+            let id = ScenarioId::Lot3ClutterTutorial;
+            let mut scenario = match AnyScenario::spawn(id) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("scenario error: {e:?}");
+                    return ExitCode::from(2);
+                }
+            };
+            if scenario.run_to_end().is_err() {
+                eprintln!("run failed");
+                return ExitCode::from(3);
+            }
+            let snap = match scenario.viewer_snapshot() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("snapshot: {e:?}");
+                    return ExitCode::from(4);
+                }
+            };
+            println!(
+                "scenario=lot3_clutter steps={} rmse={:.6} finished={}",
+                snap.step, snap.rmse, snap.finished
             );
         }
         ScenarioKind::Lot2Particle => {

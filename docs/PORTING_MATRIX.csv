@@ -198,7 +198,7 @@ stonesoup.architecture.edge,stonesoup/architecture/edge.py,component,numpy;scipy
 stonesoup.architecture.generator,stonesoup/architecture/generator.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
 stonesoup.architecture.node,stonesoup/architecture/node.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
 tutorial:docs/tutorials/02_ExtendedKalmanFilterTutorial.py,docs/tutorials/02_ExtendedKalmanFilterTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot2.rs,validated,,
-tutorial:docs/tutorials/05_DataAssociation-Clutter.py,docs/tutorials/05_DataAssociation-Clutter.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
+tutorial:docs/tutorials/05_DataAssociation-Clutter.py,docs/tutorials/05_DataAssociation-Clutter.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,validated,Lot3ClutterTutorial,parity_lot3
 tutorial:docs/tutorials/08_JPDATutorial.py,docs/tutorials/08_JPDATutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
 tutorial:docs/tutorials/04_ParticleFilter.py,docs/tutorials/04_ParticleFilter.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot2_pf.rs,validated,,
 tutorial:docs/tutorials/01_KalmanFilterTutorial.py,docs/tutorials/01_KalmanFilterTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios/src/lot1_kalman.rs,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot1.rs,validated,,

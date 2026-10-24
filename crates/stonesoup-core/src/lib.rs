@@ -5,6 +5,7 @@
 //!
 //! State vector order for Lot 1 (2D nearly-constant velocity): `[x, vx, y, vy]` (SI: m, m/s).
 
+mod associator;
 mod error;
 mod filter;
 pub mod linalg;
@@ -15,9 +16,12 @@ mod state;
 mod time;
 mod types;
 
+pub use associator::{associate_nearest_neighbour, AssociationOutcome, MeasurementHypothesis};
 pub use error::Error;
 pub use filter::ekf::ExtendedKalmanUpdater;
-pub use filter::kalman::{KalmanPredictor, KalmanUpdater, KalmanWorkspace};
+pub use filter::kalman::{
+    GaussianMeasurementPrediction, KalmanPredictor, KalmanUpdater, KalmanWorkspace,
+};
 pub use filter::ukf::{UnscentedKalmanPredictor, UnscentedKalmanUpdater};
 pub use linalg::{Mat, VecN};
 pub use metric::rmse::RmseAccumulator;

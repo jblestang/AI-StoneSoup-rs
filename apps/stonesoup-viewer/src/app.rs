@@ -22,6 +22,10 @@ pub struct ViewerApp {
     est_trail: Vec<[f64; 2]>,
     last_ellipse: Option<EllipseOverlay>,
     last_advance: f64,
+    /// Current-step detections (Tutorial 05 clutter).
+    step_clutter: Vec<[f64; 2]>,
+    step_true_dets: Vec<[f64; 2]>,
+    step_associated: Option<[f64; 2]>,
 }
 
 impl Default for ViewerApp {
@@ -38,6 +42,9 @@ impl Default for ViewerApp {
             est_trail: Vec::new(),
             last_ellipse: None,
             last_advance: 0.0,
+            step_clutter: Vec::new(),
+            step_true_dets: Vec::new(),
+            step_associated: None,
         }
     }
 }
@@ -95,6 +102,9 @@ impl ViewerApp {
         self.meas_trail.clear();
         self.est_trail.clear();
         self.last_ellipse = None;
+        self.step_clutter.clear();
+        self.step_true_dets.clear();
+        self.step_associated = None;
     }
 
     pub fn reset(&mut self) {
@@ -111,8 +121,23 @@ impl ViewerApp {
 
     fn apply_snapshot(&mut self, snap: ViewerSnapshot) {
         self.truth_trail.push([snap.truth_xy.0, snap.truth_xy.1]);
-        self.meas_trail
-            .push([snap.measurement_xy.0, snap.measurement_xy.1]);
+        self.step_clutter.clear();
+        self.step_true_dets.clear();
+        for i in 0..snap.det_count as usize {
+            let p = [snap.det_xy[i][0], snap.det_xy[i][1]];
+            if snap.det_is_true[i] {
+                self.step_true_dets.push(p);
+            } else {
+                self.step_clutter.push(p);
+            }
+        }
+        self.step_associated = snap.associated_xy.map(|(x, y)| [x, y]);
+        if let Some(p) = self.step_associated {
+            self.meas_trail.push(p);
+        } else if snap.det_count == 0 {
+            self.meas_trail
+                .push([snap.measurement_xy.0, snap.measurement_xy.1]);
+        }
         self.est_trail
             .push([snap.estimate_xy.0, snap.estimate_xy.1]);
         self.last_ellipse = snap.ellipse_semi.map(|semi| EllipseOverlay {
@@ -164,7 +189,16 @@ impl ViewerApp {
     }
 
     fn is_lot2(&self) -> bool {
-        !matches!(self.active_id, ScenarioId::Lot1KalmanTutorial)
+        matches!(
+            self.active_id,
+            ScenarioId::Lot2EkfTutorial
+                | ScenarioId::Lot2UkfTutorial
+                | ScenarioId::Lot2ParticleTutorial
+        )
+    }
+
+    fn is_lot3(&self) -> bool {
+        matches!(self.active_id, ScenarioId::Lot3ClutterTutorial)
     }
 }
 
@@ -283,13 +317,43 @@ impl eframe::App for ViewerApp {
                                 .color(egui::Color32::LIGHT_GRAY),
                         );
                     }
-                    if !self.meas_trail.is_empty() {
+                    if self.is_lot3() && !self.step_clutter.is_empty() {
+                        let clutter: PlotPoints =
+                            self.step_clutter.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.points(
+                            Points::new(clutter)
+                                .name("Clutter")
+                                .radius(3.0)
+                                .color(egui::Color32::from_rgb(180, 120, 80)),
+                        );
+                    }
+                    if self.is_lot3() && !self.step_true_dets.is_empty() {
+                        let truth_dets: PlotPoints =
+                            self.step_true_dets.iter().map(|p| [p[0], p[1]]).collect();
+                        plot_ui.points(
+                            Points::new(truth_dets)
+                                .name("True detections (step)")
+                                .radius(5.0)
+                                .color(egui::Color32::LIGHT_BLUE),
+                        );
+                    }
+                    if !self.is_lot3() && !self.meas_trail.is_empty() {
                         plot_ui.points(
                             Points::new(meas_pts)
                                 .name("Detections (Cartesian)")
                                 .radius(4.0)
                                 .color(egui::Color32::LIGHT_BLUE),
                         );
+                    }
+                    if self.is_lot3() {
+                        if let Some(p) = self.step_associated {
+                            plot_ui.points(
+                                Points::new(vec![[p[0], p[1]]])
+                                    .name("Associated detection")
+                                    .radius(6.0)
+                                    .color(egui::Color32::from_rgb(255, 200, 60)),
+                            );
+                        }
                     }
                     if !self.est_trail.is_empty() {
                         plot_ui.line(Line::new(est_pts).name("Track").color(egui::Color32::GREEN));
