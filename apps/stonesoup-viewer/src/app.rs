@@ -3,8 +3,8 @@ use std::f64::consts::TAU;
 use eframe::egui;
 use egui_plot::{Legend, Line, Plot, PlotPoints, Points, Polygon};
 use stonesoup_scenarios::{
-    AnyScenario, Scenario, ScenarioId, ScenarioRegistry, ScenarioStepOutcome, ViewerSnapshot,
-    TUTORIAL02_SENSOR_XY,
+    lot5_case_name, AnyScenario, Scenario, ScenarioId, ScenarioRegistry, ScenarioStepOutcome,
+    ViewerSnapshot, TUTORIAL02_SENSOR_XY,
 };
 
 /// NumPy / Stone Soup fixture seed (tutorials 01–10).
@@ -46,6 +46,8 @@ pub struct ViewerApp {
     step_clutter: Vec<[f64; 2]>,
     step_true_dets: Vec<[f64; 2]>,
     step_associated: Option<[f64; 2]>,
+    /// Lot 5 resampling: `(particle index, state value)` at the current step.
+    resample_plot: Vec<[f64; 2]>,
     #[cfg(target_arch = "wasm32")]
     wasm_query_handled: bool,
     #[cfg(target_arch = "wasm32")]
@@ -73,6 +75,7 @@ impl Default for ViewerApp {
             step_clutter: Vec::new(),
             step_true_dets: Vec::new(),
             step_associated: None,
+            resample_plot: Vec::new(),
             #[cfg(target_arch = "wasm32")]
             wasm_query_handled: false,
             #[cfg(target_arch = "wasm32")]
@@ -96,6 +99,7 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "08" | "8" => Some(ScenarioId::Lot3JpdaTutorial),
         "09" | "9" => Some(ScenarioId::Lot4InitiatorsTutorial),
         "10" => Some(ScenarioId::Lot4SimulationTutorial),
+        "11" | "resampling" | "sample" => Some(ScenarioId::Lot5ResamplingTutorial),
         _ => None,
     }
 }
@@ -158,6 +162,7 @@ impl ViewerApp {
         self.step_clutter.clear();
         self.step_true_dets.clear();
         self.step_associated = None;
+        self.resample_plot.clear();
     }
 
     pub fn reset(&mut self) {
@@ -175,6 +180,13 @@ impl ViewerApp {
     }
 
     fn apply_snapshot(&mut self, snap: ViewerSnapshot) {
+        if snap.resample_case != u8::MAX {
+            self.resample_plot.clear();
+            for i in 0..snap.resample_nparts as usize {
+                self.resample_plot.push(snap.resample_xy[i]);
+            }
+            return;
+        }
         self.truth_trail.push([snap.truth_xy.0, snap.truth_xy.1]);
         self.step_clutter.clear();
         self.step_true_dets.clear();
@@ -344,6 +356,10 @@ impl ViewerApp {
     fn is_lot3_nn(&self) -> bool {
         matches!(self.active_id, ScenarioId::Lot3ClutterTutorial)
     }
+
+    fn is_lot5_resampling(&self) -> bool {
+        matches!(self.active_id, ScenarioId::Lot5ResamplingTutorial)
+    }
 }
 
 impl eframe::App for ViewerApp {
@@ -433,7 +449,12 @@ impl eframe::App for ViewerApp {
             if let Some(s) = &self.scenario {
                 if let Ok(snap) = s.viewer_snapshot() {
                     ui.label(format!("Step {} / {}", snap.step, snap.max_steps));
-                    ui.label(format!("RMSE: {:.4}", snap.rmse));
+                    if self.is_lot5_resampling() && snap.resample_case != u8::MAX {
+                        ui.label(format!("Resampler: {}", lot5_case_name(snap.resample_case)));
+                        ui.label(format!("Particles: {}", snap.resample_nparts));
+                    } else if !self.is_lot5_resampling() {
+                        ui.label(format!("RMSE: {:.4}", snap.rmse));
+                    }
                     if let Some((b, r)) = snap.bearing_range {
                         ui.label(format!(
                             "Last detection: bearing {b:.2} rad, range {r:.2} m"
@@ -455,6 +476,25 @@ impl eframe::App for ViewerApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            if self.is_lot5_resampling() {
+                ui.heading("Resampled particles (index → state)");
+                Plot::new("resample_plot")
+                    .legend(Legend::default())
+                    .data_aspect(1.0)
+                    .show(ui, |plot_ui| {
+                        if !self.resample_plot.is_empty() {
+                            let pts: PlotPoints =
+                                self.resample_plot.iter().map(|p| [p[0], p[1]]).collect();
+                            plot_ui.points(
+                                Points::new(pts)
+                                    .name("Particles")
+                                    .radius(6.0)
+                                    .color(egui::Color32::from_rgb(120, 180, 255)),
+                            );
+                        }
+                    });
+                return;
+            }
             ui.heading("Tracking view (x–y)");
             let truth_pts: PlotPoints = self.truth_trail.iter().map(|p| [p[0], p[1]]).collect();
             let meas_pts: PlotPoints = self.meas_trail.iter().map(|p| [p[0], p[1]]).collect();

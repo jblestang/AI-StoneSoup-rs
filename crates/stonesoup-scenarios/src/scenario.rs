@@ -18,6 +18,7 @@ use crate::lot3_pda::MAX_LOT3_PDA_STEPS;
 use crate::lot4_tracker::MAX_LOT4_ACTIVE_TRACKS;
 use crate::lot4_tutorial09::Lot4Tutorial09Scenario;
 use crate::lot4_tutorial10::Lot4Tutorial10Scenario;
+use crate::lot5_resampling::Lot5ResamplingScenario;
 use crate::particle_lot2::Lot2ParticleScenario;
 use crate::registry::{ScenarioError, ScenarioId};
 
@@ -44,14 +45,29 @@ pub struct ViewerSnapshot {
     /// Tutorials 06/08: second target truth and estimate (x–y).
     pub truth_b_xy: Option<(f64, f64)>,
     pub estimate_b_xy: Option<(f64, f64)>,
+    /// Lot 5 resampling tutorial (`u8::MAX` when not active).
+    pub resample_case: u8,
+    pub resample_nparts: u8,
+    /// Particle positions as `(index, state)` for up to [`MAX_VIEWER_RESAMPLE_PARTS`].
+    pub resample_xy: [[f64; 2]; MAX_VIEWER_RESAMPLE_PARTS],
 }
 
-const fn empty_det_xy() -> [[f64; 2]; MAX_DETS_PER_STEP] {
+pub const MAX_VIEWER_RESAMPLE_PARTS: usize = 16;
+
+pub(crate) const fn empty_det_xy() -> [[f64; 2]; MAX_DETS_PER_STEP] {
     [[0.0, 0.0]; MAX_DETS_PER_STEP]
 }
 
-const fn empty_det_flags() -> [bool; MAX_DETS_PER_STEP] {
+pub(crate) const fn empty_det_flags() -> [bool; MAX_DETS_PER_STEP] {
     [false; MAX_DETS_PER_STEP]
+}
+
+pub(crate) const fn empty_resample_xy() -> [[f64; 2]; MAX_VIEWER_RESAMPLE_PARTS] {
+    [[0.0, 0.0]; MAX_VIEWER_RESAMPLE_PARTS]
+}
+
+const fn no_resample_view() -> (u8, u8, [[f64; 2]; MAX_VIEWER_RESAMPLE_PARTS]) {
+    (u8::MAX, 0, empty_resample_xy())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -83,6 +99,7 @@ pub enum AnyScenario {
     Lot3Jpda(Lot3JpdaScenario),
     Lot4T09(Lot4Tutorial09Scenario),
     Lot4T10(Lot4Tutorial10Scenario),
+    Lot5Resampling(Lot5ResamplingScenario),
 }
 
 impl AnyScenario {
@@ -113,6 +130,9 @@ impl AnyScenario {
             ScenarioId::Lot4SimulationTutorial => {
                 Ok(Self::Lot4T10(Lot4Tutorial10Scenario::tutorial_defaults()?))
             }
+            ScenarioId::Lot5ResamplingTutorial => Ok(Self::Lot5Resampling(
+                Lot5ResamplingScenario::tutorial_defaults()?,
+            )),
         }
     }
 
@@ -129,6 +149,7 @@ impl AnyScenario {
             Self::Lot3Jpda(_) => ScenarioId::Lot3JpdaTutorial,
             Self::Lot4T09(_) => ScenarioId::Lot4InitiatorsTutorial,
             Self::Lot4T10(_) => ScenarioId::Lot4SimulationTutorial,
+            Self::Lot5Resampling(_) => ScenarioId::Lot5ResamplingTutorial,
         }
     }
 }
@@ -146,6 +167,7 @@ impl Scenario for AnyScenario {
             Self::Lot3Jpda(s) => s.reset(),
             Self::Lot4T09(s) => s.reset(),
             Self::Lot4T10(s) => s.reset(),
+            Self::Lot5Resampling(s) => s.reset(),
         }
     }
 
@@ -206,6 +228,13 @@ impl Scenario for AnyScenario {
                     ScenarioStepOutcome::Finished
                 }
             }
+            Self::Lot5Resampling(s) => {
+                if s.step()? {
+                    ScenarioStepOutcome::Stepped
+                } else {
+                    ScenarioStepOutcome::Finished
+                }
+            }
         };
         Ok(outcome)
     }
@@ -231,6 +260,9 @@ impl Scenario for AnyScenario {
                     associated_xy: None,
                     truth_b_xy: None,
                     estimate_b_xy: None,
+                    resample_case: no_resample_view().0,
+                    resample_nparts: no_resample_view().1,
+                    resample_xy: no_resample_view().2,
                 })
             }
             Self::Lot2Ekf(s) => lot2_viewer_snapshot(s.snapshot()?),
@@ -246,6 +278,7 @@ impl Scenario for AnyScenario {
             Self::Lot3Jpda(s) => lot3_jpda_viewer_snapshot(s),
             Self::Lot4T09(s) => s.viewer_snapshot(),
             Self::Lot4T10(s) => s.viewer_snapshot(),
+            Self::Lot5Resampling(s) => s.viewer_snapshot(),
         }
     }
 }
@@ -268,6 +301,9 @@ fn lot2_viewer_snapshot(snap: Lot2Snapshot) -> Result<ViewerSnapshot, ScenarioEr
         associated_xy: None,
         truth_b_xy: None,
         estimate_b_xy: None,
+        resample_case: no_resample_view().0,
+        resample_nparts: no_resample_view().1,
+        resample_xy: no_resample_view().2,
     })
 }
 
@@ -301,6 +337,9 @@ fn lot3_viewer_snapshot(
         associated_xy: snap.associated_xy,
         truth_b_xy: None,
         estimate_b_xy: None,
+        resample_case: no_resample_view().0,
+        resample_nparts: no_resample_view().1,
+        resample_xy: no_resample_view().2,
     })
 }
 
@@ -349,6 +388,9 @@ fn lot3_pda_viewer_snapshot(s: &Lot3PdaScenario) -> Result<ViewerSnapshot, Scena
         associated_xy: None,
         truth_b_xy: None,
         estimate_b_xy: None,
+        resample_case: no_resample_view().0,
+        resample_nparts: no_resample_view().1,
+        resample_xy: no_resample_view().2,
     })
 }
 
@@ -406,6 +448,9 @@ fn lot3_mt_viewer_snapshot(s: &Lot3MultiTargetScenario) -> Result<ViewerSnapshot
         associated_xy: None,
         truth_b_xy: Some((tb[0], tb[2])),
         estimate_b_xy: Some((b.mean.0[0], b.mean.0[2])),
+        resample_case: no_resample_view().0,
+        resample_nparts: no_resample_view().1,
+        resample_xy: no_resample_view().2,
     })
 }
 
@@ -466,6 +511,9 @@ pub(crate) fn lot4_viewer_from(
         associated_xy: None,
         truth_b_xy: estimate_b_xy,
         estimate_b_xy,
+        resample_case: no_resample_view().0,
+        resample_nparts: no_resample_view().1,
+        resample_xy: no_resample_view().2,
     })
 }
 
@@ -539,5 +587,8 @@ fn lot3_jpda_viewer_snapshot(s: &Lot3JpdaScenario) -> Result<ViewerSnapshot, Sce
         associated_xy: None,
         truth_b_xy: Some((tb[0], tb[2])),
         estimate_b_xy: Some((b.mean.0[0], b.mean.0[2])),
+        resample_case: no_resample_view().0,
+        resample_nparts: no_resample_view().1,
+        resample_xy: no_resample_view().2,
     })
 }

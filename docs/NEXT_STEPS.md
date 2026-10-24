@@ -8,7 +8,9 @@
 
 **Lot 4:** complete — **09** initiators & deleters (`MultiMeasurementInitiator`, GNN, covariance deleter), **10** simulation stack (`MultiTargetTracker` loop). Headless: `lot4_initiators`, `lot4_simulation`. Parity: `parity_lot4_t09`, `parity_lot4_t10`.
 
-**Next:** Lot 5+ per `PORTING_MATRIX.csv` (metrics, advanced filters, …).
+**Lot 5:** complete — **Resampling** tutorial (`Multinomial`, `Systematic`, `Stratified`, `Residual`, `ESS` wrappers in `stonesoup-sim`). Headless: `lot5_resampling`. WASM viewer: `?tutorial=11` (aliases `resampling`, `sample`). Parity: `parity_lot5_resampling` (per-step through all 6 resampler demos + primitive fixtures).
+
+**Next:** Lot 6+ per `PORTING_MATRIX.csv` (information filter, GM-PHD, metrics, …).
 
 ## Optional polish
 
@@ -21,4 +23,4 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated tutorials at pinned SHA: 01–10.
+- Validated tutorials at pinned SHA: 01–10 + Resampling sampling tutorial.

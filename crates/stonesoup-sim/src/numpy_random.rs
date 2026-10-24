@@ -69,6 +69,11 @@ impl NumpyRng {
         (a as f64 * 67_108_864.0 + b as f64) / 9_007_199_254_740_992.0
     }
 
+    /// ``numpy.random.uniform(low, high)`` on `[low, high)`.
+    pub fn uniform(&mut self, low: f64, high: f64) -> f64 {
+        low + (high - low) * self.rk_double()
+    }
+
     pub fn standard_normal(&mut self) -> Result<f64, Error> {
         if self.has_gauss {
             self.has_gauss = false;

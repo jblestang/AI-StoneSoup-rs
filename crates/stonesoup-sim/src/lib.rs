@@ -20,7 +20,10 @@ pub use lot2_tutorial::{
 };
 pub use numpy_random::NumpyRng;
 pub use resampler::{
-    effective_sample_size, ess_resample_if_needed, systematic_resample, MAX_RESAMPLE_PARTICLES,
+    effective_sample_size, ess_resample_if_needed, ess_resample_if_needed_with,
+    multinomial_resample, replay_resampling_tutorial_preamble, residual_resample,
+    stratified_resample, systematic_resample, EssInnerResampler, ResidualStage2Method,
+    MAX_RESAMPLE_PARTICLES,
 };
 pub use rng::{Rng, SplitMix64};
 pub use sensor::{LinearPositionSensor, SensorSim};

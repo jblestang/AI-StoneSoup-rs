@@ -45,7 +45,7 @@ fn systematic_resampler_matches_stonesoup_fixture() {
         log_w[i] = log_in[i];
     }
     let mut rng = NumpyRng::seed(LOT2_NUMPY_SEED);
-    systematic_resample(&mut particles, &mut log_w, n, &mut rng).unwrap();
+    systematic_resample(&mut particles, &mut log_w, n, n, &mut rng).unwrap();
 
     let log_out: Vec<f64> = v["log_weights_out"]
         .as_array()

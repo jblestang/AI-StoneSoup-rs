@@ -22,4 +22,8 @@ for tutorial in 02_ExtendedKalmanFilterTutorial.py 03_UnscentedKalmanFilterTutor
     exit 1
   fi
 done
-echo "catalogue: registry SHA and Lot 1–4 matrix rows present (tutorials 01–10)"
+if ! grep -q 'ResamplingTutorial.py' "$csv"; then
+  echo "catalogue: ResamplingTutorial.py missing from PORTING_MATRIX.csv"
+  exit 1
+fi
+echo "catalogue: registry SHA and matrix rows present (tutorials 01–10 + resampling)"

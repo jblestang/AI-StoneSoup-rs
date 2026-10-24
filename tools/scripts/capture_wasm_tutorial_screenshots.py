@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture WASM viewer final-state PNGs for tutorials 01–08."""
+"""Capture WASM viewer final-state PNGs for catalogue tutorials 01–11."""
 from __future__ import annotations
 
 import os
@@ -37,7 +37,19 @@ def main() -> int:
 
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            for code in ("01", "02", "03", "04", "05", "06", "07", "08"):
+            for code in (
+                "01",
+                "02",
+                "03",
+                "04",
+                "05",
+                "06",
+                "07",
+                "08",
+                "09",
+                "10",
+                "11",
+            ):
                 page = browser.new_page(viewport={"width": 1280, "height": 800})
                 url = f"http://127.0.0.1:{port}/?tutorial={code}&finish=1"
                 page.goto(url, wait_until="networkidle", timeout=120_000)

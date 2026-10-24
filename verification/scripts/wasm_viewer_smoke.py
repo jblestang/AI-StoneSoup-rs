@@ -10,7 +10,7 @@ from pathlib import Path
 
 READY_TITLE = "stonesoup-viewer-ready"
 RESET_TITLE = "stonesoup-viewer-reset"
-STEP3_TITLE = "stonesoup-viewer-step-3"
+STEP_TITLE_PREFIX = "stonesoup-viewer-step-"
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -20,6 +20,13 @@ def ensure_playwright() -> None:
     except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "playwright", "-q"])
         subprocess.check_call([sys.executable, "-m", "playwright", "install", "chromium"])
+
+
+def wait_step_title(page, step: int, timeout: float = 120_000) -> None:
+    page.wait_for_function(
+        f"document.title === '{STEP_TITLE_PREFIX}{step}'",
+        timeout=timeout,
+    )
 
 
 def main() -> int:
@@ -38,13 +45,11 @@ def main() -> int:
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            page = browser.new_page(viewport={"width": 1280, "height": 800})
 
+            # Tutorial 01: partial steps then reset/finish
+            page = browser.new_page(viewport={"width": 1280, "height": 800})
             page.goto(f"{base}/?tutorial=01&steps=3", wait_until="networkidle", timeout=120_000)
-            page.wait_for_function(
-                f"document.title === '{STEP3_TITLE}'",
-                timeout=120_000,
-            )
+            wait_step_title(page, 3)
 
             page.goto(
                 f"{base}/?tutorial=01&reset=1",
@@ -61,6 +66,27 @@ def main() -> int:
                 f"document.title === '{READY_TITLE}'",
                 timeout=120_000,
             )
+            page.close()
+
+            # Tutorial 11 (resampling): every partial step 1..6, then run to end
+            lot5_steps = 6
+            for n in range(1, lot5_steps + 1):
+                page = browser.new_page(viewport={"width": 1280, "height": 800})
+                page.goto(
+                    f"{base}/?tutorial=11&steps={n}",
+                    wait_until="networkidle",
+                    timeout=120_000,
+                )
+                wait_step_title(page, n)
+                page.close()
+
+            page = browser.new_page(viewport={"width": 1280, "height": 800})
+            page.goto(f"{base}/?tutorial=11&finish=1", wait_until="networkidle", timeout=120_000)
+            page.wait_for_function(
+                f"document.title === '{READY_TITLE}'",
+                timeout=120_000,
+            )
+            page.close()
 
             browser.close()
     finally:

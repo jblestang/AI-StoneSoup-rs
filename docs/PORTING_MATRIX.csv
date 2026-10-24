@@ -186,7 +186,7 @@ stonesoup.types.update,stonesoup/types/update.py,component,numpy;scipy,crates/st
 stonesoup.smoother.base,stonesoup/smoother/base.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
 stonesoup.smoother.kalman,stonesoup/smoother/kalman.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
 stonesoup.resampler.base,stonesoup/resampler/base.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
-stonesoup.resampler.particle,stonesoup/resampler/particle.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
+stonesoup.resampler.particle,stonesoup/resampler/particle.py,component,numpy;scipy,crates/stonesoup-sim/src/resampler.rs,strict_or_std,native;wasm;embedded,crates/stonesoup-scenarios/tests/parity_lot5_resampling.rs,validated,,
 stonesoup.initiator.base,stonesoup/initiator/base.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
 stonesoup.initiator.categorical,stonesoup/initiator/categorical.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
 stonesoup.initiator.composite,stonesoup/initiator/composite.py,component,numpy;scipy,crates/stonesoup-*,strict_or_std,native;wasm;embedded,,todo,,
@@ -207,7 +207,7 @@ tutorial:docs/tutorials/07_PDATutorial.py,docs/tutorials/07_PDATutorial.py,tutor
 tutorial:docs/tutorials/10_Simulation_&_Tracking_Components.py,docs/tutorials/10_Simulation_&_Tracking_Components.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,validated,Lot4SimulationTutorial,parity_lot4_t10
 tutorial:docs/tutorials/03_UnscentedKalmanFilterTutorial.py,docs/tutorials/03_UnscentedKalmanFilterTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot2_ukf.rs,validated,,
 tutorial:docs/tutorials/06_DataAssociation-MultiTargetTutorial.py,docs/tutorials/06_DataAssociation-MultiTargetTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,validated,Lot3MultiTargetTutorial,parity_lot3_multitarget
-tutorial:docs/tutorials/sampling/ResamplingTutorial.py,docs/tutorials/sampling/ResamplingTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
+tutorial:docs/tutorials/sampling/ResamplingTutorial.py,docs/tutorials/sampling/ResamplingTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,crates/stonesoup-scenarios/tests/parity_lot5_resampling.rs,validated,Lot5ResamplingTutorial,parity_lot5_resampling
 tutorial:docs/tutorials/filters/ASDFilter.py,docs/tutorials/filters/ASDFilter.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
 tutorial:docs/tutorials/filters/GMPHDTutorial.py,docs/tutorials/filters/GMPHDTutorial.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,
 tutorial:docs/tutorials/filters/AKKF.py,docs/tutorials/filters/AKKF.py,tutorial,stonesoup,crates/stonesoup-scenarios,strict,native;wasm,,todo,,

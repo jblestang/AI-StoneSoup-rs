@@ -12,6 +12,9 @@ PNG captures of the **Stone Soup Rust** egui viewer (`apps/stonesoup-viewer`) ru
 | `tutorial_06.png` | 06 — Multi-target (GNN) |
 | `tutorial_07.png` | 07 — Probabilistic data association |
 | `tutorial_08.png` | 08 — Joint PDA |
+| `tutorial_09.png` | 09 — Initiators & deleters |
+| `tutorial_10.png` | 10 — Simulation & tracking stack |
+| `tutorial_11.png` | Sampling — Particle resamplers |
 
 ## Regenerate
 
@@ -29,6 +32,7 @@ Open a tutorial and run to the final step in one load:
 
 ```text
 http://localhost:8080/?tutorial=05&finish=1
+http://localhost:8080/?tutorial=11&finish=1
 ```
 
 When stepping completes, the page title becomes `stonesoup-viewer-ready` (for automation).
