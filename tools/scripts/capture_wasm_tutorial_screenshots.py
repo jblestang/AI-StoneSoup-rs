@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture WASM viewer final-state PNGs for catalogue tutorials 01–15."""
+"""Capture WASM viewer final-state PNGs for catalogue tutorials 01–17."""
 from __future__ import annotations
 
 import os
@@ -53,6 +53,8 @@ def main() -> int:
                 "13",
                 "14",
                 "15",
+                "16",
+                "17",
             ):
                 page = browser.new_page(viewport={"width": 1280, "height": 800})
                 url = f"http://127.0.0.1:{port}/?tutorial={code}&finish=1"
