@@ -6,7 +6,9 @@
 
 **Lot 3:** complete — **05** NN/clutter, **06** global NN (two targets), **07** PDA, **08** JPDA (parity vs pinned Stone Soup). Headless: `lot3_clutter`, `lot3_gnn`, `lot3_pda`, `lot3_jpda`.
 
-**Next:** Lot 4+ per `PORTING_MATRIX.csv` (initiators, trackers, metrics, …).
+**Lot 4:** complete — **09** initiators & deleters (`MultiMeasurementInitiator`, GNN, covariance deleter), **10** simulation stack (`MultiTargetTracker` loop). Headless: `lot4_initiators`, `lot4_simulation`. Parity: `parity_lot4_t09`, `parity_lot4_t10`.
+
+**Next:** Lot 5+ per `PORTING_MATRIX.csv` (metrics, advanced filters, …).
 
 ## Optional polish
 
@@ -19,4 +21,4 @@ Done on Lot 3 branch:
 ## Inventory
 
 - Remaining components: see `docs/PORTING_MATRIX.csv` (`todo` / `blocked`).
-- Validated tutorials at pinned SHA: 01–08.
+- Validated tutorials at pinned SHA: 01–10.

@@ -16,10 +16,10 @@ if ! grep -qE 'Lot1KalmanTutorial|01_KalmanFilterTutorial' "$csv"; then
   echo "catalogue: Lot 1 row not found in matrix"
   exit 1
 fi
-for tutorial in 02_ExtendedKalmanFilterTutorial.py 03_UnscentedKalmanFilterTutorial.py 04_ParticleFilter.py 05_DataAssociation-Clutter.py 06_DataAssociation-MultiTargetTutorial.py 07_PDATutorial.py 08_JPDATutorial.py; do
+for tutorial in 02_ExtendedKalmanFilterTutorial.py 03_UnscentedKalmanFilterTutorial.py 04_ParticleFilter.py 05_DataAssociation-Clutter.py 06_DataAssociation-MultiTargetTutorial.py 07_PDATutorial.py 08_JPDATutorial.py 09_Initiators_\&_Deleters.py 10_Simulation_\&_Tracking_Components.py; do
   if ! grep -q "$tutorial" "$csv"; then
     echo "catalogue: $tutorial missing from PORTING_MATRIX.csv"
     exit 1
   fi
 done
-echo "catalogue: registry SHA and Lot 1–4 matrix rows present"
+echo "catalogue: registry SHA and Lot 1–4 matrix rows present (tutorials 01–10)"

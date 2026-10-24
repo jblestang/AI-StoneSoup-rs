@@ -9,6 +9,9 @@ mod lot3_jpda;
 mod lot3_meas;
 mod lot3_multitarget;
 mod lot3_pda;
+mod lot4_tracker;
+mod lot4_tutorial09;
+mod lot4_tutorial10;
 mod particle_lot2;
 mod registry;
 pub mod scenario;
@@ -28,6 +31,8 @@ pub use lot3_clutter::{
 pub use lot3_jpda::{Lot3JpdaScenario, MAX_LOT3_JPDA_STEPS};
 pub use lot3_multitarget::{Lot3MultiTargetScenario, MAX_LOT3_MT_STEPS};
 pub use lot3_pda::{Lot3PdaScenario, MAX_LOT3_PDA_STEPS};
+pub use lot4_tutorial09::{Lot4Tutorial09Scenario, MAX_LOT4_T09_STEPS};
+pub use lot4_tutorial10::{Lot4Tutorial10Scenario, MAX_LOT4_T10_STEPS};
 pub use particle_lot2::{Lot2ParticleScenario, LOT2_PF_PARTICLES};
 pub use registry::{ScenarioDescriptor, ScenarioError, ScenarioId, ScenarioRegistry};
 pub use scenario::{AnyScenario, Scenario, ScenarioStepOutcome, ViewerSnapshot};

@@ -7,7 +7,7 @@ use stonesoup_scenarios::{
     TUTORIAL02_SENSOR_XY,
 };
 
-/// NumPy / Stone Soup fixture seed (tutorials 01–08).
+/// NumPy / Stone Soup fixture seed (tutorials 01–10).
 const FIXTURE_SEED: u32 = 1991;
 
 /// Document title set when `?finish=1` run completes (WASM screenshot automation).
@@ -94,6 +94,8 @@ fn scenario_id_from_tutorial(code: &str) -> Option<ScenarioId> {
         "06" | "6" => Some(ScenarioId::Lot3MultiTargetTutorial),
         "07" | "7" => Some(ScenarioId::Lot3PdaTutorial),
         "08" | "8" => Some(ScenarioId::Lot3JpdaTutorial),
+        "09" | "9" => Some(ScenarioId::Lot4InitiatorsTutorial),
+        "10" => Some(ScenarioId::Lot4SimulationTutorial),
         _ => None,
     }
 }
@@ -334,6 +336,8 @@ impl ViewerApp {
                 | ScenarioId::Lot3MultiTargetTutorial
                 | ScenarioId::Lot3PdaTutorial
                 | ScenarioId::Lot3JpdaTutorial
+                | ScenarioId::Lot4InitiatorsTutorial
+                | ScenarioId::Lot4SimulationTutorial
         )
     }
 
