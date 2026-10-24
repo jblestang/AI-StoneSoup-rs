@@ -142,7 +142,12 @@ impl Lot16DataIncestScenario {
 
     pub fn viewer_snapshot(&self) -> Result<ViewerSnapshot, ScenarioError> {
         let step = self.step;
-        let idx = if step == 0 { 0 } else { step.saturating_sub(1) };
+        let last_truth = LOT16_NUM_STEPS.saturating_sub(1);
+        let idx = if step == 0 {
+            0
+        } else {
+            step.saturating_sub(1).min(last_truth)
+        };
         let truth = LOT16_TRUTH
             .get(idx)
             .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;

@@ -207,7 +207,7 @@ fn run_tutorial(code: &str) -> Result<serde_json::Value, String> {
 
 fn main() -> ExitCode {
     let Some(code) = std::env::args().nth(1) else {
-        eprintln!("usage: dump_viewer_trail <tutorial-code 01-14>");
+        eprintln!("usage: dump_viewer_trail <tutorial-code 01-27>");
         return ExitCode::from(2);
     };
     match run_tutorial(&code) {
