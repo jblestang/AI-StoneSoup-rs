@@ -56,11 +56,6 @@ pub struct GmPhdConfig {
     pub prune_threshold: f64,
 }
 
-/// Scratch for [`gm_phd_merge`] (keeps the merge pool off the call stack).
-pub struct GmPhdReduceWorkspace {
-    pub pool: [PhdComponent; MAX_GMPHD_UPDATED],
-}
-
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
 fn logpdf2(z: VecN<2>, mean: VecN<2>, cov: Mat<2, 2>) -> Result<f64, Error> {
     let mp = crate::filter::kalman::GaussianMeasurementPrediction { mean, cov };
@@ -202,14 +197,14 @@ pub fn gm_phd_reduce(
     components: &mut [PhdComponent],
     n: &mut usize,
     config: &GmPhdConfig,
-    ws: &mut GmPhdReduceWorkspace,
+    merge_pool: &mut [PhdComponent],
 ) -> Result<(), Error> {
     if *n == 0 {
         return Ok(());
     }
     gm_phd_prune(components, n, config.prune_threshold)?;
     if *n > 1 {
-        gm_phd_merge(components, n, config.merge_threshold_sq, &mut ws.pool)?;
+        gm_phd_merge(components, n, config.merge_threshold_sq, merge_pool)?;
     }
     Ok(())
 }

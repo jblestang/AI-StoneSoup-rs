@@ -1,6 +1,8 @@
 #![no_std]
 #![forbid(unsafe_code)]
 
+extern crate alloc;
+
 mod lot1_kalman;
 mod lot2_ekf;
 mod lot2_ukf;

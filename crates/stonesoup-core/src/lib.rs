@@ -32,9 +32,8 @@ pub use error::Error;
 pub use filter::ekf::ExtendedKalmanUpdater;
 pub use filter::gm_phd::{
     gm_phd_append_detection_update, gm_phd_append_missed_update, gm_phd_collect_missed,
-    gm_phd_hypotheses_for_detection, gm_phd_reduce, GmPhdConfig, GmPhdReduceWorkspace,
-    PhdComponent, PhdHypothesis, PhdTag, MAX_GMPHD_COMPONENTS, MAX_GMPHD_DETECTIONS,
-    MAX_GMPHD_UPDATED,
+    gm_phd_hypotheses_for_detection, gm_phd_reduce, GmPhdConfig, PhdComponent, PhdHypothesis,
+    PhdTag, MAX_GMPHD_COMPONENTS, MAX_GMPHD_DETECTIONS, MAX_GMPHD_UPDATED,
 };
 pub use filter::information::{
     InformationKalmanPredictor, InformationKalmanUpdater, InformationKalmanWorkspace,

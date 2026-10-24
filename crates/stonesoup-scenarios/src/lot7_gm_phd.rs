@@ -1,5 +1,9 @@
 //! Stone Soup GM-PHD filter tutorial (`GMPHDTutorial.py`, seed 42).
 
+use alloc::boxed::Box;
+use alloc::vec;
+use alloc::vec::Vec;
+
 #[path = "lot7_gm_phd_fixtures.rs"]
 #[allow(dead_code, clippy::large_const_arrays, clippy::excessive_precision)]
 mod lot7_gm_phd_fixtures;
@@ -9,9 +13,9 @@ pub use lot7_gm_phd_fixtures::{LOT7_NUM_STEPS, LOT7_REDUCED};
 use stonesoup_core::{
     gm_phd_append_detection_update, gm_phd_append_missed_update, gm_phd_collect_missed,
     gm_phd_hypotheses_for_detection, gm_phd_reduce, ConstantVelocity2d, Detection, Duration,
-    GmPhdConfig, GmPhdReduceWorkspace, KalmanPredictor, KalmanUpdater, KalmanWorkspace,
-    LinearGaussianMeasurement, Mat, PhdComponent, PhdHypothesis, PhdTag, SensorId, Timestamp,
-    MAX_GMPHD_COMPONENTS, MAX_GMPHD_DETECTIONS, MAX_GMPHD_UPDATED,
+    GmPhdConfig, KalmanPredictor, KalmanUpdater, KalmanWorkspace, LinearGaussianMeasurement, Mat,
+    PhdComponent, PhdHypothesis, PhdTag, SensorId, Timestamp, MAX_GMPHD_COMPONENTS,
+    MAX_GMPHD_DETECTIONS, MAX_GMPHD_UPDATED,
 };
 
 use crate::lot3_clutter::MAX_DETS_PER_STEP;
@@ -36,16 +40,16 @@ pub struct Lot7GmPhdScenario {
     birth: PhdComponent,
     step: usize,
     finished: bool,
-    /// Reused each step to keep large PHD buffers off the stack.
-    step_bufs: Lot7GmPhdStepBuffers,
+    /// Reused each step; large arrays are heap-backed for WASM stack limits.
+    step_bufs: Box<Lot7GmPhdStepBuffers>,
 }
 
 struct Lot7GmPhdStepBuffers {
     current: [PhdComponent; MAX_GMPHD_COMPONENTS],
     missed: [PhdHypothesis; MAX_GMPHD_COMPONENTS],
     group: [PhdHypothesis; MAX_GMPHD_COMPONENTS],
-    updated: [PhdComponent; MAX_GMPHD_UPDATED],
-    reduce_ws: GmPhdReduceWorkspace,
+    updated: Vec<PhdComponent>,
+    merge_pool: Vec<PhdComponent>,
 }
 
 impl Lot7GmPhdScenario {
@@ -122,7 +126,7 @@ impl Lot7GmPhdScenario {
             birth,
             step: 0,
             finished: false,
-            step_bufs: Lot7GmPhdStepBuffers {
+            step_bufs: Box::new(Lot7GmPhdStepBuffers {
                 current: [placeholder; MAX_GMPHD_COMPONENTS],
                 missed: [PhdHypothesis {
                     component: placeholder,
@@ -132,11 +136,9 @@ impl Lot7GmPhdScenario {
                     component: placeholder,
                     detection_index: None,
                 }; MAX_GMPHD_COMPONENTS],
-                updated: [placeholder; MAX_GMPHD_UPDATED],
-                reduce_ws: GmPhdReduceWorkspace {
-                    pool: [placeholder; MAX_GMPHD_UPDATED],
-                },
-            },
+                updated: vec![placeholder; MAX_GMPHD_UPDATED],
+                merge_pool: vec![placeholder; MAX_GMPHD_UPDATED],
+            }),
         })
     }
 
@@ -271,7 +273,7 @@ impl Lot7GmPhdScenario {
             &mut bufs.updated,
             &mut n_reduced,
             &self.config,
-            &mut bufs.reduce_ws,
+            &mut bufs.merge_pool,
         )
         .map_err(ScenarioError::Core)?;
         if n_reduced > MAX_GMPHD_COMPONENTS {
