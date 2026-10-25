@@ -26,6 +26,7 @@ fn track_to_truth_links_one_path() {
         association_threshold_m: 10.0,
         consec_pairs_confirm: 2,
         consec_misses_end: 2,
+        switch_margin_m: 0.0,
     };
     let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg);
     assert!(!assoc.is_empty());

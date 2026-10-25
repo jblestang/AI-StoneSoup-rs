@@ -7,8 +7,10 @@ use alloc::vec::Vec;
 
 use stonesoup_core::linalg::Mat;
 use stonesoup_core::{
-    assess_track_quality, associate_tracks_to_truths, continuous_tracks_per_truth, mod_bearing,
-    CartesianToBearingRange, TrackQualityReport,
+    assess_track_quality, associate_tracks_to_truths, continuous_tracks_per_truth,
+    diagnose_identity_switches_from_assoc, mod_bearing, CartesianToBearingRange,
+    SwitchDiagnosisSummary,
+    TrackQualityReport,
     ConstantVelocity2d, ContinuousTruthTrack, Detection, Duration, Error, ExtendedKalmanUpdater,
     GaussianState, JpdaHypothesisSet, KalmanPredictor, KalmanWorkspace, ProbabilityHypothesis,
     SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
@@ -83,8 +85,10 @@ pub const TRUTH_ASSOC_METERS: f64 = {
     const BEARING_SIGMA_RAD: f64 = RADAR_BEARING_SIGMA_DEG * core::f64::consts::PI / 180.0;
     4.0 * BEARING_SIGMA_RAD * TRUTH_MAX_RANGE_M
 };
-pub const TRACK_TO_TRUTH_CONSEC_PAIRS: u8 = 1;
+/// Avoid nearest-neighbour truth label flicker in the 1000-target field.
+pub const TRACK_TO_TRUTH_CONSEC_PAIRS: u8 = 3;
 pub const TRACK_TO_TRUTH_CONSEC_MISSES: u8 = 4;
+pub const TRACK_TO_TRUTH_SWITCH_MARGIN_M: f64 = 1_500.0;
 /// Coprime stride to rotate truth scan order each 360° (fair plot budget at cap).
 pub const PLOT_SCAN_CURSOR_STRIDE: usize = 127;
 pub const SEED: u64 = 42;
@@ -259,6 +263,7 @@ pub struct DualRadarStats {
     /// Continuous tracks classified by **fused filter** measurement updates (not plots alone).
     pub continuous_track_fused_sensor_counts: TruthSensorPlotCounts,
     pub track_quality: TrackQualityReport,
+    pub switch_diagnosis: SwitchDiagnosisSummary,
 }
 
 fn half_fov_rad() -> f64 {
@@ -1308,6 +1313,7 @@ impl DualRadarClutterSim {
             association_threshold_m: TRUTH_ASSOC_METERS,
             consec_pairs_confirm: TRACK_TO_TRUTH_CONSEC_PAIRS,
             consec_misses_end: TRACK_TO_TRUTH_CONSEC_MISSES,
+            switch_margin_m: TRACK_TO_TRUTH_SWITCH_MARGIN_M,
         };
         let track_to_truth =
             associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config);
@@ -1320,6 +1326,13 @@ impl DualRadarClutterSim {
             &tt_config,
         )
         .map_err(ScenarioError::Core)?;
+        let switch_diagnosis = diagnose_identity_switches_from_assoc(
+            &self.filter_paths,
+            &truth_paths,
+            &track_to_truth,
+            &tt_config,
+            40,
+        );
         let truth_plot_sensor_counts = truth_sensor_plot_counts(
             &self.truths_plot_seen_a,
             &self.truths_plot_seen_b,
@@ -1365,6 +1378,7 @@ impl DualRadarClutterSim {
             continuous_track_sensor_counts,
             continuous_track_fused_sensor_counts,
             track_quality,
+            switch_diagnosis,
         })
     }
 }

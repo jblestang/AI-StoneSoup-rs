@@ -178,6 +178,35 @@ fn run() -> Result<String, ScenarioError> {
             "total_identity_switches": stats.track_quality.total_identity_switches,
             "mean_filter_handoffs_per_truth": stats.track_quality.mean_filter_handoffs_per_truth,
             "max_filter_handoffs_per_truth": stats.track_quality.max_filter_handoffs_per_truth,
+            "switch_diagnosis": {
+                "description": "Why TrackToTruth reports identity switches. Often label flicker in dense scenes, not filter physically jumping.",
+                "t2t_consec_pairs_confirm": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_PAIRS,
+                "t2t_consec_misses_end": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_MISSES,
+                "t2t_switch_margin_m": stonesoup_scenarios::TRACK_TO_TRUTH_SWITCH_MARGIN_M,
+                "identity_switches_at_confirm_1": stats.switch_diagnosis.identity_switches_t2t,
+                "identity_switches_if_confirm_3": stats.switch_diagnosis.identity_switches_confirm3,
+                "per_step_nearest_truth_flips": stats.switch_diagnosis.per_step_nearest_truth_flips,
+                "ambiguous_nearest_steps": stats.switch_diagnosis.ambiguous_nearest_steps,
+                "total_path_samples": stats.switch_diagnosis.total_path_samples,
+                "switch_causes": {
+                    "ambiguous_nearest_neighbor": stats.switch_diagnosis.switch_causes.ambiguous_nearest_neighbor,
+                    "coast_then_relock": stats.switch_diagnosis.switch_causes.coast_then_relock,
+                    "diverged_relock": stats.switch_diagnosis.switch_causes.diverged_relock,
+                    "unknown": stats.switch_diagnosis.switch_causes.unknown,
+                },
+                "sample_events": stats.switch_diagnosis.events.iter().map(|e| {
+                    serde_json::json!({
+                        "track_id": e.track_id,
+                        "from_truth": e.from_truth,
+                        "to_truth": e.to_truth,
+                        "switch_time_s": e.switch_time_s,
+                        "dist_to_from_m": e.dist_to_from_m,
+                        "dist_to_to_m": e.dist_to_to_m,
+                        "second_nearest_gap_m": e.second_nearest_gap_m,
+                        "cause": e.cause.as_str(),
+                    })
+                }).collect::<Vec<_>>(),
+            },
             "by_truth": stats.track_quality.continuous_truth.iter().map(|q| {
                 serde_json::json!({
                     "truth_id": q.truth_id,

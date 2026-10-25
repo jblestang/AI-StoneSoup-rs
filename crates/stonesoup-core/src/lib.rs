@@ -33,6 +33,7 @@ pub use associator::{
     ProbabilityHypothesis, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS, MAX_GNN_ASSIGN_DETS,
     MAX_GNN_TRACKS, MAX_KDTREE_POINTS, MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
     assess_track_quality, associate_tracks_to_truths, continuous_tracks_per_truth,
+    diagnose_identity_switches_from_assoc, SwitchCause, SwitchDiagnosisSummary,
     squared_mahalanobis, ContinuousTruthQuality, ContinuousTruthTrack, FilterTrackQuality,
     TrackQualityReport,
     TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,

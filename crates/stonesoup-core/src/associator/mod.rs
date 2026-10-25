@@ -8,6 +8,7 @@ mod kdtree2;
 mod kdtree_gnn;
 mod nearest_neighbour;
 mod pda;
+mod switch_diagnosis;
 mod track_quality;
 mod track_to_truth;
 
@@ -30,6 +31,10 @@ pub use nearest_neighbour::{
 pub use pda::{
     gm_reduce_single, pda_hypotheses, pda_merged_update, ProbabilityHypothesis, MAX_PDA_HYPOTHESES,
     PDA_GATE_CHI2_2D,
+};
+pub use switch_diagnosis::{
+    diagnose_identity_switches_from_assoc, IdentitySwitchEvent, SwitchCause, SwitchCauseCounts,
+    SwitchDiagnosisSummary,
 };
 pub use track_quality::{
     assess_track_quality, ContinuousTruthQuality, FilterTrackQuality, TrackQualityReport,

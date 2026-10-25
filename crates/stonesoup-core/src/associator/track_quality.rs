@@ -60,7 +60,7 @@ pub struct ContinuousTruthQuality {
     pub wall_duration_s: f64,
 }
 
-fn identity_switches_for_track(assoc: &[TrackTruthAssociation], track_id: u32) -> u32 {
+pub(crate) fn identity_switches_for_track(assoc: &[TrackTruthAssociation], track_id: u32) -> u32 {
     let mut segs: Vec<&TrackTruthAssociation> =
         assoc.iter().filter(|a| a.track_id == track_id).collect();
     if segs.len() < 2 {
@@ -325,6 +325,7 @@ mod tests {
             association_threshold_m: 50.0,
             consec_pairs_confirm: 1,
             consec_misses_end: 1,
+            switch_margin_m: 0.0,
         };
         let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg);
         let switches = identity_switches_for_track(&assoc, 7);

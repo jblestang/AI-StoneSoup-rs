@@ -31,11 +31,13 @@ pub struct TrackTruthAssociation {
     pub range: TimeRange,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct TrackToTruthConfig {
     pub association_threshold_m: f64,
     pub consec_pairs_confirm: u8,
     pub consec_misses_end: u8,
+    /// Require a new truth to beat the current one by this margin (m) before switching.
+    pub switch_margin_m: f64,
 }
 
 impl Default for TrackToTruthConfig {
@@ -44,6 +46,7 @@ impl Default for TrackToTruthConfig {
             association_threshold_m: 2_000.0,
             consec_pairs_confirm: 3,
             consec_misses_end: 2,
+            switch_margin_m: 0.0,
         }
     }
 }
@@ -52,6 +55,17 @@ pub(crate) fn position_distance(track: [f64; 4], truth: [f64; 4]) -> f64 {
     let dx = track[0] - truth[0];
     let dy = track[2] - truth[2];
     libm::sqrt(dx * dx + dy * dy)
+}
+
+fn distance_to_truth(
+    truths: &[TruthPath],
+    truth_id: u16,
+    ts: Timestamp,
+    track_state: [f64; 4],
+) -> Option<f64> {
+    let truth = truths.iter().find(|t| t.id == truth_id)?;
+    let truth_state = truth_state_at(truth, ts)?;
+    Some(position_distance(track_state, truth_state))
 }
 
 pub(crate) fn truth_state_at(truth: &TruthPath, ts: Timestamp) -> Option<[f64; 4]> {
@@ -101,6 +115,20 @@ pub fn associate_track_to_truths(
             if d < min_dist {
                 min_dist = d;
                 min_truth = Some(truth.id);
+            }
+        }
+
+        if config.switch_margin_m > 0.0 {
+            if let Some(cur) = current_truth {
+                if let (Some(nt), Some(d_cur)) = (
+                    min_truth,
+                    distance_to_truth(truths, cur, *ts, *track_state),
+                ) {
+                    if nt != cur && min_dist + config.switch_margin_m >= d_cur {
+                        min_truth = Some(cur);
+                        min_dist = d_cur;
+                    }
+                }
             }
         }
 
