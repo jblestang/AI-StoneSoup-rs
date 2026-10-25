@@ -1,5 +1,6 @@
 mod distance;
 mod ekf_gnn;
+mod ekf_jpda;
 mod global_neighbour;
 mod gnn_assignment;
 mod jpda;
@@ -7,9 +8,16 @@ mod kdtree2;
 mod kdtree_gnn;
 mod nearest_neighbour;
 mod pda;
+mod switch_diagnosis;
+mod track_quality;
+mod track_to_truth;
 
 pub use distance::{distance_hypotheses, squared_mahalanobis};
 pub use ekf_gnn::{associate_gnn_2d_ekf, associate_gnn_2d_ekf_det_models};
+pub use ekf_jpda::{
+    ekf_pda_hypotheses, ekf_pda_merged_update, jpda_associate_ekf_det_models,
+    jpda_detection_weights, MAX_JPDA_EKF_TRACKS,
+};
 pub use global_neighbour::{
     associate_global_nearest_neighbour, GnnTrackAssignment, MAX_GNN_TRACKS,
 };
@@ -23,4 +31,15 @@ pub use nearest_neighbour::{
 pub use pda::{
     gm_reduce_single, pda_hypotheses, pda_merged_update, ProbabilityHypothesis, MAX_PDA_HYPOTHESES,
     PDA_GATE_CHI2_2D,
+};
+pub use switch_diagnosis::{
+    diagnose_identity_switches_from_assoc, IdentitySwitchEvent, SwitchCause, SwitchCauseCounts,
+    SwitchDiagnosisSummary,
+};
+pub use track_quality::{
+    assess_track_quality, ContinuousTruthQuality, FilterTrackQuality, TrackQualityReport,
+};
+pub use track_to_truth::{
+    associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack, TrackPath,
+    TrackToTruthConfig, TrackTruthAssociation, TruthPath,
 };
