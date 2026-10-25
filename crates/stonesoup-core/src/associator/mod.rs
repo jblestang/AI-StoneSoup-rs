@@ -8,6 +8,7 @@ mod kdtree2;
 mod kdtree_gnn;
 mod nearest_neighbour;
 mod pda;
+mod track_quality;
 mod track_to_truth;
 
 pub use distance::{distance_hypotheses, squared_mahalanobis};
@@ -29,6 +30,9 @@ pub use nearest_neighbour::{
 pub use pda::{
     gm_reduce_single, pda_hypotheses, pda_merged_update, ProbabilityHypothesis, MAX_PDA_HYPOTHESES,
     PDA_GATE_CHI2_2D,
+};
+pub use track_quality::{
+    assess_track_quality, ContinuousTruthQuality, FilterTrackQuality, TrackQualityReport,
 };
 pub use track_to_truth::{
     associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack, TrackPath,

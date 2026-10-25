@@ -2,11 +2,13 @@
 
 extern crate alloc;
 
+use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 use stonesoup_core::linalg::Mat;
 use stonesoup_core::{
-    associate_tracks_to_truths, continuous_tracks_per_truth, mod_bearing, CartesianToBearingRange,
+    assess_track_quality, associate_tracks_to_truths, continuous_tracks_per_truth, mod_bearing,
+    CartesianToBearingRange, TrackQualityReport,
     ConstantVelocity2d, ContinuousTruthTrack, Detection, Duration, Error, ExtendedKalmanUpdater,
     GaussianState, JpdaHypothesisSet, KalmanPredictor, KalmanWorkspace, ProbabilityHypothesis,
     SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
@@ -256,6 +258,7 @@ pub struct DualRadarStats {
     pub continuous_track_sensor_counts: TruthSensorPlotCounts,
     /// Continuous tracks classified by **fused filter** measurement updates (not plots alone).
     pub continuous_track_fused_sensor_counts: TruthSensorPlotCounts,
+    pub track_quality: TrackQualityReport,
 }
 
 fn half_fov_rad() -> f64 {
@@ -1310,6 +1313,13 @@ impl DualRadarClutterSim {
             associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config);
         let continuous_truth_tracks =
             continuous_tracks_per_truth(&track_to_truth, NUM_TRUTHS as u16);
+        let track_quality = assess_track_quality(
+            &self.filter_paths,
+            &truth_paths,
+            &continuous_truth_tracks,
+            &tt_config,
+        )
+        .map_err(ScenarioError::Core)?;
         let truth_plot_sensor_counts = truth_sensor_plot_counts(
             &self.truths_plot_seen_a,
             &self.truths_plot_seen_b,
@@ -1354,6 +1364,7 @@ impl DualRadarClutterSim {
             truth_plot_sensor_counts,
             continuous_track_sensor_counts,
             continuous_track_fused_sensor_counts,
+            track_quality,
         })
     }
 }
@@ -1396,6 +1407,9 @@ pub struct DualRadarVizExport {
     pub plotted_without_continuous_count: usize,
     /// Arrow length in plot = velocity × this horizon (seconds).
     pub speed_vector_horizon_s: f64,
+    pub track_quality_mean_rmse_m: Option<f64>,
+    pub track_quality_identity_switches: u32,
+    pub track_quality_mean_score: f64,
     pub truths: alloc::vec::Vec<TruthVizPoint>,
     pub truth_trajectories: alloc::vec::Vec<TruthTrajectoryViz>,
     pub filter_tracks: alloc::vec::Vec<FilterTrackViz>,
@@ -1414,6 +1428,8 @@ pub struct TruthVizPoint {
     pub speed_mps: f64,
     pub vx_mps: f64,
     pub vy_mps: f64,
+    pub quality_score: Option<f64>,
+    pub rmse_m: Option<f64>,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -1431,6 +1447,10 @@ pub struct FilterTrackViz {
     pub points_km: alloc::vec::Vec<[f64; 2]>,
     pub end_vx_mps: f64,
     pub end_vy_mps: f64,
+    /// 0–1 heuristic (accuracy, coverage, stability).
+    pub quality_score: Option<f64>,
+    pub rmse_m: Option<f64>,
+    pub identity_switch_count: u32,
 }
 
 impl DualRadarClutterSim {
@@ -1464,6 +1484,30 @@ impl DualRadarClutterSim {
         false_track_ids.sort_unstable();
         false_track_ids.dedup();
 
+        let path_quality: BTreeMap<u32, _> = stats
+            .track_quality
+            .filter_paths
+            .iter()
+            .map(|q| (q.track_id, q))
+            .collect();
+        let truth_quality: BTreeMap<u16, _> = stats
+            .track_quality
+            .continuous_truth
+            .iter()
+            .map(|q| (q.truth_id, q))
+            .collect();
+        let mut score_sum = 0.0f64;
+        let mut score_n = 0u32;
+        for q in &stats.track_quality.continuous_truth {
+            score_sum += q.quality_score;
+            score_n += 1;
+        }
+        let track_quality_mean_score = if score_n > 0 {
+            score_sum / score_n as f64
+        } else {
+            0.0
+        };
+
         let mut plotted_without_continuous = 0usize;
         let truths = self
             .truths
@@ -1484,6 +1528,7 @@ impl DualRadarClutterSim {
                 if plotted_untracked {
                     plotted_without_continuous += 1;
                 }
+                let tq = truth_quality.get(&(i as u16));
                 let speed_mps = self
                     .truth_speed_mps
                     .get(i)
@@ -1499,6 +1544,8 @@ impl DualRadarClutterSim {
                     speed_mps,
                     vx_mps: gt.state[1],
                     vy_mps: gt.state[3],
+                    quality_score: tq.map(|q| q.quality_score),
+                    rmse_m: tq.and_then(|q| q.rmse_m),
                 }
             })
             .collect();
@@ -1533,6 +1580,7 @@ impl DualRadarClutterSim {
                     return None;
                 }
                 let (_, last_mean) = path.states.last().copied().unwrap_or((Timestamp::ZERO, [0.0; 4]));
+                let pq = path_quality.get(&path.id);
                 Some(FilterTrackViz {
                     track_id: path.id,
                     truth_id,
@@ -1541,6 +1589,11 @@ impl DualRadarClutterSim {
                     points_km,
                     end_vx_mps: last_mean[1],
                     end_vy_mps: last_mean[3],
+                    quality_score: pq.and_then(|_| {
+                        truth_id.and_then(|tid| truth_quality.get(&tid).map(|q| q.quality_score))
+                    }),
+                    rmse_m: pq.and_then(|q| q.rmse_m),
+                    identity_switch_count: pq.map(|q| q.identity_switch_count).unwrap_or(0),
                 })
             })
             .collect();
@@ -1561,6 +1614,9 @@ impl DualRadarClutterSim {
             continuous_track_count: stats.continuous_truth_track_count,
             plotted_without_continuous_count: plotted_without_continuous,
             speed_vector_horizon_s: 12.0,
+            track_quality_mean_rmse_m: stats.track_quality.established_mean_rmse_m,
+            track_quality_identity_switches: stats.track_quality.total_identity_switches,
+            track_quality_mean_score: track_quality_mean_score,
             truths,
             truth_trajectories,
             filter_tracks,

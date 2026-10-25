@@ -163,6 +163,34 @@ fn run() -> Result<String, ScenarioError> {
             }).collect::<Vec<_>>(),
             "association_count": stats.track_to_truth.len(),
         },
+        "track_quality": {
+            "description": "Following error vs ground truth on TrackToTruth-associated samples. identity_switch = filter path jumped to a different truth; filter_handoff = new filter id on same truth.",
+            "association_threshold_m": stonesoup_scenarios::TRUTH_ASSOC_METERS,
+            "established_mean_rmse_m": stats.track_quality.established_mean_rmse_m,
+            "established_max_rmse_m": stats.track_quality.established_max_rmse_m,
+            "mean_quality_score": if stats.track_quality.continuous_truth.is_empty() {
+                serde_json::Value::Null
+            } else {
+                serde_json::json!(stats.track_quality.continuous_truth.iter().map(|q| q.quality_score).sum::<f64>()
+                    / stats.track_quality.continuous_truth.len() as f64)
+            },
+            "paths_with_identity_switch": stats.track_quality.paths_with_identity_switch,
+            "total_identity_switches": stats.track_quality.total_identity_switches,
+            "mean_filter_handoffs_per_truth": stats.track_quality.mean_filter_handoffs_per_truth,
+            "max_filter_handoffs_per_truth": stats.track_quality.max_filter_handoffs_per_truth,
+            "by_truth": stats.track_quality.continuous_truth.iter().map(|q| {
+                serde_json::json!({
+                    "truth_id": q.truth_id,
+                    "rmse_m": q.rmse_m,
+                    "max_error_m": q.max_error_m,
+                    "quality_score": q.quality_score,
+                    "identity_switch_count": q.identity_switch_count,
+                    "filter_handoffs": q.filter_handoffs,
+                    "covered_duration_s": q.covered_duration_s,
+                    "wall_duration_s": q.wall_duration_s,
+                })
+            }).collect::<Vec<_>>(),
+        },
     });
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../verification/reports");

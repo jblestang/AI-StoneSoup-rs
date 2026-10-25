@@ -111,12 +111,23 @@ def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
     ax.set_ylabel("North (km)")
     untracked_plotted = int(payload.get("plotted_without_continuous_count", 0))
     n_filter = len(filter_tracks)
+    q_rmse = payload.get("track_quality_mean_rmse_m")
+    q_sw = payload.get("track_quality_identity_switches")
+    q_score = payload.get("track_quality_mean_score")
+    qual_line = ""
+    if q_rmse is not None:
+        qual_line = f"\nTrack quality: mean RMSE {float(q_rmse)/1000.0:.2f} km"
+        if q_score is not None:
+            qual_line += f" · mean score {float(q_score):.2f}/1"
+        if q_sw is not None:
+            qual_line += f" · {int(q_sw)} identity switches (track jumps)"
     ax.set_title(
         "Dual radar tracking (seed 42, 60 s)\n"
         f"{payload['continuous_track_count']} established (continuous) filter tracks · "
         f"{untracked_plotted} plotted but untracked · "
         f"{payload['truths_with_any_plot']} plotted / {payload['num_truths']} truths"
         + (f" · {n_filter} filter paths shown" if n_filter else "")
+        + qual_line
     )
 
     ax.add_patch(
@@ -183,7 +194,23 @@ def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
             continue
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
-        ax.plot(xs, ys, color="#222222", alpha=0.72, linewidth=1.35, zorder=4)
+        score = tr.get("quality_score")
+        switches = int(tr.get("identity_switch_count") or 0)
+        if switches > 0:
+            color = "#9467bd"
+            alpha = 0.85
+            lw = 1.6
+        elif score is not None:
+            # Green (good) → amber (poor) by quality score.
+            s = max(0.0, min(1.0, float(score)))
+            color = (1.0 - s, 0.35 + 0.55 * s, 0.15)
+            alpha = 0.72
+            lw = 1.35
+        else:
+            color = "#222222"
+            alpha = 0.72
+            lw = 1.35
+        ax.plot(xs, ys, color=color, alpha=alpha, linewidth=lw, zorder=4)
 
     horizon_s = float(payload.get("speed_vector_horizon_s", 12.0))
 
@@ -269,7 +296,8 @@ def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
         Line2D([0], [0], color="#d62728", linewidth=2, label=f"Truth speed vector ({horizon_s:.0f} s horizon)"),
         Line2D([0], [0], color="#111111", alpha=0.4, linewidth=1.5, label="Filter speed vector (continuous)"),
         Line2D([0], [0], color="#b0b0b0", alpha=0.5, linewidth=1, label="Truth trajectory (60 s)"),
-        Line2D([0], [0], color="#1a1a1a", alpha=0.7, linewidth=1.5, label="Continuous filter track"),
+        Line2D([0], [0], color=(0.2, 0.85, 0.15), alpha=0.7, linewidth=1.5, label="Established track (quality score colour)"),
+        Line2D([0], [0], color="#9467bd", alpha=0.85, linewidth=1.6, label="Track with identity switch (jump)"),
         Line2D([0], [0], color="#f28e2b", alpha=0.7, linewidth=1.2, linestyle="--", label="Filter fragment (truth assoc.)"),
         Line2D([0], [0], color="#e15759", alpha=0.7, linewidth=1.2, linestyle=":", label="False filter track"),
         Line2D(

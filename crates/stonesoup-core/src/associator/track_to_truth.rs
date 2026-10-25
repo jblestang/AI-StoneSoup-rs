@@ -48,13 +48,13 @@ impl Default for TrackToTruthConfig {
     }
 }
 
-fn position_distance(track: [f64; 4], truth: [f64; 4]) -> f64 {
+pub(crate) fn position_distance(track: [f64; 4], truth: [f64; 4]) -> f64 {
     let dx = track[0] - truth[0];
     let dy = track[2] - truth[2];
     libm::sqrt(dx * dx + dy * dy)
 }
 
-fn truth_state_at(truth: &TruthPath, ts: Timestamp) -> Option<[f64; 4]> {
+pub(crate) fn truth_state_at(truth: &TruthPath, ts: Timestamp) -> Option<[f64; 4]> {
     truth
         .states
         .iter()
