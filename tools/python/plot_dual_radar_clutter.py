@@ -27,6 +27,54 @@ def bearing_north_cw_to_matplotlib_deg(bearing_deg: float) -> float:
     return 90.0 - bearing_deg
 
 
+def speed_tier_color(speed_mps: float) -> str:
+    """Match dual_radar truth speed tiers (Mach 2 … 250 kn)."""
+    if speed_mps >= 650.0:
+        return "#d62728"
+    if speed_mps >= 380.0:
+        return "#bcbd22"
+    if speed_mps >= 300.0:
+        return "#ff7f0e"
+    if speed_mps >= 170.0:
+        return "#2ca02c"
+    return "#1f77b4"
+
+
+def draw_speed_quivers(
+    ax,
+    origins_x: list[float],
+    origins_y: list[float],
+    vx_mps: list[float],
+    vy_mps: list[float],
+    colors: list[str],
+    horizon_s: float,
+    *,
+    width: float = 0.0018,
+    alpha: float = 0.88,
+    zorder: int = 5,
+) -> None:
+    if not origins_x:
+        return
+    u = [vx * horizon_s / 1000.0 for vx in vx_mps]
+    v = [vy * horizon_s / 1000.0 for vy in vy_mps]
+    ax.quiver(
+        origins_x,
+        origins_y,
+        u,
+        v,
+        color=colors,
+        angles="xy",
+        scale_units="xy",
+        scale=1.0,
+        width=width,
+        headwidth=3.2,
+        headlength=4.0,
+        alpha=alpha,
+        zorder=zorder,
+        pivot="tail",
+    )
+
+
 def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
     import matplotlib
 
@@ -135,6 +183,43 @@ def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
         ys = [p[1] for p in pts]
         ax.plot(xs, ys, color="#222222", alpha=0.72, linewidth=1.35, zorder=4)
 
+    horizon_s = float(payload.get("speed_vector_horizon_s", 12.0))
+
+    tx, ty, tvx, tvy, tcols = [], [], [], [], []
+    for t in truths:
+        if "vx_mps" not in t:
+            continue
+        tx.append(t["x_km"])
+        ty.append(t["y_km"])
+        tvx.append(float(t["vx_mps"]))
+        tvy.append(float(t["vy_mps"]))
+        tcols.append(speed_tier_color(float(t.get("speed_mps", 0.0))))
+    draw_speed_quivers(ax, tx, ty, tvx, tvy, tcols, horizon_s, zorder=5)
+
+    fx, fy, fvx, fvy = [], [], [], []
+    for tr in filter_tracks:
+        if not tr.get("continuous"):
+            continue
+        pts = tr.get("points_km") or []
+        if len(pts) < 1 or "end_vx_mps" not in tr:
+            continue
+        fx.append(pts[-1][0])
+        fy.append(pts[-1][1])
+        fvx.append(float(tr["end_vx_mps"]))
+        fvy.append(float(tr["end_vy_mps"]))
+    draw_speed_quivers(
+        ax,
+        fx,
+        fy,
+        fvx,
+        fvy,
+        ["#111111"] * len(fx),
+        horizon_s,
+        width=0.0010,
+        alpha=0.35,
+        zorder=4,
+    )
+
     vis_colors = {
         "both": "#59a14f",
         "a_only": "#e45756",
@@ -179,6 +264,8 @@ def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
     ax.grid(True, alpha=0.25)
 
     legend_elems = [
+        Line2D([0], [0], color="#d62728", linewidth=2, label=f"Truth speed vector ({horizon_s:.0f} s horizon)"),
+        Line2D([0], [0], color="#111111", alpha=0.4, linewidth=1.5, label="Filter speed vector (continuous)"),
         Line2D([0], [0], color="#b0b0b0", alpha=0.5, linewidth=1, label="Truth trajectory (60 s)"),
         Line2D([0], [0], color="#1a1a1a", alpha=0.7, linewidth=1.5, label="Continuous filter track"),
         Line2D([0], [0], color="#f28e2b", alpha=0.7, linewidth=1.2, linestyle="--", label="Filter fragment (truth assoc.)"),

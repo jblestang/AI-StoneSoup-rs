@@ -1201,6 +1201,8 @@ pub struct DualRadarVizExport {
     pub truths_with_any_plot: usize,
     pub continuous_track_count: usize,
     pub plotted_without_continuous_count: usize,
+    /// Arrow length in plot = velocity × this horizon (seconds).
+    pub speed_vector_horizon_s: f64,
     pub truths: alloc::vec::Vec<TruthVizPoint>,
     pub truth_trajectories: alloc::vec::Vec<TruthTrajectoryViz>,
     pub filter_tracks: alloc::vec::Vec<FilterTrackViz>,
@@ -1216,6 +1218,9 @@ pub struct TruthVizPoint {
     pub has_continuous_track: bool,
     /// Received ≥1 plot but no continuous track-to-truth segment.
     pub plotted_untracked: bool,
+    pub speed_mps: f64,
+    pub vx_mps: f64,
+    pub vy_mps: f64,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -1231,6 +1236,8 @@ pub struct FilterTrackViz {
     pub continuous: bool,
     pub is_false_track: bool,
     pub points_km: alloc::vec::Vec<[f64; 2]>,
+    pub end_vx_mps: f64,
+    pub end_vy_mps: f64,
 }
 
 impl DualRadarClutterSim {
@@ -1284,6 +1291,11 @@ impl DualRadarClutterSim {
                 if plotted_untracked {
                     plotted_without_continuous += 1;
                 }
+                let speed_mps = self
+                    .truth_speed_mps
+                    .get(i)
+                    .copied()
+                    .unwrap_or(TRUTH_SPEED_250_KNOTS_MPS);
                 TruthVizPoint {
                     id: i as u16,
                     x_km: gt.state[0] / 1000.0,
@@ -1291,6 +1303,9 @@ impl DualRadarClutterSim {
                     plot_visibility: vis,
                     has_continuous_track: has_cont,
                     plotted_untracked,
+                    speed_mps,
+                    vx_mps: gt.state[1],
+                    vy_mps: gt.state[3],
                 }
             })
             .collect();
@@ -1321,12 +1336,15 @@ impl DualRadarClutterSim {
                     .find(|(tid, _)| *tid == path.id)
                     .map(|(_, truth)| *truth);
                 let is_false_track = false_track_ids.binary_search(&path.id).is_ok();
+                let (_, last_mean) = path.states.last().copied().unwrap_or((Timestamp::ZERO, [0.0; 4]));
                 Some(FilterTrackViz {
                     track_id: path.id,
                     truth_id,
                     continuous,
                     is_false_track,
                     points_km,
+                    end_vx_mps: last_mean[1],
+                    end_vy_mps: last_mean[3],
                 })
             })
             .collect();
@@ -1346,6 +1364,7 @@ impl DualRadarClutterSim {
             truths_with_any_plot: stats.truths_with_any_plot,
             continuous_track_count: stats.continuous_truth_track_count,
             plotted_without_continuous_count: plotted_without_continuous,
+            speed_vector_horizon_s: 12.0,
             truths,
             truth_trajectories,
             filter_tracks,
