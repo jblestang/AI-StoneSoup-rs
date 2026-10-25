@@ -61,6 +61,7 @@ fn run() -> Result<String, ScenarioError> {
     let payload = serde_json::json!({
         "parameters": {
             "implementation": "rust",
+            "active_filter": "IMM-EKF (3 CV sub-models: q≈40 / 4k / 12k) + JPDA bearing–range",
             "targets_per_rotation_per_radar": TARGETS_PER_ROTATION,
             "clutter_fraction_target": CLUTTER_FRACTION_TARGET,
             "clutter_lambda_poisson": CLUTTER_LAMBDA,
