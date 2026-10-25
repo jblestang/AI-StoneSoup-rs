@@ -79,6 +79,26 @@ pub const TRACK_TO_TRUTH_CONSEC_MISSES: u8 = 4;
 pub const PLOT_SCAN_CURSOR_STRIDE: usize = 127;
 pub const SEED: u64 = 42;
 
+/// Sea-level speed of sound for Mach tiers (m/s).
+pub const TRUTH_SPEED_OF_SOUND_MPS: f64 = 343.0;
+pub const KNOTS_TO_MPS: f64 = 1852.0 / 3600.0;
+
+pub const TRUTH_SPEED_MACH2_MPS: f64 = 2.0 * TRUTH_SPEED_OF_SOUND_MPS;
+pub const TRUTH_SPEED_MACH1_MPS: f64 = TRUTH_SPEED_OF_SOUND_MPS;
+pub const TRUTH_SPEED_800_KNOTS_MPS: f64 = 800.0 * KNOTS_TO_MPS;
+pub const TRUTH_SPEED_400_KNOTS_MPS: f64 = 400.0 * KNOTS_TO_MPS;
+pub const TRUTH_SPEED_250_KNOTS_MPS: f64 = 250.0 * KNOTS_TO_MPS;
+
+/// Target speed mix: 10% Mach 2, 20% Mach 1, 30% 800 kn, 20% 400 kn, 20% 250 kn.
+pub const TRUTH_SPEED_TIER_MPS: [f64; 5] = [
+    TRUTH_SPEED_MACH2_MPS,
+    TRUTH_SPEED_MACH1_MPS,
+    TRUTH_SPEED_800_KNOTS_MPS,
+    TRUTH_SPEED_400_KNOTS_MPS,
+    TRUTH_SPEED_250_KNOTS_MPS,
+];
+pub const TRUTH_SPEED_TIER_FRACTION: [f64; 5] = [0.10, 0.20, 0.30, 0.20, 0.20];
+
 /// Concurrent fused tracks; [`MAX_GNN_ASSIGN_DETS`] matches this per-step detection budget.
 pub const MAX_ACTIVE: usize = 4096;
 const MAX_HOLDING: usize = 65_536;
@@ -323,10 +343,11 @@ fn clutter_detection(
 
 fn large_prior(ts: Timestamp) -> Result<GaussianState, ScenarioError> {
     let mut cov = Mat::<4, 4>::zeros();
+    let v_var = TRUTH_SPEED_MACH2_MPS * TRUTH_SPEED_MACH2_MPS;
     cov.set(0, 0, 1e6).map_err(ScenarioError::Core)?;
-    cov.set(1, 1, 10.0).map_err(ScenarioError::Core)?;
+    cov.set(1, 1, v_var).map_err(ScenarioError::Core)?;
     cov.set(2, 2, 1e6).map_err(ScenarioError::Core)?;
-    cov.set(3, 3, 10.0).map_err(ScenarioError::Core)?;
+    cov.set(3, 3, v_var).map_err(ScenarioError::Core)?;
     GaussianState::new_from_array([0.0; 4], cov, ts).map_err(ScenarioError::Core)
 }
 
@@ -359,16 +380,56 @@ fn initiate_bearing_range(
     GaussianState::new_from_array(mean, cov, det.timestamp).map_err(ScenarioError::Core)
 }
 
-fn init_truths(ts0: Timestamp, rng: &mut SplitMix64) -> Result<Vec<GroundTruthState>, ScenarioError> {
+fn truth_speed_tier_counts() -> [usize; 5] {
+    let mut counts = [0usize; 5];
+    let mut assigned = 0usize;
+    for (i, &frac) in TRUTH_SPEED_TIER_FRACTION.iter().enumerate() {
+        let n = if i + 1 == TRUTH_SPEED_TIER_FRACTION.len() {
+            NUM_TRUTHS - assigned
+        } else {
+            libm::round(frac * NUM_TRUTHS as f64) as usize
+        };
+        counts[i] = n;
+        assigned += n;
+    }
+    counts
+}
+
+fn shuffle_speeds(speeds: &mut [f64], rng: &mut SplitMix64) {
+    for i in (1..speeds.len()).rev() {
+        let j = (rng.uniform01() * (i + 1) as f64) as usize;
+        speeds.swap(i, j);
+    }
+}
+
+fn init_truth_speeds_mps(rng: &mut SplitMix64) -> alloc::vec::Vec<f64> {
+    let tier_counts = truth_speed_tier_counts();
+    let mut speeds = alloc::vec::Vec::with_capacity(NUM_TRUTHS);
+    for (tier, &count) in TRUTH_SPEED_TIER_MPS.iter().zip(tier_counts.iter()) {
+        for _ in 0..count {
+            speeds.push(*tier);
+        }
+    }
+    debug_assert_eq!(speeds.len(), NUM_TRUTHS);
+    shuffle_speeds(&mut speeds, rng);
+    speeds
+}
+
+fn init_truths(
+    ts0: Timestamp,
+    speed_mps: &[f64],
+    rng: &mut SplitMix64,
+) -> Result<Vec<GroundTruthState>, ScenarioError> {
     let mut out = Vec::with_capacity(NUM_TRUTHS);
     let r_min2 = TRUTH_MIN_RANGE_M * TRUTH_MIN_RANGE_M;
     let r_max2 = TRUTH_MAX_RANGE_M * TRUTH_MAX_RANGE_M;
-    for _ in 0..NUM_TRUTHS {
+    for &speed in speed_mps {
         let bearing = rng.uniform01() * 2.0 * core::f64::consts::PI;
         let u = rng.uniform01();
         let range = libm::sqrt(u * (r_max2 - r_min2) + r_min2);
-        let vx = (rng.standard_normal().map_err(ScenarioError::Core)? * 3.0).clamp(-6.0, 6.0);
-        let vy = (rng.standard_normal().map_err(ScenarioError::Core)? * 3.0).clamp(-6.0, 6.0);
+        let heading = rng.uniform01() * 2.0 * core::f64::consts::PI;
+        let vx = speed * libm::cos(heading);
+        let vy = speed * libm::sin(heading);
         let state = [
             range * libm::cos(bearing),
             vx,
@@ -378,6 +439,20 @@ fn init_truths(ts0: Timestamp, rng: &mut SplitMix64) -> Result<Vec<GroundTruthSt
         out.push(GroundTruthState::new(state, ts0).map_err(ScenarioError::Core)?);
     }
     Ok(out)
+}
+
+fn enforce_truth_speed(state: &mut [f64; 4], speed_mps: f64, rng: &mut SplitMix64) {
+    let vx = state[1];
+    let vy = state[3];
+    let mag = libm::sqrt(vx * vx + vy * vy);
+    if mag > 1.0 {
+        state[1] = vx / mag * speed_mps;
+        state[3] = vy / mag * speed_mps;
+    } else {
+        let heading = rng.uniform01() * 2.0 * core::f64::consts::PI;
+        state[1] = speed_mps * libm::cos(heading);
+        state[3] = speed_mps * libm::sin(heading);
+    }
 }
 
 fn count_unique_truth_labels(completed: &[CompletedTrack]) -> usize {
@@ -395,6 +470,7 @@ fn count_unique_truth_labels(completed: &[CompletedTrack]) -> usize {
 
 fn advance_truth(
     gt: GroundTruthState,
+    speed_mps: f64,
     cfg: &TruthStepConfig,
     rng: &mut SplitMix64,
 ) -> Result<GroundTruthState, ScenarioError> {
@@ -430,6 +506,7 @@ fn advance_truth(
         state[i] += l00 * n0;
         state[i + 1] += l10 * n0 + l11 * n1;
     }
+    enforce_truth_speed(&mut state, speed_mps, rng);
     GroundTruthState::new(state, ts).map_err(ScenarioError::Core)
 }
 
@@ -465,20 +542,23 @@ pub struct DualRadarClutterSim {
     next_track_id: u32,
     filter_paths: Vec<TrackPath>,
     truth_log: Vec<Vec<(Timestamp, [f64; 4])>>,
+    truth_speed_mps: Vec<f64>,
 }
 
 impl DualRadarClutterSim {
     pub fn new() -> Result<Self, ScenarioError> {
-        let transition = ConstantVelocity2d::new(1.0, 1.0).map_err(ScenarioError::Core)?;
-        let predictor = KalmanPredictor::new(transition);
+        let truth_transition = ConstantVelocity2d::new(3.0, 3.0).map_err(ScenarioError::Core)?;
+        let filter_transition = ConstantVelocity2d::new(120.0, 120.0).map_err(ScenarioError::Core)?;
+        let predictor = KalmanPredictor::new(filter_transition);
         let updater = ExtendedKalmanUpdater::new(radar_model(0.0)?);
         let truth_cfg = TruthStepConfig {
-            transition,
+            transition: truth_transition,
             dt: Duration::from_seconds(DT_S).map_err(ScenarioError::Core)?,
         };
         let ts0 = Timestamp::ZERO;
         let mut rng = SplitMix64::new(SEED);
-        let truths = init_truths(ts0, &mut rng)?;
+        let truth_speed_mps = init_truth_speeds_mps(&mut rng);
+        let truths = init_truths(ts0, &truth_speed_mps, &mut rng)?;
         let truths_plot_seen = alloc::vec![false; NUM_TRUTHS];
         let truths_plot_seen_a = alloc::vec![false; NUM_TRUTHS];
         let truths_plot_seen_b = alloc::vec![false; NUM_TRUTHS];
@@ -549,6 +629,7 @@ impl DualRadarClutterSim {
             next_track_id: 0,
             filter_paths: Vec::new(),
             truth_log,
+            truth_speed_mps,
         })
     }
 
@@ -610,8 +691,9 @@ impl DualRadarClutterSim {
     }
 
     fn advance_truths(&mut self) -> Result<(), ScenarioError> {
-        for gt in &mut self.truths {
-            *gt = advance_truth(*gt, &self.truth_cfg, &mut self.rng)?;
+        for (i, gt) in self.truths.iter_mut().enumerate() {
+            let speed = self.truth_speed_mps.get(i).copied().unwrap_or(TRUTH_SPEED_250_KNOTS_MPS);
+            *gt = advance_truth(*gt, speed, &self.truth_cfg, &mut self.rng)?;
         }
         Ok(())
     }

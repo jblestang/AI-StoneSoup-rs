@@ -73,6 +73,18 @@ fn run() -> Result<String, ScenarioError> {
             "truth_layout": format!(
                 "{NUM_TRUTHS} targets uniform random range 50–392 km bearing"
             ),
+            "truth_speed_mix": {
+                "mach_2_fraction": 0.10,
+                "mach_1_fraction": 0.20,
+                "800_knots_fraction": 0.30,
+                "400_knots_fraction": 0.20,
+                "250_knots_fraction": 0.20,
+                "mach_2_mps": stonesoup_scenarios::TRUTH_SPEED_MACH2_MPS,
+                "mach_1_mps": stonesoup_scenarios::TRUTH_SPEED_MACH1_MPS,
+                "800_knots_mps": stonesoup_scenarios::TRUTH_SPEED_800_KNOTS_MPS,
+                "400_knots_mps": stonesoup_scenarios::TRUTH_SPEED_400_KNOTS_MPS,
+                "250_knots_mps": stonesoup_scenarios::TRUTH_SPEED_250_KNOTS_MPS,
+            },
             "seed": SEED,
             "simulation_duration_s": SIM_DURATION_S,
             "time_step_s": DT_S,
