@@ -76,17 +76,33 @@ pub fn ekf_pda_hypotheses(
         }
         let model = det_models.get(i).ok_or(Error::InvalidDimension)?;
         let prediction = predictor.predict(track_tail, det.timestamp, ws)?;
-        let meas_pred = ekf_gnn::ekf_meas_pred(model, &prediction, ws)?;
-        let innovation = CartesianToBearingRange::innovation(det.vector.0, meas_pred.mean.0)?;
-        let sq = super::distance::squared_mahalanobis(
+        let meas_pred = match ekf_gnn::ekf_meas_pred(model, &prediction, ws) {
+            Ok(m) => m,
+            Err(Error::NumericalFailure) => continue,
+            Err(e) => return Err(e),
+        };
+        let innovation = match CartesianToBearingRange::innovation(det.vector.0, meas_pred.mean.0)
+        {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let sq = match super::distance::squared_mahalanobis(
             VecN(innovation),
             &GaussianMeasurementPrediction {
                 mean: VecN([0.0, 0.0]),
                 cov: meas_pred.cov,
             },
-        )?;
+        ) {
+            Ok(s) => s,
+            Err(Error::SingularInnovation) => continue,
+            Err(e) => return Err(e),
+        };
         if sq <= PDA_GATE_CHI2_2D {
-            let logp = logpdf2(det.vector, meas_pred.mean, meas_pred.cov)?;
+            let logp = match logpdf2(det.vector, meas_pred.mean, meas_pred.cov) {
+                Ok(v) => v,
+                Err(Error::SingularInnovation) => continue,
+                Err(e) => return Err(e),
+            };
             let mut prob = libm::exp(logp);
             prob *= prob_detect / clutter_spatial_density;
             out[n] = ProbabilityHypothesis {
@@ -129,7 +145,13 @@ pub fn ekf_pda_merged_update(
             Some(i) => {
                 let det = detections.get(i).ok_or(Error::InvalidDimension)?;
                 updater.measurement = det_models.get(i).copied().ok_or(Error::InvalidDimension)?;
-                updater.update(&h.prediction, det, ws)?
+                match updater.update(&h.prediction, det, ws) {
+                    Ok(s) => s,
+                    Err(Error::SingularInnovation)
+                    | Err(Error::NumericalFailure)
+                    | Err(Error::InvalidParameter) => h.prediction,
+                    Err(e) => return Err(e),
+                }
             }
         };
         means[k] = state.mean;

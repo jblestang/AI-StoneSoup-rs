@@ -12,7 +12,7 @@ use stonesoup_core::{
     SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
     MAX_GNN_ASSIGN_DETS, MAX_JPDA_EKF_TRACKS, MAX_PDA_HYPOTHESES,
     jpda_associate_ekf_det_models, jpda_detection_weights, ekf_pda_merged_update,
-    HoldingDeleter, MultiMeasurementInitiator,
+    HoldingDeleter, ImmEkfConfig, ImmEkfState, MultiMeasurementInitiator,
 };
 use stonesoup_core::GroundTruthState;
 use stonesoup_sim::{SplitMix64, TruthStepConfig};
@@ -137,10 +137,10 @@ struct RadarRuntime {
     rotation_plotted: Vec<bool>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct ActiveTrack {
     id: u32,
-    tail: GaussianState,
+    imm: ImmEkfState,
     last_meas_step: usize,
     birth_step: usize,
     sensors_meas_mask: u8,
@@ -617,6 +617,7 @@ fn euclidean_xy(a: (f64, f64), b: (f64, f64)) -> f64 {
 
 pub struct DualRadarClutterSim {
     predictor: KalmanPredictor,
+    imm_cfg: ImmEkfConfig,
     updater: ExtendedKalmanUpdater,
     ws: KalmanWorkspace,
     prior: GaussianState,
@@ -648,8 +649,10 @@ pub struct DualRadarClutterSim {
 impl DualRadarClutterSim {
     pub fn new() -> Result<Self, ScenarioError> {
         let truth_transition = ConstantVelocity2d::new(1.0, 1.0).map_err(ScenarioError::Core)?;
-        let filter_transition = ConstantVelocity2d::new(280.0, 280.0).map_err(ScenarioError::Core)?;
-        let predictor = KalmanPredictor::new(filter_transition);
+        let predictor = KalmanPredictor::new(
+            ConstantVelocity2d::new(80.0, 80.0).map_err(ScenarioError::Core)?,
+        );
+        let imm_cfg = ImmEkfConfig::dual_radar_default().map_err(ScenarioError::Core)?;
         let updater = ExtendedKalmanUpdater::new(radar_model(0.0)?);
         let truth_cfg = TruthStepConfig {
             transition: truth_transition,
@@ -667,6 +670,7 @@ impl DualRadarClutterSim {
         let coast_steps = libm::ceil(COAST_SECONDS / DT_S) as usize;
         Ok(Self {
             predictor,
+            imm_cfg,
             updater,
             ws: KalmanWorkspace {
                 f: Mat::zeros(),
@@ -762,10 +766,15 @@ impl DualRadarClutterSim {
         let snaps: alloc::vec::Vec<(u32, [f64; 4])> = self
             .active
             .iter()
-            .map(|t| (t.id, t.tail.mean.0))
+            .filter_map(|t| {
+                t.imm
+                    .combined()
+                    .ok()
+                    .map(|c| (t.id, c.mean.0))
+            })
             .collect();
         for (id, mean) in snaps {
-            self.append_filter_path(id, ts, mean);
+            let _ = self.append_filter_path(id, ts, mean);
         }
     }
 
@@ -895,7 +904,7 @@ impl DualRadarClutterSim {
         self.start_filter_path(id, ts, tail.mean.0);
         self.active.push(ActiveTrack {
             id,
-            tail,
+            imm: ImmEkfState::from_gaussian(tail),
             last_meas_step: step,
             birth_step: step,
             sensors_meas_mask: 0,
@@ -914,7 +923,7 @@ impl DualRadarClutterSim {
     }
 
     fn finish_track(&mut self, t: ActiveTrack, step: usize) -> Result<(), ScenarioError> {
-        let m = t.tail.mean.0;
+        let m = t.imm.combined().map_err(ScenarioError::Core)?.mean.0;
         self.completed.push(CompletedTrack {
             filter_track_id: t.id,
             birth_step: t.birth_step,
@@ -932,7 +941,7 @@ impl DualRadarClutterSim {
         let mut stale = Vec::new();
         self.active.retain(|t| {
             if step.saturating_sub(t.last_meas_step) > coast {
-                stale.push(*t);
+                stale.push(t.clone());
                 false
             } else {
                 true
@@ -1063,7 +1072,19 @@ impl DualRadarClutterSim {
         let mut det_weights = alloc::vec![0.0; n_dets];
         let n_act = self.active.len();
         if n_act > 0 && !detections.is_empty() && n_act <= MAX_JPDA_EKF_TRACKS {
-            let mut act_tails: Vec<GaussianState> = self.active.iter().map(|t| t.tail).collect();
+            if radar_idx == 0 {
+                for track in &mut self.active {
+                    track
+                        .imm
+                        .interaction_and_predict(ts, &self.imm_cfg, &mut self.ws)
+                        .map_err(ScenarioError::Core)?;
+                }
+            }
+            let act_tails: alloc::vec::Vec<GaussianState> = self
+                .active
+                .iter()
+                .map(|t| t.imm.combined().map_err(ScenarioError::Core))
+                .collect::<Result<_, _>>()?;
             let template = act_tails[0];
             let mut sets = alloc::vec![Self::empty_jpda_set(template); n_act];
             jpda_associate_ekf_det_models(
@@ -1088,9 +1109,20 @@ impl DualRadarClutterSim {
                     }
                 }
             }
-            self.jpda_apply_sets(&mut act_tails, &sets, detections, det_models)?;
-            for (track, tail) in self.active.iter_mut().zip(act_tails.iter()) {
-                track.tail = *tail;
+            for (track, set) in self.active.iter_mut().zip(sets.iter()) {
+                track
+                    .imm
+                    .jpda_update(
+                        &set.hypotheses,
+                        set.count,
+                        detections,
+                        det_models,
+                        ts,
+                        &mut self.updater,
+                        &self.imm_cfg,
+                        &mut self.ws,
+                    )
+                    .map_err(ScenarioError::Core)?;
             }
             det_weights = jpda_detection_weights(&sets, n_dets);
         }
@@ -1125,68 +1157,74 @@ impl DualRadarClutterSim {
         Ok(())
     }
 
-    pub fn run(&mut self) -> Result<DualRadarStats, ScenarioError> {
+    /// Advance one simulation time step. Returns `Ok(true)` while more steps remain.
+    pub fn run_single_step(&mut self) -> Result<bool, ScenarioError> {
         let max_steps = max_simulation_steps();
-        while self.step < max_steps {
-            if self.step > 0 {
-                self.advance_truths()?;
-            }
-            let ts = self.ts();
-            self.log_truths_at(ts);
-            self.prior.timestamp = ts;
-            let mut step_unassoc = Vec::with_capacity(16);
-            let mut step_unassoc_models = Vec::with_capacity(16);
-            let mut step_all_dets = Vec::with_capacity(32);
-            let mut step_all_models = Vec::with_capacity(32);
-            let mut chunk = alloc::vec![
-                Detection {
-                    vector: stonesoup_core::VecN([0.0, 0.0]),
-                    timestamp: ts,
-                    sensor: SensorId(0),
-                };
-                MAX_GNN_ASSIGN_DETS
-            ];
-            let mut any_dets = false;
-            for ri in 0..2 {
-                let got = self.generate_sensor_dets(ri, ts, &mut chunk)?;
-                if got == 0 {
-                    continue;
-                }
-                any_dets = true;
-                let model = radar_model(self.radar_rt[ri].dwell_rad)?;
-                let dets = &chunk[..got];
-                let models: alloc::vec::Vec<CartesianToBearingRange> =
-                    alloc::vec![model; got];
-                step_all_dets.extend_from_slice(dets);
-                step_all_models.extend(models.iter().copied());
-                let clutter_rho = clutter_spatial_density(self.radars[ri].max_range_m);
-                let (mut unassoc, mut un_models) =
-                    self.associate_update_actives(dets, &models, clutter_rho, ri)?;
-                step_unassoc.append(&mut unassoc);
-                step_unassoc_models.append(&mut un_models);
-            }
-            if any_dets {
-                let pooled_clutter = 0.5
-                    * (clutter_spatial_density(self.radars[0].max_range_m)
-                        + clutter_spatial_density(self.radars[1].max_range_m));
-                self.finish_tracker_step(
-                    &step_all_dets,
-                    &step_all_models,
-                    &step_unassoc,
-                    &step_unassoc_models,
-                    pooled_clutter,
-                )?;
-            } else {
-                self.delete_stale_active()?;
-                let confirmed = self
-                    .tentative
-                    .predict_only_step(&holding_deleter())
-                    .map_err(ScenarioError::Core)?;
-                self.promote_confirmed_tentatives(confirmed)?;
-                self.snapshot_active_paths(ts);
-            }
-            self.step += 1;
+        if self.step >= max_steps {
+            return Ok(false);
         }
+        if self.step > 0 {
+            self.advance_truths()?;
+        }
+        let ts = self.ts();
+        self.log_truths_at(ts);
+        self.prior.timestamp = ts;
+        let mut step_unassoc = Vec::with_capacity(16);
+        let mut step_unassoc_models = Vec::with_capacity(16);
+        let mut step_all_dets = Vec::with_capacity(32);
+        let mut step_all_models = Vec::with_capacity(32);
+        let mut chunk = alloc::vec![
+            Detection {
+                vector: stonesoup_core::VecN([0.0, 0.0]),
+                timestamp: ts,
+                sensor: SensorId(0),
+            };
+            MAX_GNN_ASSIGN_DETS
+        ];
+        let mut any_dets = false;
+        for ri in 0..2 {
+            let got = self.generate_sensor_dets(ri, ts, &mut chunk)?;
+            if got == 0 {
+                continue;
+            }
+            any_dets = true;
+            let model = radar_model(self.radar_rt[ri].dwell_rad)?;
+            let dets = &chunk[..got];
+            let models: alloc::vec::Vec<CartesianToBearingRange> = alloc::vec![model; got];
+            step_all_dets.extend_from_slice(dets);
+            step_all_models.extend(models.iter().copied());
+            let clutter_rho = clutter_spatial_density(self.radars[ri].max_range_m);
+            let (mut unassoc, mut un_models) =
+                self.associate_update_actives(dets, &models, clutter_rho, ri)?;
+            step_unassoc.append(&mut unassoc);
+            step_unassoc_models.append(&mut un_models);
+        }
+        if any_dets {
+            let pooled_clutter = 0.5
+                * (clutter_spatial_density(self.radars[0].max_range_m)
+                    + clutter_spatial_density(self.radars[1].max_range_m));
+            self.finish_tracker_step(
+                &step_all_dets,
+                &step_all_models,
+                &step_unassoc,
+                &step_unassoc_models,
+                pooled_clutter,
+            )?;
+        } else {
+            self.delete_stale_active()?;
+            let confirmed = self
+                .tentative
+                .predict_only_step(&holding_deleter())
+                .map_err(ScenarioError::Core)?;
+            self.promote_confirmed_tentatives(confirmed)?;
+            self.snapshot_active_paths(ts);
+        }
+        self.step += 1;
+        Ok(self.step < max_steps)
+    }
+
+    pub fn run(&mut self) -> Result<DualRadarStats, ScenarioError> {
+        while self.run_single_step()? {}
         let step = self.step;
         for t in core::mem::take(&mut self.active) {
             self.finish_track(t, step)?;
