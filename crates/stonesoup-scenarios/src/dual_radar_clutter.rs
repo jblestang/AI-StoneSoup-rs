@@ -32,6 +32,10 @@ pub const RANGE_B_M: f64 = RANGE_A_M * 0.447_213_595_499_957_9;
 pub const PERIOD_A_S: f64 = 6.0;
 pub const PERIOD_B_S: f64 = 3.0;
 pub const FOV_DEG: f64 = 90.0;
+/// Measurement noise σ (bearing relative to boresight, degrees).
+pub const RADAR_BEARING_SIGMA_DEG: f64 = 0.2;
+/// Measurement noise σ (slant range, metres).
+pub const RADAR_RANGE_SIGMA_M: f64 = 30.0;
 pub const DT_S: f64 = 0.25;
 /// Wall-clock simulation length (plot budget resets each radar rotation).
 pub const SIM_DURATION_S: f64 = 60.0;
@@ -68,9 +72,9 @@ fn holding_deleter() -> HoldingDeleter {
 }
 /// ~2.5× radar A rotation: coast through out-of-FOV gaps between beam passes.
 pub const COAST_SECONDS: f64 = 60.0;
-/// ~3σ cross-range from 0.5° bearing σ at max truth range (init + filter lag margin).
+/// ~3σ cross-range from bearing σ at max truth range (init + filter lag margin).
 pub const TRUTH_ASSOC_METERS: f64 = {
-    const BEARING_SIGMA_RAD: f64 = 0.5 * core::f64::consts::PI / 180.0;
+    const BEARING_SIGMA_RAD: f64 = RADAR_BEARING_SIGMA_DEG * core::f64::consts::PI / 180.0;
     3.0 * BEARING_SIGMA_RAD * TRUTH_MAX_RANGE_M
 };
 pub const TRACK_TO_TRUTH_CONSEC_PAIRS: u8 = 1;
@@ -247,11 +251,12 @@ fn half_fov_rad() -> f64 {
 }
 
 fn radar_model(dwell_rad: f64) -> Result<CartesianToBearingRange, ScenarioError> {
-    let half_deg = 0.5 * core::f64::consts::PI / 180.0;
+    let bearing_sigma_rad = RADAR_BEARING_SIGMA_DEG * core::f64::consts::PI / 180.0;
     let mut r = Mat::<2, 2>::zeros();
-    r.set(0, 0, half_deg * half_deg)
+    r.set(0, 0, bearing_sigma_rad * bearing_sigma_rad)
         .map_err(ScenarioError::Core)?;
-    r.set(1, 1, 80.0 * 80.0).map_err(ScenarioError::Core)?;
+    r.set(1, 1, RADAR_RANGE_SIGMA_M * RADAR_RANGE_SIGMA_M)
+        .map_err(ScenarioError::Core)?;
     Ok(CartesianToBearingRange {
         sensor_x: 0.0,
         sensor_y: 0.0,

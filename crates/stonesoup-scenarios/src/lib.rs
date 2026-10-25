@@ -82,6 +82,7 @@ pub use dual_radar_clutter::{
     max_simulation_steps, CompletedTrack, DualRadarClutterSim, DualRadarStats, MAX_ACTIVE,
     TruthSensorPlotCounts,
     CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S, FOV_DEG, NUM_TRUTHS, OVERLAP_AREA_FRACTION,
+    RADAR_BEARING_SIGMA_DEG, RADAR_RANGE_SIGMA_M,
     PLOTS_PER_RADAR, PLOTS_PER_ROTATION, TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M,
     RANGE_B_M, SEED,
     SIM_DURATION_S,

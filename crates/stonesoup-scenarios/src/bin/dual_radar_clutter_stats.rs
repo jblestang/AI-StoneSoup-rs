@@ -7,8 +7,9 @@ use std::process::ExitCode;
 
 use stonesoup_scenarios::{
     max_simulation_steps, DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S,
-    FOV_DEG, NUM_TRUTHS, OVERLAP_AREA_FRACTION, TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S,
-    RANGE_A_M, RANGE_B_M, SEED, SIM_DURATION_S, ScenarioError,
+    FOV_DEG, NUM_TRUTHS, OVERLAP_AREA_FRACTION, RADAR_BEARING_SIGMA_DEG, RADAR_RANGE_SIGMA_M,
+    TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED, SIM_DURATION_S,
+    ScenarioError,
 };
 
 fn main() -> ExitCode {
@@ -69,9 +70,11 @@ fn run() -> Result<String, ScenarioError> {
             "period_a_s": PERIOD_A_S,
             "period_b_s": PERIOD_B_S,
             "fov_deg": FOV_DEG,
+            "radar_bearing_sigma_deg": RADAR_BEARING_SIGMA_DEG,
+            "radar_range_sigma_m": RADAR_RANGE_SIGMA_M,
             "num_truths": NUM_TRUTHS,
             "truth_layout": format!(
-                "{NUM_TRUTHS} targets uniform random range 50–392 km bearing"
+                "{NUM_TRUTHS} targets uniform range 50–392 km; speed mix 10% Mach2 / 20% Mach1 / 30% 800kn / 20% 400kn / 20% 250kn"
             ),
             "truth_speed_mix": {
                 "mach_2_fraction": 0.10,
