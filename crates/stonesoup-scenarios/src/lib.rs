@@ -87,7 +87,7 @@ pub use dual_radar_clutter::{
     RANGE_B_M, SEED,
     SIM_DURATION_S,
     TRUTH_SPEED_250_KNOTS_MPS, TRUTH_SPEED_400_KNOTS_MPS, TRUTH_SPEED_800_KNOTS_MPS,
-    TRUTH_SPEED_MACH1_MPS, TRUTH_SPEED_MACH2_MPS,
+    TRUTH_SPEED_MACH1_MPS, TRUTH_SPEED_MACH2_MPS, TRUTH_MAX_MANEUVER_G,
 };
 pub use stonesoup_core::{ContinuousTruthTrack, TrackTruthAssociation};
 pub use lot2_ekf::{

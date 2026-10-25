@@ -9,7 +9,7 @@ use stonesoup_scenarios::{
     max_simulation_steps, DualRadarClutterSim, CLUTTER_FRACTION_TARGET, CLUTTER_LAMBDA, DT_S,
     FOV_DEG, NUM_TRUTHS, OVERLAP_AREA_FRACTION, RADAR_BEARING_SIGMA_DEG, RADAR_RANGE_SIGMA_M,
     TARGETS_PER_ROTATION, PERIOD_A_S, PERIOD_B_S, RANGE_A_M, RANGE_B_M, SEED, SIM_DURATION_S,
-    ScenarioError,
+    TRUTH_MAX_MANEUVER_G, ScenarioError,
 };
 
 fn main() -> ExitCode {
@@ -74,8 +74,10 @@ fn run() -> Result<String, ScenarioError> {
             "radar_range_sigma_m": RADAR_RANGE_SIGMA_M,
             "num_truths": NUM_TRUTHS,
             "truth_layout": format!(
-                "{NUM_TRUTHS} targets uniform range 50–392 km; speed mix 10% Mach2 / 20% Mach1 / 30% 800kn / 20% 400kn / 20% 250kn"
+                "{NUM_TRUTHS} targets uniform range 50–392 km; speed mix 10% Mach2 … 20% 250kn; CV/CA/CT manoeuvres up to {TRUTH_MAX_MANEUVER_G} g"
             ),
+            "truth_max_maneuver_g": stonesoup_scenarios::TRUTH_MAX_MANEUVER_G,
+            "truth_motion_models": ["CV", "CA", "CT"],
             "truth_speed_mix": {
                 "mach_2_fraction": 0.10,
                 "mach_1_fraction": 0.20,

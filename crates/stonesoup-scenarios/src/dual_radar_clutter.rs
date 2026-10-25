@@ -72,10 +72,10 @@ fn holding_deleter() -> HoldingDeleter {
 }
 /// ~2.5× radar A rotation: coast through out-of-FOV gaps between beam passes.
 pub const COAST_SECONDS: f64 = 60.0;
-/// ~3σ cross-range from bearing σ at max truth range (init + filter lag margin).
+/// ~4σ cross-range from bearing σ at max truth range (manoeuvre + filter lag margin).
 pub const TRUTH_ASSOC_METERS: f64 = {
     const BEARING_SIGMA_RAD: f64 = RADAR_BEARING_SIGMA_DEG * core::f64::consts::PI / 180.0;
-    3.0 * BEARING_SIGMA_RAD * TRUTH_MAX_RANGE_M
+    4.0 * BEARING_SIGMA_RAD * TRUTH_MAX_RANGE_M
 };
 pub const TRACK_TO_TRUTH_CONSEC_PAIRS: u8 = 1;
 pub const TRACK_TO_TRUTH_CONSEC_MISSES: u8 = 4;
@@ -102,6 +102,14 @@ pub const TRUTH_SPEED_TIER_MPS: [f64; 5] = [
     TRUTH_SPEED_250_KNOTS_MPS,
 ];
 pub const TRUTH_SPEED_TIER_FRACTION: [f64; 5] = [0.10, 0.20, 0.30, 0.20, 0.20];
+
+pub const TRUTH_GRAVITY_MPS2: f64 = 9.806_65;
+/// Peak manoeuvre magnitude for ground-truth dynamics (CA tangential / CT centripetal).
+pub const TRUTH_MAX_MANEUVER_G: f64 = 9.0;
+pub const TRUTH_MAX_MANEUVER_MPS2: f64 = TRUTH_MAX_MANEUVER_G * TRUTH_GRAVITY_MPS2;
+
+const TRUTH_MODE_MIN_STEPS: u16 = 8;
+const TRUTH_MODE_MAX_STEPS: u16 = 48;
 
 /// Concurrent fused tracks; [`MAX_GNN_ASSIGN_DETS`] matches this per-step detection budget.
 pub const MAX_ACTIVE: usize = 4096;
@@ -446,17 +454,97 @@ fn init_truths(
     Ok(out)
 }
 
-fn enforce_truth_speed(state: &mut [f64; 4], speed_mps: f64, rng: &mut SplitMix64) {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TruthMotionMode {
+    Cv,
+    Ca,
+    Ct,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct TruthMotionProfile {
+    mode: TruthMotionMode,
+    steps_left: u16,
+    ax: f64,
+    ay: f64,
+    omega_rad_s: f64,
+}
+
+fn init_truth_motion_profiles(rng: &mut SplitMix64) -> alloc::vec::Vec<TruthMotionProfile> {
+    let mut out = alloc::vec::Vec::with_capacity(NUM_TRUTHS);
+    for _ in 0..NUM_TRUTHS {
+        out.push(sample_truth_motion(rng, TruthMotionMode::Cv, 0.0));
+    }
+    out
+}
+
+fn sample_mode_dwell(rng: &mut SplitMix64) -> u16 {
+    let span = (TRUTH_MODE_MAX_STEPS - TRUTH_MODE_MIN_STEPS) as f64;
+    TRUTH_MODE_MIN_STEPS + (rng.uniform01() * (span + 1.0)) as u16
+}
+
+fn sample_truth_motion(
+    rng: &mut SplitMix64,
+    mode: TruthMotionMode,
+    speed_mps: f64,
+) -> TruthMotionProfile {
+    let steps_left = sample_mode_dwell(rng);
+    match mode {
+        TruthMotionMode::Cv => TruthMotionProfile {
+            mode,
+            steps_left,
+            ax: 0.0,
+            ay: 0.0,
+            omega_rad_s: 0.0,
+        },
+        TruthMotionMode::Ca => {
+            let heading = rng.uniform01() * 2.0 * core::f64::consts::PI;
+            let frac = 0.15 + 0.85 * rng.uniform01();
+            let mag = frac * TRUTH_MAX_MANEUVER_MPS2;
+            TruthMotionProfile {
+                mode,
+                steps_left,
+                ax: mag * libm::cos(heading),
+                ay: mag * libm::sin(heading),
+                omega_rad_s: 0.0,
+            }
+        }
+        TruthMotionMode::Ct => {
+            let v = speed_mps.max(30.0);
+            let omega_max = TRUTH_MAX_MANEUVER_MPS2 / v;
+            let sign = if rng.uniform01() < 0.5 { -1.0 } else { 1.0 };
+            let frac = 0.2 + 0.8 * rng.uniform01();
+            TruthMotionProfile {
+                mode,
+                steps_left,
+                ax: 0.0,
+                ay: 0.0,
+                omega_rad_s: sign * frac * omega_max,
+            }
+        }
+    }
+}
+
+fn pick_next_truth_mode(rng: &mut SplitMix64, speed_mps: f64) -> TruthMotionProfile {
+    let u = rng.uniform01();
+    let mode = if u < 0.35 {
+        TruthMotionMode::Cv
+    } else if u < 0.65 {
+        TruthMotionMode::Ca
+    } else {
+        TruthMotionMode::Ct
+    };
+    sample_truth_motion(rng, mode, speed_mps)
+}
+
+fn clamp_truth_speed_cap(state: &mut [f64; 4], max_speed_mps: f64) {
     let vx = state[1];
     let vy = state[3];
     let mag = libm::sqrt(vx * vx + vy * vy);
-    if mag > 1.0 {
-        state[1] = vx / mag * speed_mps;
-        state[3] = vy / mag * speed_mps;
-    } else {
-        let heading = rng.uniform01() * 2.0 * core::f64::consts::PI;
-        state[1] = speed_mps * libm::cos(heading);
-        state[3] = speed_mps * libm::sin(heading);
+    if mag > max_speed_mps && mag > 1e-6 {
+        let s = max_speed_mps / mag;
+        state[1] = vx * s;
+        state[3] = vy * s;
     }
 }
 
@@ -476,42 +564,48 @@ fn count_unique_truth_labels(completed: &[CompletedTrack]) -> usize {
 fn advance_truth(
     gt: GroundTruthState,
     speed_mps: f64,
-    cfg: &TruthStepConfig,
+    motion: &mut TruthMotionProfile,
+    dt_s: f64,
     rng: &mut SplitMix64,
 ) -> Result<GroundTruthState, ScenarioError> {
-    use stonesoup_core::linalg::mat_vec_mul;
     let ts = gt
         .timestamp
-        .checked_add(cfg.dt)
+        .checked_add(Duration::from_seconds(dt_s).map_err(ScenarioError::Core)?)
         .map_err(ScenarioError::Core)?;
-    let f = cfg
-        .transition
-        .transition_matrix(cfg.dt)
-        .map_err(ScenarioError::Core)?;
-    let mean = mat_vec_mul(f, stonesoup_core::VecN(gt.state)).map_err(ScenarioError::Core)?;
-    let mut state = [0.0; 4];
-    for (i, slot) in state.iter_mut().enumerate() {
-        *slot = mean.get(i).map_err(ScenarioError::Core)?;
+    if motion.steps_left == 0 {
+        *motion = pick_next_truth_mode(rng, speed_mps);
     }
-    let q = cfg
-        .transition
-        .process_noise(cfg.dt)
-        .map_err(ScenarioError::Core)?;
-    for block in 0..2usize {
-        let i = block * 2;
-        let n0 = rng.standard_normal().map_err(ScenarioError::Core)?;
-        let n1 = rng.standard_normal().map_err(ScenarioError::Core)?;
-        let q00 = q.get(i, i).map_err(ScenarioError::Core)?;
-        let q01 = q.get(i, i + 1).map_err(ScenarioError::Core)?;
-        let q11 = q.get(i + 1, i + 1).map_err(ScenarioError::Core)?;
-        let l00 = libm::sqrt(if q00 > 0.0 { q00 } else { 0.0 });
-        let l10 = if l00 > 1e-18 { q01 / l00 } else { 0.0 };
-        let rem = q11 - l10 * l10;
-        let l11 = libm::sqrt(if rem > 0.0 { rem } else { 0.0 });
-        state[i] += l00 * n0;
-        state[i + 1] += l10 * n0 + l11 * n1;
+    motion.steps_left = motion.steps_left.saturating_sub(1);
+
+    let mut state = gt.state;
+    let dt2 = dt_s * dt_s;
+
+    match motion.mode {
+        TruthMotionMode::Cv => {
+            state[0] += state[1] * dt_s;
+            state[2] += state[3] * dt_s;
+        }
+        TruthMotionMode::Ca => {
+            state[0] += state[1] * dt_s + 0.5 * motion.ax * dt2;
+            state[1] += motion.ax * dt_s;
+            state[2] += state[3] * dt_s + 0.5 * motion.ay * dt2;
+            state[3] += motion.ay * dt_s;
+        }
+        TruthMotionMode::Ct => {
+            let vx = state[1];
+            let vy = state[3];
+            let speed = libm::sqrt(vx * vx + vy * vy).max(1.0);
+            let heading = libm::atan2(vy, vx);
+            let w = motion.omega_rad_s;
+            let heading_new = heading + w * dt_s;
+            state[1] = speed * libm::cos(heading_new);
+            state[3] = speed * libm::sin(heading_new);
+            state[0] += state[1] * dt_s;
+            state[2] += state[3] * dt_s;
+        }
     }
-    enforce_truth_speed(&mut state, speed_mps, rng);
+
+    clamp_truth_speed_cap(&mut state, speed_mps);
     GroundTruthState::new(state, ts).map_err(ScenarioError::Core)
 }
 
@@ -548,12 +642,13 @@ pub struct DualRadarClutterSim {
     filter_paths: Vec<TrackPath>,
     truth_log: Vec<Vec<(Timestamp, [f64; 4])>>,
     truth_speed_mps: Vec<f64>,
+    truth_motion: Vec<TruthMotionProfile>,
 }
 
 impl DualRadarClutterSim {
     pub fn new() -> Result<Self, ScenarioError> {
-        let truth_transition = ConstantVelocity2d::new(3.0, 3.0).map_err(ScenarioError::Core)?;
-        let filter_transition = ConstantVelocity2d::new(120.0, 120.0).map_err(ScenarioError::Core)?;
+        let truth_transition = ConstantVelocity2d::new(1.0, 1.0).map_err(ScenarioError::Core)?;
+        let filter_transition = ConstantVelocity2d::new(280.0, 280.0).map_err(ScenarioError::Core)?;
         let predictor = KalmanPredictor::new(filter_transition);
         let updater = ExtendedKalmanUpdater::new(radar_model(0.0)?);
         let truth_cfg = TruthStepConfig {
@@ -564,6 +659,7 @@ impl DualRadarClutterSim {
         let mut rng = SplitMix64::new(SEED);
         let truth_speed_mps = init_truth_speeds_mps(&mut rng);
         let truths = init_truths(ts0, &truth_speed_mps, &mut rng)?;
+        let truth_motion = init_truth_motion_profiles(&mut rng);
         let truths_plot_seen = alloc::vec![false; NUM_TRUTHS];
         let truths_plot_seen_a = alloc::vec![false; NUM_TRUTHS];
         let truths_plot_seen_b = alloc::vec![false; NUM_TRUTHS];
@@ -635,6 +731,7 @@ impl DualRadarClutterSim {
             filter_paths: Vec::new(),
             truth_log,
             truth_speed_mps,
+            truth_motion,
         })
     }
 
@@ -696,9 +793,18 @@ impl DualRadarClutterSim {
     }
 
     fn advance_truths(&mut self) -> Result<(), ScenarioError> {
+        let dt_s = self.truth_cfg.dt.as_seconds();
         for (i, gt) in self.truths.iter_mut().enumerate() {
-            let speed = self.truth_speed_mps.get(i).copied().unwrap_or(TRUTH_SPEED_250_KNOTS_MPS);
-            *gt = advance_truth(*gt, speed, &self.truth_cfg, &mut self.rng)?;
+            let speed = self
+                .truth_speed_mps
+                .get(i)
+                .copied()
+                .unwrap_or(TRUTH_SPEED_250_KNOTS_MPS);
+            let motion = self
+                .truth_motion
+                .get_mut(i)
+                .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+            *gt = advance_truth(*gt, speed, motion, dt_s, &mut self.rng)?;
         }
         Ok(())
     }
