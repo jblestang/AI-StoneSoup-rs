@@ -110,11 +110,13 @@ def plot(payload: dict[str, Any], dest: Path, *, dpi: int = 300) -> None:
     ax.set_xlabel("East (km)")
     ax.set_ylabel("North (km)")
     untracked_plotted = int(payload.get("plotted_without_continuous_count", 0))
+    n_filter = len(filter_tracks)
     ax.set_title(
         "Dual radar tracking (seed 42, 60 s)\n"
-        f"{payload['continuous_track_count']} continuous tracks · "
+        f"{payload['continuous_track_count']} established (continuous) filter tracks · "
         f"{untracked_plotted} plotted but untracked · "
         f"{payload['truths_with_any_plot']} plotted / {payload['num_truths']} truths"
+        + (f" · {n_filter} filter paths shown" if n_filter else "")
     )
 
     ax.add_patch(

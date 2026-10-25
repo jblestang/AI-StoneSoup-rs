@@ -62,6 +62,8 @@ fn run() -> Result<String, ScenarioError> {
         "parameters": {
             "implementation": "rust",
             "active_filter": "IMM-EKF (3 CV sub-models: q≈40 / 4k / 12k) + JPDA bearing–range",
+            "initiator_min_points": stonesoup_scenarios::INITIATOR_MIN_POINTS,
+            "initiator_holding_coast_steps": stonesoup_scenarios::HOLDING_TIME_STEPS_DELETER,
             "targets_per_rotation_per_radar": TARGETS_PER_ROTATION,
             "clutter_fraction_target": CLUTTER_FRACTION_TARGET,
             "clutter_lambda_poisson": CLUTTER_LAMBDA,

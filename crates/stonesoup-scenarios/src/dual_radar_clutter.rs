@@ -12,8 +12,10 @@ use stonesoup_core::{
     SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
     MAX_GNN_ASSIGN_DETS, MAX_JPDA_EKF_TRACKS, MAX_PDA_HYPOTHESES,
     jpda_associate_ekf_det_models, jpda_detection_weights, ekf_pda_merged_update,
+    GaussianMeasurementPrediction, PDA_GATE_CHI2_2D, squared_mahalanobis,
     HoldingDeleter, ImmEkfConfig, ImmEkfState, MultiMeasurementInitiator,
 };
+use stonesoup_core::linalg::VecN;
 use stonesoup_core::GroundTruthState;
 use stonesoup_sim::{SplitMix64, TruthStepConfig};
 
@@ -61,11 +63,13 @@ pub const JPDA_CLUTTER_DENSITY: f64 = {
 };
 const JPDA_DET_ASSOCIATED_THRESH: f64 = 0.35;
 const JPDA_MEAS_UPDATE_THRESH: f64 = 0.35;
+/// Stricter JPDA mass threshold before a tentative track earns an associated-update point.
+const INITIATOR_MEAS_UPDATE_THRESH: f64 = 0.5;
 /// Stone Soup ``MultiMeasurementInitiator.min_points`` (associated updates, ``updates_only``).
-/// Confirm when ``update_count ≥ 1`` after ``from_init`` (next scan); deleter removes stale tentatives.
-pub const INITIATOR_MIN_POINTS: u8 = 1;
-/// Stone Soup ``UpdateTimeStepsDeleter`` on holding tracks (~4 s at 0.25 s steps).
-pub const HOLDING_TIME_STEPS_DELETER: usize = 16;
+/// ``from_init`` sets ``update_count = 1``; one further corroborating JPDA update before confirm.
+pub const INITIATOR_MIN_POINTS: u8 = 2;
+/// Holding coast must exceed one radar-A rotation (6 s @ 0.25 s) so tentatives survive to the next plot.
+pub const HOLDING_TIME_STEPS_DELETER: usize = 40;
 
 fn holding_deleter() -> HoldingDeleter {
     HoldingDeleter::update_time_steps(HOLDING_TIME_STEPS_DELETER)
@@ -1035,7 +1039,7 @@ impl DualRadarClutterSim {
             .iter_mut()
             .zip(hold_tails.iter().zip(sets.iter()))
         {
-            let got_update = Self::meas_association_prob(set) >= JPDA_MEAS_UPDATE_THRESH;
+            let got_update = Self::meas_association_prob(set) >= INITIATOR_MEAS_UPDATE_THRESH;
             ht.finish_scan(*tail, got_update, updates_only);
         }
         let confirmed = self
@@ -1045,12 +1049,52 @@ impl DualRadarClutterSim {
         self.promote_confirmed_tentatives(confirmed)
     }
 
+    fn detection_gated_by_existing_track(
+        &mut self,
+        det: &Detection,
+        model: &CartesianToBearingRange,
+    ) -> Result<bool, ScenarioError> {
+        for track in &self.active {
+            let tail = track.imm.combined().map_err(ScenarioError::Core)?;
+            let pred = self
+                .predictor
+                .predict(&tail, det.timestamp, &mut self.ws)
+                .map_err(ScenarioError::Core)?;
+            self.updater.measurement = *model;
+            let meas = match self.updater.predict_measurement(&pred, &mut self.ws) {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+            let innov = match CartesianToBearingRange::innovation(det.vector.0, meas.mean.0) {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+            let sq = match squared_mahalanobis(
+                VecN(innov),
+                &GaussianMeasurementPrediction {
+                    mean: VecN([0.0, 0.0]),
+                    cov: meas.cov,
+                },
+            ) {
+                Ok(s) => s,
+                Err(_) => continue,
+            };
+            if sq <= PDA_GATE_CHI2_2D {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     fn initiate_tentatives_from_unassoc(
         &mut self,
         detections: &[Detection],
         det_models: &[CartesianToBearingRange],
     ) -> Result<(), ScenarioError> {
         for (i, det) in detections.iter().enumerate() {
+            if self.detection_gated_by_existing_track(det, &det_models[i])? {
+                continue;
+            }
             let init = initiate_bearing_range(&self.prior, det, det_models[i])?;
             self.tentative
                 .try_add_holding(init)
@@ -1485,6 +1529,9 @@ impl DualRadarClutterSim {
                     .find(|(tid, _)| *tid == path.id)
                     .map(|(_, truth)| *truth);
                 let is_false_track = false_track_ids.binary_search(&path.id).is_ok();
+                if is_false_track && !continuous {
+                    return None;
+                }
                 let (_, last_mean) = path.states.last().copied().unwrap_or((Timestamp::ZERO, [0.0; 4]));
                 Some(FilterTrackViz {
                     track_id: path.id,

@@ -57,4 +57,14 @@ fn dual_radar_runs_full_duration_with_per_rotation_target_cap() {
         "continuous {}",
         stats.continuous_truth_track_count
     );
+    assert!(
+        stats.continuous_truth_track_count >= 990,
+        "expected nearly all truths to have a continuous established track: {}",
+        stats.continuous_truth_track_count
+    );
+    assert!(
+        stats.fused_false_tracks() <= 200,
+        "too many false fused tracks: {}",
+        stats.fused_false_tracks()
+    );
 }
