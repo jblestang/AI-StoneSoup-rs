@@ -257,9 +257,9 @@
         "covered_duration_s": 50.0,
         "filter_handoffs": 0,
         "identity_switch_count": 0,
-        "max_error_m": 4740.438816018391,
-        "quality_score": 0.614554642516391,
-        "rmse_m": 1707.480049205799,
+        "max_error_m": 4740.438821707386,
+        "quality_score": 0.614554642368202,
+        "rmse_m": 1707.480051493841,
         "truth_id": 5,
         "wall_duration_s": 50.0
       },
@@ -2418,8 +2418,8 @@
         "filter_handoffs": 0,
         "identity_switch_count": 0,
         "max_error_m": 2172.8618455292353,
-        "quality_score": 0.674936563708,
-        "rmse_m": 1127.1384139584898,
+        "quality_score": 0.6749365639120896,
+        "rmse_m": 1127.1384126840396,
         "truth_id": 222,
         "wall_duration_s": 38.25
       },
@@ -10166,10 +10166,10 @@
     ],
     "description": "Following error vs ground truth on TrackToTruth-associated samples. identity_switch = filter path jumped to a different truth; filter_handoff = new filter id on same truth.",
     "established_max_rmse_m": 7412.858804479572,
-    "established_mean_rmse_m": 1132.4273884897596,
+    "established_mean_rmse_m": 1132.427388490777,
     "max_filter_handoffs_per_truth": 4,
     "mean_filter_handoffs_per_truth": 0.22389558232931728,
-    "mean_quality_score": 0.6760524734766697,
+    "mean_quality_score": 0.6760524734767258,
     "paths_with_identity_switch": 59,
     "position_gate": {
       "bearing_sigma_deg": 0.2,
@@ -10229,9 +10229,9 @@
           0.396378691854115
         ],
         "mean_mu_baseline": [
-          0.2759282159990533,
-          0.2848473853402933,
-          0.4392243986606407
+          0.2759282150177044,
+          0.28484738442227986,
+          0.43922440056000306
         ],
         "mean_mu_coast_window": [
           0.27572077635106834,
