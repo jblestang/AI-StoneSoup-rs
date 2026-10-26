@@ -72,6 +72,8 @@ pub struct TrackToTruthConfig {
     pub consec_misses_end: u8,
     /// In χ² / score space: a challenger must beat the current truth by at least this margin.
     pub switch_score_margin: f64,
+    /// Multiplier on [`Self::accuracy_scale_m`] for RMSE quality scoring (1.0 = acquire gate σ).
+    pub rmse_quality_scale_multiplier: f64,
 }
 
 impl Default for TrackToTruthConfig {
@@ -81,6 +83,7 @@ impl Default for TrackToTruthConfig {
             consec_pairs_confirm: 3,
             consec_misses_end: 2,
             switch_score_margin: 0.0,
+            rmse_quality_scale_multiplier: 1.0,
         }
     }
 }
@@ -97,12 +100,13 @@ impl TrackToTruthConfig {
             consec_pairs_confirm: revisit.consec_pairs_confirm,
             consec_misses_end: revisit.consec_misses_end(),
             switch_score_margin,
+            rmse_quality_scale_multiplier: 1.0,
         }
     }
 
     /// Planar scale for RMSE quality heuristics (mid-range σ for bearing–range gates).
     pub fn accuracy_scale_m(&self) -> f64 {
-        match self.position_gate {
+        let base = match self.position_gate {
             TrackTruthPositionGate::FixedRadius(r) => r,
             TrackTruthPositionGate::BearingRangeChi2 {
                 sensor_x,
@@ -111,7 +115,8 @@ impl TrackToTruthConfig {
             } => self
                 .position_gate
                 .combined_sigma_m(sensor_x + 200_000.0, sensor_y),
-        }
+        };
+        base * self.rmse_quality_scale_multiplier.max(1e-6)
     }
 }
 

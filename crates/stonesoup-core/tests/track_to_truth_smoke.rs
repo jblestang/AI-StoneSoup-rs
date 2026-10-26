@@ -28,6 +28,7 @@ fn track_to_truth_links_one_path() {
         consec_pairs_confirm: 2,
         consec_misses_end: 2,
         switch_score_margin: 0.0,
+        rmse_quality_scale_multiplier: 1.0,
     };
     let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg).unwrap();
     assert!(!assoc.is_empty());

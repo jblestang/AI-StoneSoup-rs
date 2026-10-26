@@ -128,11 +128,15 @@ pub fn track_to_truth_consec_misses_for_period(period_s: f64, dt_s: f64) -> u8 {
 }
 
 pub fn dual_radar_track_to_truth_config() -> TrackToTruthConfig {
-    TrackToTruthConfig::from_radar_revisit(
+    let mut cfg = TrackToTruthConfig::from_radar_revisit(
         dual_radar_track_truth_gate(),
         radar_a_track_to_truth_revisit(),
         TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
-    )
+    );
+    // RMSE quality vs sustain gate σ at mid-range (~2σ acquire) for long-range BR tracking.
+    let chi_ratio = TRACK_TO_TRUTH_CHI2_SUSTAIN / TRACK_TO_TRUTH_CHI2_LIMIT;
+    cfg.rmse_quality_scale_multiplier = libm::sqrt(chi_ratio) * 1.42;
+    cfg
 }
 /// Coprime stride to rotate truth scan order each 360° (fair plot budget at cap).
 pub const PLOT_SCAN_CURSOR_STRIDE: usize = 127;

@@ -483,6 +483,7 @@ pub fn diagnose_identity_switches_from_assoc(
         consec_pairs_confirm: 3,
         consec_misses_end: config.consec_misses_end,
         switch_score_margin: config.switch_score_margin,
+        rmse_quality_scale_multiplier: config.rmse_quality_scale_multiplier,
     };
     let mut identity_switches_confirm3 = 0u32;
     for track in tracks {

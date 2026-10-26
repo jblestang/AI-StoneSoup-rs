@@ -344,6 +344,7 @@ mod tests {
             consec_pairs_confirm: 1,
             consec_misses_end: 1,
             switch_score_margin: 0.0,
+            rmse_quality_scale_multiplier: 1.0,
         };
         let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg).unwrap();
         let switches = identity_switches_for_track(&assoc, 7);
