@@ -62,6 +62,7 @@ impl ImmEkfConfig {
                 q_vel: 350.0,
                 omega_scale: 1.0,
                 omega_speed_floor_mps: 30.0,
+                min_turn_rate_rad_s: super::imm_dynamics::CT_MIN_TURN_RATE_RAD_S,
             },
             tpm,
         })
@@ -599,6 +600,7 @@ fn mul6x6_6x6(a: Cov6, b: Cov6) -> Cov6 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::filter::imm_dynamics::CT_MIN_TURN_RATE_RAD_S;
     use crate::time::Duration;
 
     #[test]
@@ -619,6 +621,31 @@ mod tests {
         let pred = predict_imm_model(prior, t1, ImmModelKind::Ca, &cfg).expect("pred");
         assert!((pred.mean[0] - (100_000.0 + 200.0 + 2.5)).abs() < 1e-6);
         assert!((pred.mean[1] - 205.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn ct_straight_when_turn_rate_below_one_degree_per_second() {
+        let mut cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
+        cfg.ct.max_turn_accel_mps2 = 0.5;
+        cfg.ct.omega_scale = 0.01;
+        cfg.ct.min_turn_rate_rad_s = CT_MIN_TURN_RATE_RAD_S;
+        let t0 = Timestamp::ZERO;
+        let dt = Duration::from_seconds(2.0).expect("dt");
+        let speed = 250.0;
+        let mut mean = [0.0; IMM_STATE_DIM];
+        mean[1] = speed;
+        let cov = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
+        let prior = GaussianState6::new(mean, cov, t0).expect("prior");
+        let t1 = t0.checked_add(dt).expect("t1");
+        let pred =
+            predict_imm_model(prior, t1, ImmModelKind::CtPos, &cfg).expect("pred");
+        assert!(
+            (pred.mean[0] - speed * 2.0).abs() < 1e-3,
+            "expected straight east motion, x={}",
+            pred.mean[0]
+        );
+        assert!((pred.mean[4]).abs() < 1e-6);
+        assert!(cfg.ct.omega_for_speed(speed) < CT_MIN_TURN_RATE_RAD_S);
     }
 
     #[test]

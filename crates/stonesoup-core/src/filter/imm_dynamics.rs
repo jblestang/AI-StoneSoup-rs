@@ -9,6 +9,9 @@ use super::imm_state6::{GaussianState6, IMM_STATE_DIM};
 /// Peak centripetal acceleration used to cap turn rate at speed (matches truth CT).
 pub const CT_MANEUVER_ACCEL_MPS2: f64 = 9.0 * 9.806_65;
 
+/// Minimum |ω| (rad/s) before the coordinated-turn model applies curvature (1°/s).
+pub const CT_MIN_TURN_RATE_RAD_S: f64 = core::f64::consts::PI / 180.0;
+
 /// Singer-style CV on 6D state: acceleration is driven noise with exponential decay.
 #[derive(Debug, Clone, Copy)]
 pub struct SingerCv6d {
@@ -109,6 +112,8 @@ pub struct CoordinatedTurn6d {
     pub omega_scale: f64,
     /// Floor on speed in ``ω = a/v`` to avoid extreme turn rates at low ``v``.
     pub omega_speed_floor_mps: f64,
+    /// If ``|ω|`` after clamping is below this, treat as straight flight (ω′ = 0).
+    pub min_turn_rate_rad_s: f64,
 }
 
 impl CoordinatedTurn6d {
@@ -152,7 +157,10 @@ impl CoordinatedTurn6d {
         let vy = prior.mean[4];
         let speed = libm::sqrt(vx * vx + vy * vy).max(1.0);
         let heading = libm::atan2(vy, vx);
-        let w = omega_rad_s.clamp(-self.omega_for_speed(speed), self.omega_for_speed(speed));
+        let mut w = omega_rad_s.clamp(-self.omega_for_speed(speed), self.omega_for_speed(speed));
+        if w.abs() < self.min_turn_rate_rad_s.max(0.0) {
+            w = 0.0;
+        }
         let heading_new = heading + w * t;
         let vx2 = speed * libm::cos(heading_new);
         let vy2 = speed * libm::sin(heading_new);
