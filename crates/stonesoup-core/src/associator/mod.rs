@@ -36,8 +36,9 @@ pub use pda::{
 };
 pub use radar_a_coast_relock::{study_radar_a_coast_relocks, RadarACoastRelockStudy};
 pub use switch_diagnosis::{
-    diagnose_identity_switches_from_assoc, study_coast_relocks, CoastRelockStudy,
-    IdentitySwitchEvent, SwitchCause, SwitchCauseCounts, SwitchDiagnosisSummary,
+    diagnose_identity_switches_from_assoc, list_coast_relock_handoffs, study_coast_relocks,
+    CoastRelockHandoff, CoastRelockStudy, IdentitySwitchEvent, SwitchCause, SwitchCauseCounts,
+    SwitchDiagnosisSummary,
 };
 pub use track_quality::{
     assess_track_quality, ContinuousTruthQuality, FilterTrackQuality, TrackQualityReport,

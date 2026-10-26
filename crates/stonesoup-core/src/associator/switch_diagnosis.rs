@@ -284,6 +284,55 @@ fn median(mut xs: Vec<f64>) -> f64 {
 }
 
 /// Classify all coast-then-relock handoffs (TrackToTruth segment boundaries).
+#[derive(Debug, Clone, Copy)]
+pub struct CoastRelockHandoff {
+    pub track_id: u32,
+    pub from_truth: u16,
+    pub to_truth: u16,
+    pub switch_ts: Timestamp,
+}
+
+/// Every TrackToTruth segment boundary classified as coast-then-relock.
+pub fn list_coast_relock_handoffs(
+    tracks: &[TrackPath],
+    truths: &[TruthPath],
+    assoc: &[TrackTruthAssociation],
+    config: &TrackToTruthConfig,
+) -> Result<Vec<CoastRelockHandoff>, Error> {
+    let gate = config.position_gate;
+    let mut out = Vec::new();
+    for track in tracks {
+        let mut segs: Vec<&TrackTruthAssociation> =
+            assoc.iter().filter(|a| a.track_id == track.id).collect();
+        if segs.len() < 2 {
+            continue;
+        }
+        segs.sort_by_key(|a| a.range.start);
+        for w in segs.windows(2) {
+            if w[0].truth_id == w[1].truth_id {
+                continue;
+            }
+            let ev = classify_switch(
+                track,
+                w[0].truth_id,
+                w[1].truth_id,
+                w[1].range.start,
+                truths,
+                gate,
+            )?;
+            if ev.cause == SwitchCause::CoastThenRelock {
+                out.push(CoastRelockHandoff {
+                    track_id: track.id,
+                    from_truth: w[0].truth_id,
+                    to_truth: w[1].truth_id,
+                    switch_ts: w[1].range.start,
+                });
+            }
+        }
+    }
+    Ok(out)
+}
+
 pub fn study_coast_relocks(
     tracks: &[TrackPath],
     truths: &[TruthPath],

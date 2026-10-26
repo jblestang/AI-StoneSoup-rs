@@ -68,6 +68,31 @@ fn run() -> Result<String, ScenarioError> {
             "track_meas_zero": c.track_meas_zero,
         })
     };
+    let hist = &stats.jpda_a_histogram;
+    let hist_json = |h: &stonesoup_scenarios::MeasPHistogram| {
+        serde_json::json!({
+            "total": h.total(),
+            "buckets": {
+                "(0, 1e-8]": h.zero,
+                "(0, 0.1)": h.gt_zero_lt_0_1,
+                "[0.1, 0.2)": h.ge_0_1_lt_0_2,
+                "[0.2, 0.35)": h.ge_0_2_lt_0_35,
+                "[0.35, 0.5)": h.ge_0_35_lt_0_5,
+                "[0.5, 0.75)": h.ge_0_5_lt_0_75,
+                "[0.75, 1.0]": h.ge_0_75_le_1_0,
+                "(1.0, inf)": h.gt_1_0,
+            },
+        })
+    };
+    let sens_json = |rows: &[stonesoup_scenarios::ThresholdSensitivityRow]| {
+        rows.iter().map(|r| {
+            serde_json::json!({
+                "tau": r.tau,
+                "passes_with_meas_p_ge_tau": r.passes_with_meas_p_ge_tau,
+                "fraction_of_all_passes": r.fraction_of_all_passes,
+            })
+        }).collect::<Vec<_>>()
+    };
     let payload = serde_json::json!({
         "parameters": {
             "implementation": "rust",
@@ -137,6 +162,18 @@ fn run() -> Result<String, ScenarioError> {
     "b_plots_total": sf.b_plots_total,
     "jpda_radar_a": jpda_json(sf.jpda_radar_a),
     "jpda_radar_b": jpda_json(sf.jpda_radar_b),
+    "jpda_a_meas_p_histogram": {
+      "description": "Distribution of JPDA measurement association mass meas_p on radar-A passes (one sample per active track per A scan with detections). Operational contact threshold remains 0.35.",
+      "operational_threshold": hist.operational_threshold,
+      "total_a_track_passes": hist.total_a_track_passes,
+      "all_active_passes": hist_json(&hist.all_active_passes),
+      "coast_relock_track_passes": hist_json(&hist.coast_relock_track_passes),
+      "coast_relock_at_a_plot_of_prior_truth": hist_json(&hist.coast_relock_at_a_plot_of_prior_truth),
+      "coast_relock_track_count": hist.coast_relock_track_count,
+      "coast_relock_at_plot_sample_count": hist.coast_relock_at_plot_sample_count,
+      "threshold_sensitivity_all_passes": sens_json(&hist.threshold_sensitivity),
+      "threshold_sensitivity_coast_relock_tracks_only": sens_json(&hist.threshold_sensitivity_coast_relock_tracks),
+    },
   },
   "truths": {
             "simulated": NUM_TRUTHS,

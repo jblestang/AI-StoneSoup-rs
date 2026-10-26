@@ -65,6 +65,126 @@
     "inside_b_plotted_fused_a_only": 0,
     "inside_b_plotted_fused_b_updated": 172,
     "inside_b_plotted_no_continuous_track": 0,
+    "jpda_a_meas_p_histogram": {
+      "all_active_passes": {
+        "buckets": {
+          "(0, 0.1)": 645,
+          "(0, 1e-8]": 197799,
+          "(1.0, inf)": 0,
+          "[0.1, 0.2)": 98,
+          "[0.2, 0.35)": 134,
+          "[0.35, 0.5)": 214,
+          "[0.5, 0.75)": 307,
+          "[0.75, 1.0]": 8145
+        },
+        "total": 207342
+      },
+      "coast_relock_at_a_plot_of_prior_truth": {
+        "buckets": {
+          "(0, 0.1)": 4,
+          "(0, 1e-8]": 5,
+          "(1.0, inf)": 0,
+          "[0.1, 0.2)": 1,
+          "[0.2, 0.35)": 1,
+          "[0.35, 0.5)": 2,
+          "[0.5, 0.75)": 6,
+          "[0.75, 1.0]": 108
+        },
+        "total": 127
+      },
+      "coast_relock_at_plot_sample_count": 127,
+      "coast_relock_track_count": 77,
+      "coast_relock_track_passes": {
+        "buckets": {
+          "(0, 0.1)": 15,
+          "(0, 1e-8]": 12916,
+          "(1.0, inf)": 0,
+          "[0.1, 0.2)": 4,
+          "[0.2, 0.35)": 7,
+          "[0.35, 0.5)": 24,
+          "[0.5, 0.75)": 31,
+          "[0.75, 1.0]": 552
+        },
+        "total": 13549
+      },
+      "description": "Distribution of JPDA measurement association mass meas_p on radar-A passes (one sample per active track per A scan with detections). Operational contact threshold remains 0.35.",
+      "operational_threshold": 0.35,
+      "threshold_sensitivity_all_passes": [
+        {
+          "fraction_of_all_passes": 0.04341136865661564,
+          "passes_with_meas_p_ge_tau": 9001,
+          "tau": 0.05
+        },
+        {
+          "fraction_of_all_passes": 0.04291460485574558,
+          "passes_with_meas_p_ge_tau": 8898,
+          "tau": 0.1
+        },
+        {
+          "fraction_of_all_passes": 0.042630050833887975,
+          "passes_with_meas_p_ge_tau": 8839,
+          "tau": 0.15
+        },
+        {
+          "fraction_of_all_passes": 0.04244195580249057,
+          "passes_with_meas_p_ge_tau": 8800,
+          "tau": 0.2
+        },
+        {
+          "fraction_of_all_passes": 0.04222974602347812,
+          "passes_with_meas_p_ge_tau": 8756,
+          "tau": 0.25
+        },
+        {
+          "fraction_of_all_passes": 0.04200306739589663,
+          "passes_with_meas_p_ge_tau": 8709,
+          "tau": 0.3
+        },
+        {
+          "fraction_of_all_passes": 0.041795680566407194,
+          "passes_with_meas_p_ge_tau": 8666,
+          "tau": 0.35
+        }
+      ],
+      "threshold_sensitivity_coast_relock_tracks_only": [
+        {
+          "fraction_of_all_passes": 0.0030239893509274533,
+          "passes_with_meas_p_ge_tau": 627,
+          "tau": 0.05
+        },
+        {
+          "fraction_of_all_passes": 0.0029805828052203607,
+          "passes_with_meas_p_ge_tau": 618,
+          "tau": 0.1
+        },
+        {
+          "fraction_of_all_passes": 0.0029757598556973503,
+          "passes_with_meas_p_ge_tau": 617,
+          "tau": 0.15
+        },
+        {
+          "fraction_of_all_passes": 0.002961291007128319,
+          "passes_with_meas_p_ge_tau": 614,
+          "tau": 0.2
+        },
+        {
+          "fraction_of_all_passes": 0.002951645108082299,
+          "passes_with_meas_p_ge_tau": 612,
+          "tau": 0.25
+        },
+        {
+          "fraction_of_all_passes": 0.0029371762595132678,
+          "passes_with_meas_p_ge_tau": 609,
+          "tau": 0.3
+        },
+        {
+          "fraction_of_all_passes": 0.0029275303604672474,
+          "passes_with_meas_p_ge_tau": 607,
+          "tau": 0.35
+        }
+      ],
+      "total_a_track_passes": 207342
+    },
     "jpda_radar_a": {
       "passes_with_dets_and_actives": 200,
       "track_meas_above_thresh": 8666,

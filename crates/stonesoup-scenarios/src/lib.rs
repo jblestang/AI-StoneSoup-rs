@@ -4,6 +4,7 @@
 extern crate alloc;
 
 mod dual_radar_clutter;
+mod jpda_a_histogram;
 mod lot10_single_sensor;
 mod lot11_kdtree;
 mod lot13_multi_sensor;
@@ -93,6 +94,7 @@ pub use dual_radar_clutter::{
     TRUTH_SPEED_250_KNOTS_MPS, TRUTH_SPEED_400_KNOTS_MPS, TRUTH_SPEED_800_KNOTS_MPS,
     TRUTH_SPEED_MACH1_MPS, TRUTH_SPEED_MACH2_MPS, TRUTH_MAX_MANEUVER_G,
 };
+pub use jpda_a_histogram::{JpdaAHistogramReport, MeasPHistogram, ThresholdSensitivityRow};
 pub use stonesoup_core::{ContinuousTruthTrack, TrackTruthAssociation};
 pub use lot2_ekf::{
     bearing_range_to_xy, Lot2EkfScenario, Lot2Snapshot, Lot2StepOutcome, MAX_LOT2_STEPS,

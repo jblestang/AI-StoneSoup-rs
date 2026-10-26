@@ -291,6 +291,7 @@ pub struct DualRadarStats {
     pub switch_diagnosis: SwitchDiagnosisSummary,
     pub sensor_fusion: FusedSensorDiagnostics,
     pub radar_a_coast_relock: stonesoup_core::RadarACoastRelockStudy,
+    pub jpda_a_histogram: crate::jpda_a_histogram::JpdaAHistogramReport,
 }
 
 /// Why fused tracks show A-only vs both-sensor JPDA updates.
@@ -735,6 +736,7 @@ pub struct DualRadarClutterSim {
     jpda_pass: [JpdaPassCounters; 2],
     truth_a_plot_steps: Vec<Vec<usize>>,
     filter_a_meas_steps: BTreeMap<u32, Vec<usize>>,
+    a_meas_pass_samples: Vec<crate::jpda_a_histogram::AMeasPassSample>,
 }
 
 impl DualRadarClutterSim {
@@ -835,6 +837,7 @@ impl DualRadarClutterSim {
             jpda_pass: [JpdaPassCounters::default(), JpdaPassCounters::default()],
             truth_a_plot_steps: alloc::vec![Vec::new(); NUM_TRUTHS],
             filter_a_meas_steps: BTreeMap::new(),
+            a_meas_pass_samples: Vec::new(),
         })
     }
 
@@ -1244,6 +1247,15 @@ impl DualRadarClutterSim {
             pass.passes_with_dets_and_actives += 1;
             for (track, set) in self.active.iter_mut().zip(sets.iter()) {
                 let meas_p = Self::meas_association_prob(set);
+                if radar_idx == 0 {
+                    self.a_meas_pass_samples.push(
+                        crate::jpda_a_histogram::AMeasPassSample {
+                            track_id: track.id,
+                            step: self.step.min(u16::MAX as usize) as u16,
+                            meas_p: meas_p as f32,
+                        },
+                    );
+                }
                 if meas_p >= JPDA_MEAS_UPDATE_THRESH {
                     pass.track_meas_above_thresh += 1;
                     track.last_meas_step = self.step;
@@ -1479,6 +1491,18 @@ impl DualRadarClutterSim {
         )
         .map_err(ScenarioError::Core)?;
 
+        let jpda_a_histogram = crate::jpda_a_histogram::build_jpda_a_histogram_report(
+            &self.a_meas_pass_samples,
+            &self.filter_paths,
+            &truth_paths,
+            &track_to_truth,
+            &tt_config,
+            &self.truth_a_plot_steps,
+            DT_S,
+            PERIOD_A_S,
+        )
+        .map_err(ScenarioError::Core)?;
+
         for ri in 0..2 {
             let rt = &mut self.radar_rt[ri];
             if rt.unique_targets_this_rotation > rt.max_targets_in_rotation {
@@ -1511,6 +1535,7 @@ impl DualRadarClutterSim {
             switch_diagnosis,
             sensor_fusion,
             radar_a_coast_relock,
+            jpda_a_histogram,
         })
     }
 }
