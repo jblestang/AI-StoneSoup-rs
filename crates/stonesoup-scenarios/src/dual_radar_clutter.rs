@@ -13,7 +13,8 @@ use stonesoup_core::{
     TrackQualityReport,
     ConstantVelocity2d, ContinuousTruthTrack, Detection, Duration, Error, ExtendedKalmanUpdater,
     GaussianState, JpdaHypothesisSet, KalmanPredictor, KalmanWorkspace, ProbabilityHypothesis,
-    SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
+    SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TrackTruthPositionGate,
+    TruthPath,
     MAX_GNN_ASSIGN_DETS, MAX_JPDA_EKF_TRACKS, MAX_PDA_HYPOTHESES,
     jpda_associate_ekf_det_models, jpda_detection_weights, ekf_pda_merged_update,
     GaussianMeasurementPrediction, PDA_GATE_CHI2_2D, squared_mahalanobis,
@@ -80,15 +81,38 @@ fn holding_deleter() -> HoldingDeleter {
 }
 /// ~2.5× radar A rotation: coast through out-of-FOV gaps between beam passes.
 pub const COAST_SECONDS: f64 = 60.0;
-/// ~4σ cross-range from bearing σ at max truth range (manoeuvre + filter lag margin).
-pub const TRUTH_ASSOC_METERS: f64 = {
+/// Planar cross-range at max truth range for reporting (≈ bearing σ·R at 392 km).
+pub const TRUTH_ASSOC_MAX_RANGE_SIGMA_M: f64 = {
     const BEARING_SIGMA_RAD: f64 = RADAR_BEARING_SIGMA_DEG * core::f64::consts::PI / 180.0;
-    4.0 * BEARING_SIGMA_RAD * TRUTH_MAX_RANGE_M
+    BEARING_SIGMA_RAD * TRUTH_MAX_RANGE_M
 };
 /// Avoid nearest-neighbour truth label flicker in the 1000-target field.
 pub const TRACK_TO_TRUTH_CONSEC_PAIRS: u8 = 3;
 pub const TRACK_TO_TRUTH_CONSEC_MISSES: u8 = 4;
-pub const TRACK_TO_TRUTH_SWITCH_MARGIN_M: f64 = 1_500.0;
+/// Require one χ² unit better score before TrackToTruth steals the label from the current truth.
+pub const TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN: f64 = 1.0;
+/// Track–truth metrics gate: ≈4σ in bearing at long range (χ²=16), tightening with range via R.
+pub const TRACK_TO_TRUTH_CHI2_LIMIT: f64 = 16.0;
+
+/// Bearing–range Mahalanobis gate for TrackToTruth / quality metrics (not JPDA detection gating).
+pub fn dual_radar_track_truth_gate() -> TrackTruthPositionGate {
+    TrackTruthPositionGate::BearingRangeChi2 {
+        sensor_x: 0.0,
+        sensor_y: 0.0,
+        bearing_sigma_rad: RADAR_BEARING_SIGMA_DEG * core::f64::consts::PI / 180.0,
+        range_sigma_m: RADAR_RANGE_SIGMA_M,
+        chi2_limit: TRACK_TO_TRUTH_CHI2_LIMIT,
+    }
+}
+
+pub fn dual_radar_track_to_truth_config() -> TrackToTruthConfig {
+    TrackToTruthConfig {
+        position_gate: dual_radar_track_truth_gate(),
+        consec_pairs_confirm: TRACK_TO_TRUTH_CONSEC_PAIRS,
+        consec_misses_end: TRACK_TO_TRUTH_CONSEC_MISSES,
+        switch_score_margin: TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
+    }
+}
 /// Coprime stride to rotate truth scan order each 360° (fair plot budget at cap).
 pub const PLOT_SCAN_CURSOR_STRIDE: usize = 127;
 pub const SEED: u64 = 42;
@@ -1282,19 +1306,24 @@ impl DualRadarClutterSim {
             self.finish_track(t, step)?;
         }
         let mut completed = Vec::with_capacity(self.completed.len());
+        let end_label_gate = dual_radar_track_truth_gate();
         for mut c in core::mem::take(&mut self.completed) {
-            let mut best = TRUTH_ASSOC_METERS;
+            let track_state = [c.end_xy.0, 0.0, c.end_xy.1, 0.0];
+            let mut best_score = f64::INFINITY;
             let mut best_id = None;
             for (ti, gt) in self.truths.iter().enumerate() {
-                let d = euclidean_xy(c.end_xy, (gt.state[0], gt.state[2]));
-                if d < best {
-                    best = d;
+                let Some(score) = end_label_gate
+                    .score(track_state, gt.state)
+                    .map_err(ScenarioError::Core)?
+                else {
+                    continue;
+                };
+                if score < best_score {
+                    best_score = score;
                     best_id = Some(ti as u16);
                 }
             }
-            if best <= TRUTH_ASSOC_METERS {
-                c.truth_id = best_id;
-            }
+            c.truth_id = best_id;
             completed.push(c);
         }
         let truths_with_labeled = count_unique_truth_labels(&completed);
@@ -1309,14 +1338,9 @@ impl DualRadarClutterSim {
                 states: states.clone(),
             })
             .collect();
-        let tt_config = TrackToTruthConfig {
-            association_threshold_m: TRUTH_ASSOC_METERS,
-            consec_pairs_confirm: TRACK_TO_TRUTH_CONSEC_PAIRS,
-            consec_misses_end: TRACK_TO_TRUTH_CONSEC_MISSES,
-            switch_margin_m: TRACK_TO_TRUTH_SWITCH_MARGIN_M,
-        };
-        let track_to_truth =
-            associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config);
+        let tt_config = dual_radar_track_to_truth_config();
+        let track_to_truth = associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config)
+            .map_err(ScenarioError::Core)?;
         let continuous_truth_tracks =
             continuous_tracks_per_truth(&track_to_truth, NUM_TRUTHS as u16);
         let track_quality = assess_track_quality(
@@ -1332,7 +1356,8 @@ impl DualRadarClutterSim {
             &track_to_truth,
             &tt_config,
             40,
-        );
+        )
+        .map_err(ScenarioError::Core)?;
         let truth_plot_sensor_counts = truth_sensor_plot_counts(
             &self.truths_plot_seen_a,
             &self.truths_plot_seen_b,

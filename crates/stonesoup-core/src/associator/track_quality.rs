@@ -121,8 +121,11 @@ fn assess_filter_path(
             max_error_m = d;
         }
         acc.push(state[0] - truth_state[0], state[2] - truth_state[2])?;
-        if d > config.association_threshold_m {
-            if prev_err.map(|p| p <= config.association_threshold_m * 0.5).unwrap_or(false) {
+        let jump_scale = config
+            .position_gate
+            .combined_sigma_m(truth_state[0], truth_state[2]);
+        if d > jump_scale * 2.0 {
+            if prev_err.map(|p| p <= jump_scale).unwrap_or(false) {
                 jump_event_count += 1;
             }
         }
@@ -181,7 +184,8 @@ pub fn assess_track_quality(
     continuous: &[ContinuousTruthTrack],
     config: &TrackToTruthConfig,
 ) -> Result<TrackQualityReport, crate::error::Error> {
-    let assoc = associate_tracks_to_truths(tracks, truths, config);
+    let assoc = associate_tracks_to_truths(tracks, truths, config)?;
+    let accuracy_scale = config.accuracy_scale_m();
     let mut filter_paths = Vec::with_capacity(tracks.len());
     for track in tracks {
         filter_paths.push(assess_filter_path(track, truths, &assoc, config)?);
@@ -232,7 +236,7 @@ pub fn assess_track_quality(
         let wall_s = (ct.wall_end.0 - ct.wall_start.0) as f64 / 1e9;
         let quality_score = quality_score_from(
             rmse_m,
-            config.association_threshold_m,
+            accuracy_scale,
             covered_s,
             wall_s,
             identity_switch_count,
@@ -322,12 +326,12 @@ mod tests {
             ],
         }];
         let cfg = TrackToTruthConfig {
-            association_threshold_m: 50.0,
+            position_gate: crate::TrackTruthPositionGate::FixedRadius(50.0),
             consec_pairs_confirm: 1,
             consec_misses_end: 1,
-            switch_margin_m: 0.0,
+            switch_score_margin: 0.0,
         };
-        let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg);
+        let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg).unwrap();
         let switches = identity_switches_for_track(&assoc, 7);
         assert!(switches >= 1, "expected jump from truth 0 to 1, assoc={assoc:?}");
     }

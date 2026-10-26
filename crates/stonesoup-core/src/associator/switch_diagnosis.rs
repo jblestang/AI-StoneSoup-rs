@@ -5,6 +5,7 @@ extern crate alloc;
 use alloc::collections::BTreeSet;
 use alloc::vec::Vec;
 
+use crate::error::Error;
 use crate::time::Timestamp;
 
 use super::track_quality::identity_switches_for_track;
@@ -12,6 +13,7 @@ use super::track_to_truth::{
     associate_track_to_truths, position_distance, truth_state_at, TrackPath, TrackToTruthConfig,
     TrackTruthAssociation, TruthPath,
 };
+use super::track_truth_gate::TrackTruthPositionGate;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SwitchCause {
@@ -78,46 +80,50 @@ fn truths_within_gate(
     track_state: [f64; 4],
     ts: Timestamp,
     truths: &[TruthPath],
-    threshold_m: f64,
-) -> Vec<(u16, f64)> {
+    gate: TrackTruthPositionGate,
+) -> Result<Vec<(u16, f64)>, Error> {
     let mut within = Vec::new();
     for truth in truths {
         let Some(truth_state) = truth_state_at_index(truth, ts) else {
             continue;
         };
-        let d = position_distance(track_state, truth_state);
-        if d < threshold_m {
-            within.push((truth.id, d));
-        }
+        let Some(score) = gate.score(track_state, truth_state)? else {
+            continue;
+        };
+        within.push((truth.id, score));
     }
     within.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(core::cmp::Ordering::Equal));
-    within
+    Ok(within)
 }
 
 fn nearest_two_truths(
     track_state: [f64; 4],
     ts: Timestamp,
     truths: &[TruthPath],
-    threshold_m: f64,
-) -> (Option<(u16, f64)>, Option<(u16, f64)>) {
-    let w = truths_within_gate(track_state, ts, truths, threshold_m);
-    (w.first().copied(), w.get(1).copied())
+    gate: TrackTruthPositionGate,
+) -> Result<(Option<(u16, f64)>, Option<(u16, f64)>), Error> {
+    let w = truths_within_gate(track_state, ts, truths, gate)?;
+    Ok((w.first().copied(), w.get(1).copied()))
 }
 
 fn per_step_nearest_flips(
     track: &TrackPath,
     truths: &[TruthPath],
-    threshold_m: f64,
-) -> (u32, u32, u32) {
+    gate: TrackTruthPositionGate,
+) -> Result<(u32, u32, u32), Error> {
     let mut prev: Option<u16> = None;
     let mut flips = 0u32;
     let mut ambiguous = 0u32;
     let mut samples = 0u32;
+    let score_ambiguity_margin = match gate {
+        TrackTruthPositionGate::FixedRadius(r) => r * 0.05,
+        TrackTruthPositionGate::BearingRangeChi2 { .. } => 1.0,
+    };
     for (ts, state) in &track.states {
         samples += 1;
-        let (best, second) = nearest_two_truths(*state, *ts, truths, threshold_m);
-        if let (Some((_, d1)), Some((_, d2))) = (best, second) {
-            if d2 - d1 < 1_000.0 {
+        let (best, second) = nearest_two_truths(*state, *ts, truths, gate)?;
+        if let (Some((_, s1)), Some((_, s2))) = (best, second) {
+            if s2 - s1 < score_ambiguity_margin {
                 ambiguous += 1;
             }
         }
@@ -132,7 +138,18 @@ fn per_step_nearest_flips(
             prev = None;
         }
     }
-    (flips, ambiguous, samples)
+    Ok((flips, ambiguous, samples))
+}
+
+fn in_gate(
+    gate: TrackTruthPositionGate,
+    track_state: [f64; 4],
+    truth_state: [f64; 4],
+) -> bool {
+    gate.score(track_state, truth_state)
+        .ok()
+        .flatten()
+        .is_some()
 }
 
 fn classify_switch(
@@ -141,8 +158,8 @@ fn classify_switch(
     to_truth: u16,
     switch_ts: Timestamp,
     truths: &[TruthPath],
-    threshold_m: f64,
-) -> IdentitySwitchEvent {
+    gate: TrackTruthPositionGate,
+) -> Result<IdentitySwitchEvent, Error> {
     let state = track
         .states
         .iter()
@@ -161,22 +178,36 @@ fn classify_switch(
     };
     let dist_to_from_m = dist(from_truth);
     let dist_to_to_m = dist(to_truth);
-    let second_nearest_gap_m = match nearest_two_truths(state, switch_ts, truths, threshold_m) {
-        (Some((_, d1)), Some((_, d2))) => d2 - d1,
+    let second_nearest_gap_m = match nearest_two_truths(state, switch_ts, truths, gate)? {
+        (Some((_, s1)), Some((_, s2))) => s2 - s1,
         _ => f64::INFINITY,
     };
 
-    let cause = if dist_to_from_m < threshold_m && dist_to_to_m < threshold_m {
+    let from_state = truths
+        .iter()
+        .find(|t| t.id == from_truth)
+        .and_then(|t| truth_state_at_index(t, switch_ts));
+    let to_state = truths
+        .iter()
+        .find(|t| t.id == to_truth)
+        .and_then(|t| truth_state_at_index(t, switch_ts));
+
+    let from_in = from_state
+        .map(|s| in_gate(gate, state, s))
+        .unwrap_or(false);
+    let to_in = to_state.map(|s| in_gate(gate, state, s)).unwrap_or(false);
+
+    let cause = if from_in && to_in {
         SwitchCause::AmbiguousNearestNeighbor
-    } else if dist_to_from_m >= threshold_m && dist_to_to_m < threshold_m {
+    } else if !from_in && to_in {
         SwitchCause::CoastThenRelock
-    } else if dist_to_to_m < dist_to_from_m && dist_to_to_m < threshold_m {
+    } else if to_in && dist_to_to_m < dist_to_from_m {
         SwitchCause::DivergedRelock
     } else {
         SwitchCause::Unknown
     };
 
-    IdentitySwitchEvent {
+    Ok(IdentitySwitchEvent {
         track_id: track.id,
         from_truth,
         to_truth,
@@ -185,16 +216,17 @@ fn classify_switch(
         dist_to_to_m,
         second_nearest_gap_m,
         cause,
-    }
+    })
 }
 
 fn for_each_switch<F>(
     tracks: &[TrackPath],
     truths: &[TruthPath],
     assoc: &[TrackTruthAssociation],
-    threshold_m: f64,
-    mut f: F,
-) where
+    gate: TrackTruthPositionGate,
+    f: &mut F,
+) -> Result<(), Error>
+where
     F: FnMut(IdentitySwitchEvent),
 {
     for track in tracks {
@@ -214,10 +246,11 @@ fn for_each_switch<F>(
                 w[1].truth_id,
                 w[1].range.start,
                 truths,
-                threshold_m,
-            ));
+                gate,
+            )?);
         }
     }
+    Ok(())
 }
 
 /// Analyse identity switches using an existing TrackToTruth labelling (no full re-run).
@@ -227,8 +260,9 @@ pub fn diagnose_identity_switches_from_assoc(
     assoc: &[TrackTruthAssociation],
     config: &TrackToTruthConfig,
     max_sample_events: usize,
-) -> SwitchDiagnosisSummary {
+) -> Result<SwitchDiagnosisSummary, Error> {
     let config = *config;
+    let gate = config.position_gate;
     let mut identity_switches_t2t = 0u32;
     let mut switched_ids = BTreeSet::new();
     for track in tracks {
@@ -240,17 +274,17 @@ pub fn diagnose_identity_switches_from_assoc(
     }
 
     let strict = TrackToTruthConfig {
-        association_threshold_m: config.association_threshold_m,
+        position_gate: config.position_gate,
         consec_pairs_confirm: 3,
         consec_misses_end: config.consec_misses_end,
-        switch_margin_m: config.switch_margin_m,
+        switch_score_margin: config.switch_score_margin,
     };
     let mut identity_switches_confirm3 = 0u32;
     for track in tracks {
         if !switched_ids.contains(&track.id) {
             continue;
         }
-        let a = associate_track_to_truths(track, truths, &strict);
+        let a = associate_track_to_truths(track, truths, &strict)?;
         identity_switches_confirm3 += identity_switches_for_track(&a, track.id);
     }
 
@@ -261,7 +295,7 @@ pub fn diagnose_identity_switches_from_assoc(
         if !switched_ids.contains(&track.id) {
             continue;
         }
-        let (f, a, s) = per_step_nearest_flips(track, truths, config.association_threshold_m);
+        let (f, a, s) = per_step_nearest_flips(track, truths, gate)?;
         per_step_nearest_truth_flips += f;
         ambiguous_nearest_steps += a;
         total_path_samples += s;
@@ -269,7 +303,7 @@ pub fn diagnose_identity_switches_from_assoc(
 
     let mut switch_causes = SwitchCauseCounts::default();
     let mut events = Vec::new();
-    for_each_switch(tracks, truths, assoc, config.association_threshold_m, |ev| {
+    for_each_switch(tracks, truths, assoc, gate, &mut |ev| {
         match ev.cause {
             SwitchCause::AmbiguousNearestNeighbor => {
                 switch_causes.ambiguous_nearest_neighbor += 1;
@@ -281,9 +315,9 @@ pub fn diagnose_identity_switches_from_assoc(
         if events.len() < max_sample_events {
             events.push(ev);
         }
-    });
+    })?;
 
-    SwitchDiagnosisSummary {
+    Ok(SwitchDiagnosisSummary {
         identity_switches_t2t,
         identity_switches_confirm3,
         per_step_nearest_truth_flips,
@@ -291,16 +325,16 @@ pub fn diagnose_identity_switches_from_assoc(
         total_path_samples,
         switch_causes,
         events,
-    }
+    })
 }
 
 impl SwitchCause {
     pub fn as_str(self) -> &'static str {
         match self {
-            Self::AmbiguousNearestNeighbor => "ambiguous_nearest_neighbor",
-            Self::CoastThenRelock => "coast_then_relock",
-            Self::DivergedRelock => "diverged_relock",
-            Self::Unknown => "unknown",
+            SwitchCause::AmbiguousNearestNeighbor => "ambiguous_nearest_neighbor",
+            SwitchCause::CoastThenRelock => "coast_then_relock",
+            SwitchCause::DivergedRelock => "diverged_relock",
+            SwitchCause::Unknown => "unknown",
         }
     }
 }

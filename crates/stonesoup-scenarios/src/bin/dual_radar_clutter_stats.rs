@@ -165,7 +165,15 @@ fn run() -> Result<String, ScenarioError> {
         },
         "track_quality": {
             "description": "Following error vs ground truth on TrackToTruth-associated samples. identity_switch = filter path jumped to a different truth; filter_handoff = new filter id on same truth.",
-            "association_threshold_m": stonesoup_scenarios::TRUTH_ASSOC_METERS,
+            "position_gate": {
+                "kind": "bearing_range_chi2",
+                "sensor_xy_m": [0.0, 0.0],
+                "bearing_sigma_deg": stonesoup_scenarios::RADAR_BEARING_SIGMA_DEG,
+                "range_sigma_m": stonesoup_scenarios::RADAR_RANGE_SIGMA_M,
+                "chi2_limit": stonesoup_scenarios::TRACK_TO_TRUTH_CHI2_LIMIT,
+                "max_range_1sigma_cross_range_m": stonesoup_scenarios::TRUTH_ASSOC_MAX_RANGE_SIGMA_M,
+            },
+            "accuracy_scale_m": stonesoup_scenarios::dual_radar_track_to_truth_config().accuracy_scale_m(),
             "established_mean_rmse_m": stats.track_quality.established_mean_rmse_m,
             "established_max_rmse_m": stats.track_quality.established_max_rmse_m,
             "mean_quality_score": if stats.track_quality.continuous_truth.is_empty() {
@@ -182,7 +190,7 @@ fn run() -> Result<String, ScenarioError> {
                 "description": "Why TrackToTruth reports identity switches. Often label flicker in dense scenes, not filter physically jumping.",
                 "t2t_consec_pairs_confirm": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_PAIRS,
                 "t2t_consec_misses_end": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_MISSES,
-                "t2t_switch_margin_m": stonesoup_scenarios::TRACK_TO_TRUTH_SWITCH_MARGIN_M,
+                "t2t_switch_score_margin": stonesoup_scenarios::TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
                 "identity_switches_at_confirm_1": stats.switch_diagnosis.identity_switches_t2t,
                 "identity_switches_if_confirm_3": stats.switch_diagnosis.identity_switches_confirm3,
                 "per_step_nearest_truth_flips": stats.switch_diagnosis.per_step_nearest_truth_flips,

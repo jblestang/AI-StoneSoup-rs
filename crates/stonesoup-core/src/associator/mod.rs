@@ -11,6 +11,7 @@ mod pda;
 mod switch_diagnosis;
 mod track_quality;
 mod track_to_truth;
+mod track_truth_gate;
 
 pub use distance::{distance_hypotheses, squared_mahalanobis};
 pub use ekf_gnn::{associate_gnn_2d_ekf, associate_gnn_2d_ekf_det_models};
@@ -43,3 +44,4 @@ pub use track_to_truth::{
     associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack, TrackPath,
     TrackToTruthConfig, TrackTruthAssociation, TruthPath,
 };
+pub use track_truth_gate::TrackTruthPositionGate;

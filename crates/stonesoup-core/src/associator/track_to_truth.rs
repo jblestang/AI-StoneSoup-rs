@@ -4,7 +4,10 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 
+use crate::error::Error;
 use crate::time::{Duration, Timestamp};
+
+use super::track_truth_gate::TrackTruthPositionGate;
 
 #[derive(Debug, Clone)]
 pub struct TrackPath {
@@ -33,20 +36,36 @@ pub struct TrackTruthAssociation {
 
 #[derive(Debug, Clone, Copy)]
 pub struct TrackToTruthConfig {
-    pub association_threshold_m: f64,
+    pub position_gate: TrackTruthPositionGate,
     pub consec_pairs_confirm: u8,
     pub consec_misses_end: u8,
-    /// Require a new truth to beat the current one by this margin (m) before switching.
-    pub switch_margin_m: f64,
+    /// In χ² / score space: a challenger must beat the current truth by at least this margin.
+    pub switch_score_margin: f64,
 }
 
 impl Default for TrackToTruthConfig {
     fn default() -> Self {
         Self {
-            association_threshold_m: 2_000.0,
+            position_gate: TrackTruthPositionGate::FixedRadius(2_000.0),
             consec_pairs_confirm: 3,
             consec_misses_end: 2,
-            switch_margin_m: 0.0,
+            switch_score_margin: 0.0,
+        }
+    }
+}
+
+impl TrackToTruthConfig {
+    /// Planar scale for RMSE quality heuristics (mid-range σ for bearing–range gates).
+    pub fn accuracy_scale_m(&self) -> f64 {
+        match self.position_gate {
+            TrackTruthPositionGate::FixedRadius(r) => r,
+            TrackTruthPositionGate::BearingRangeChi2 {
+                sensor_x,
+                sensor_y,
+                ..
+            } => self
+                .position_gate
+                .combined_sigma_m(sensor_x + 200_000.0, sensor_y),
         }
     }
 }
@@ -57,17 +76,6 @@ pub(crate) fn position_distance(track: [f64; 4], truth: [f64; 4]) -> f64 {
     libm::sqrt(dx * dx + dy * dy)
 }
 
-fn distance_to_truth(
-    truths: &[TruthPath],
-    truth_id: u16,
-    ts: Timestamp,
-    track_state: [f64; 4],
-) -> Option<f64> {
-    let truth = truths.iter().find(|t| t.id == truth_id)?;
-    let truth_state = truth_state_at(truth, ts)?;
-    Some(position_distance(track_state, truth_state))
-}
-
 pub(crate) fn truth_state_at(truth: &TruthPath, ts: Timestamp) -> Option<[f64; 4]> {
     truth
         .states
@@ -76,17 +84,74 @@ pub(crate) fn truth_state_at(truth: &TruthPath, ts: Timestamp) -> Option<[f64; 4
         .map(|(_, s)| *s)
 }
 
+fn score_to_truth(
+    truths: &[TruthPath],
+    truth_id: u16,
+    ts: Timestamp,
+    track_state: [f64; 4],
+    gate: TrackTruthPositionGate,
+) -> Result<Option<f64>, Error> {
+    let Some(truth) = truths.iter().find(|t| t.id == truth_id) else {
+        return Ok(None);
+    };
+    let Some(truth_state) = truth_state_at(truth, ts) else {
+        return Ok(None);
+    };
+    gate.score(track_state, truth_state)
+}
+
+fn best_gated_truth(
+    truths: &[TruthPath],
+    ts: Timestamp,
+    track_state: [f64; 4],
+    gate: TrackTruthPositionGate,
+) -> Result<(Option<u16>, f64), Error> {
+    let mut best_score = f64::INFINITY;
+    let mut best_id: Option<u16> = None;
+
+    for truth in truths {
+        if truth.states.is_empty() {
+            continue;
+        }
+        let first = truth.states[0].0;
+        let last = truth.states[truth.states.len() - 1].0;
+        if first > ts || last < ts {
+            continue;
+        }
+        let Some(truth_state) = truth_state_at(truth, ts) else {
+            continue;
+        };
+        let Some(score) = gate.score(track_state, truth_state)? else {
+            continue;
+        };
+        if score < best_score {
+            best_score = score;
+            best_id = Some(truth.id);
+        }
+    }
+
+    Ok((
+        best_id,
+        if best_id.is_some() {
+            best_score
+        } else {
+            f64::INFINITY
+        },
+    ))
+}
+
 /// Associate one filter track path to truth paths (same logic as Stone Soup ``TrackToTruth``).
 pub fn associate_track_to_truths(
     track: &TrackPath,
     truths: &[TruthPath],
     config: &TrackToTruthConfig,
-) -> Vec<TrackTruthAssociation> {
+) -> Result<Vec<TrackTruthAssociation>, Error> {
     let mut out = Vec::new();
     if track.states.is_empty() {
-        return out;
+        return Ok(out);
     }
 
+    let gate = config.position_gate;
     let mut current_truth: Option<u16> = None;
     let mut potential_truth: Option<u16> = None;
     let mut n_potential_successes = 0u8;
@@ -96,37 +161,18 @@ pub fn associate_track_to_truths(
     let mut end_ts: Option<Timestamp> = None;
 
     for (ts, track_state) in &track.states {
-        let mut min_dist = config.association_threshold_m;
-        let mut min_truth: Option<u16> = None;
+        let (mut min_truth, mut min_score) =
+            best_gated_truth(truths, *ts, *track_state, gate)?;
 
-        for truth in truths {
-            if truth.states.is_empty() {
-                continue;
-            }
-            let first = truth.states[0].0;
-            let last = truth.states[truth.states.len() - 1].0;
-            if first > *ts || last < *ts {
-                continue;
-            }
-            let Some(truth_state) = truth_state_at(truth, *ts) else {
-                continue;
-            };
-            let d = position_distance(*track_state, truth_state);
-            if d < min_dist {
-                min_dist = d;
-                min_truth = Some(truth.id);
-            }
-        }
-
-        if config.switch_margin_m > 0.0 {
+        if config.switch_score_margin > 0.0 {
             if let Some(cur) = current_truth {
-                if let (Some(nt), Some(d_cur)) = (
+                if let (Some(nt), Some(score_cur)) = (
                     min_truth,
-                    distance_to_truth(truths, cur, *ts, *track_state),
+                    score_to_truth(truths, cur, *ts, *track_state, gate).ok().flatten(),
                 ) {
-                    if nt != cur && min_dist + config.switch_margin_m >= d_cur {
+                    if nt != cur && min_score + config.switch_score_margin >= score_cur {
                         min_truth = Some(cur);
-                        min_dist = d_cur;
+                        min_score = score_cur;
                     }
                 }
             }
@@ -188,6 +234,7 @@ pub fn associate_track_to_truths(
                 }
             }
         }
+        let _ = min_score;
     }
 
     if let Some(cur) = current_truth {
@@ -200,19 +247,19 @@ pub fn associate_track_to_truths(
         }
     }
 
-    out
+    Ok(out)
 }
 
 pub fn associate_tracks_to_truths(
     tracks: &[TrackPath],
     truths: &[TruthPath],
     config: &TrackToTruthConfig,
-) -> Vec<TrackTruthAssociation> {
+) -> Result<Vec<TrackTruthAssociation>, Error> {
     let mut all = Vec::new();
     for track in tracks {
-        all.extend(associate_track_to_truths(track, truths, config));
+        all.extend(associate_track_to_truths(track, truths, config)?);
     }
-    all
+    Ok(all)
 }
 
 #[derive(Debug, Clone)]

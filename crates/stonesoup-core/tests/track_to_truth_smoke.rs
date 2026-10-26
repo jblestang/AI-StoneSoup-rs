@@ -1,6 +1,6 @@
 use stonesoup_core::{
     associate_tracks_to_truths, continuous_tracks_per_truth, TrackPath, TrackToTruthConfig,
-    TruthPath,
+    TrackTruthPositionGate, TruthPath,
 };
 use stonesoup_core::Timestamp;
 
@@ -23,12 +23,12 @@ fn track_to_truth_links_one_path() {
         ],
     }];
     let cfg = TrackToTruthConfig {
-        association_threshold_m: 10.0,
+        position_gate: TrackTruthPositionGate::FixedRadius(10.0),
         consec_pairs_confirm: 2,
         consec_misses_end: 2,
-        switch_margin_m: 0.0,
+        switch_score_margin: 0.0,
     };
-    let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg);
+    let assoc = associate_tracks_to_truths(&tracks, &truths, &cfg).unwrap();
     assert!(!assoc.is_empty());
     let cont = continuous_tracks_per_truth(&assoc, 1);
     assert_eq!(cont.len(), 1);

@@ -36,7 +36,7 @@ pub use associator::{
     diagnose_identity_switches_from_assoc, SwitchCause, SwitchDiagnosisSummary,
     squared_mahalanobis, ContinuousTruthQuality, ContinuousTruthTrack, FilterTrackQuality,
     TrackQualityReport,
-    TrackPath, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
+    TrackPath, TrackToTruthConfig, TrackTruthAssociation, TrackTruthPositionGate, TruthPath,
 };
 pub use deleter::{
     covariance_trace, holding_should_delete, should_delete_covariance_trace, HoldingDeleter,
