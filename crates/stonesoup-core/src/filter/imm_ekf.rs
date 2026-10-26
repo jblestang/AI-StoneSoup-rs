@@ -11,7 +11,9 @@ use crate::state::GaussianState;
 use crate::time::Timestamp;
 use crate::types::Detection;
 
-use super::imm_dynamics::{ConstantAcceleration6d, CoordinatedTurn6d, CT_MANEUVER_ACCEL_MPS2, SingerCv6d};
+use super::imm_dynamics::{
+    ConstantAcceleration6d, CoordinatedTurn6d, CT_MANEUVER_ACCEL_MPS2, SingerCv6d,
+};
 use super::imm_state6::{
     gm_reduce_6, predict_linear6, GaussianState6, IMM_STATE_DIM,
 };
@@ -44,8 +46,8 @@ impl ImmEkfConfig {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn dual_radar_default() -> Result<Self, Error> {
         let tpm = [
-            [0.92, 0.02, 0.03, 0.03],
-            [0.02, 0.92, 0.03, 0.03],
+            [0.92, 0.03, 0.03, 0.02],
+            [0.03, 0.92, 0.03, 0.02],
             [0.03, 0.03, 0.92, 0.02],
             [0.03, 0.03, 0.02, 0.92],
         ];
@@ -58,6 +60,8 @@ impl ImmEkfConfig {
             ct: CoordinatedTurn6d {
                 max_turn_accel_mps2: CT_MANEUVER_ACCEL_MPS2,
                 q_vel: 350.0,
+                omega_scale: 1.0,
+                omega_speed_floor_mps: 30.0,
             },
             tpm,
         })

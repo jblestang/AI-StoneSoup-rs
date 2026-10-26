@@ -170,7 +170,12 @@ fn quality_score_from(
     } else {
         0.0
     };
-    let accuracy = rmse_m.map(|r| (1.0 - (r / threshold_m).min(1.0)).clamp(0.0, 1.0)).unwrap_or(0.0);
+    let accuracy = rmse_m
+        .map(|r| {
+            let x = (r / threshold_m).max(0.0);
+            (1.0 / (1.0 + x * x)).clamp(0.0, 1.0)
+        })
+        .unwrap_or(0.0);
     let stability = 1.0 - 0.25 * (identity_switches.min(4) as f64);
     let continuity = 1.0 - 0.15 * (filter_handoffs.min(5) as f64);
     (coverage * 0.35 + accuracy * 0.45 + stability * 0.1 + continuity * 0.1).clamp(0.0, 1.0)
@@ -297,6 +302,14 @@ mod tests {
     use alloc::vec;
     use crate::Timestamp;
     use super::super::track_to_truth::associate_tracks_to_truths;
+
+    #[test]
+    fn quality_score_gives_partial_accuracy_above_gate_scale() {
+        let at_scale = quality_score_from(Some(700.0), 700.0, 60.0, 60.0, 0, 0);
+        let above = quality_score_from(Some(1_150.0), 700.0, 60.0, 60.0, 0, 0);
+        assert!(above > 0.55, "expected partial credit above scale, got {above}");
+        assert!(at_scale > above);
+    }
 
     #[test]
     fn detects_identity_switch_on_one_path() {

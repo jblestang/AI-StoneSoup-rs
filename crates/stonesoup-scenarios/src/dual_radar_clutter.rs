@@ -76,7 +76,8 @@ const INITIATOR_MEAS_UPDATE_THRESH: f64 = 0.5;
 /// ``from_init`` sets ``update_count = 1``; one further corroborating JPDA update before confirm.
 pub const INITIATOR_MIN_POINTS: u8 = 2;
 /// Holding coast must exceed one radar-A rotation (6 s @ 0.25 s) so tentatives survive to the next plot.
-pub const HOLDING_TIME_STEPS_DELETER: usize = 40;
+/// Holding coast through two radar-A rotations (6 s each) plus margin at 0.25 s steps.
+pub const HOLDING_TIME_STEPS_DELETER: usize = 56;
 
 fn holding_deleter() -> HoldingDeleter {
     HoldingDeleter::update_time_steps(HOLDING_TIME_STEPS_DELETER)

@@ -105,13 +105,17 @@ impl ConstantAcceleration6d {
 pub struct CoordinatedTurn6d {
     pub max_turn_accel_mps2: f64,
     pub q_vel: f64,
+    /// Scales ``ω = a/v`` (IMM turns are gentler than truth peak 9 g).
+    pub omega_scale: f64,
+    /// Floor on speed in ``ω = a/v`` to avoid extreme turn rates at low ``v``.
+    pub omega_speed_floor_mps: f64,
 }
 
 impl CoordinatedTurn6d {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn omega_for_speed(&self, speed_mps: f64) -> f64 {
-        let v = speed_mps.max(30.0);
-        self.max_turn_accel_mps2 / v
+        let v = speed_mps.max(self.omega_speed_floor_mps.max(1.0));
+        self.max_turn_accel_mps2 / v * self.omega_scale.max(0.0)
     }
 
     /// CT sub-models do not use longitudinal acceleration states.
