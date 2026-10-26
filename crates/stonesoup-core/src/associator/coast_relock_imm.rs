@@ -5,6 +5,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 use crate::error::Error;
+use crate::filter::imm_ekf::collapse_imm_mu_for_truth;
 use crate::time::Timestamp;
 
 use super::switch_diagnosis::list_coast_relock_handoffs;
@@ -21,7 +22,7 @@ pub struct ImmDominantCounts {
 
 impl ImmDominantCounts {
     pub fn record(&mut self, mu: [f64; 3]) {
-        match dominant_imm_index(mu) {
+        match dominant_imm_index_collapsed(mu) {
             0 => self.cv += 1,
             1 => self.ca += 1,
             _ => self.ct += 1,
@@ -54,7 +55,7 @@ pub struct CoastRelockImmStudy {
     pub imm_truth_crosstab_at_switch: [[u32; 3]; 3],
 }
 
-pub fn dominant_imm_index(mu: [f64; 3]) -> u8 {
+pub fn dominant_imm_index_collapsed(mu: [f64; 3]) -> u8 {
     if mu[1] >= mu[0] && mu[1] >= mu[2] {
         1
     } else if mu[2] >= mu[0] && mu[2] >= mu[1] {
@@ -70,7 +71,7 @@ fn imm_mu_at_or_before(track: &TrackPath, ts: Timestamp) -> Option<[f64; 3]> {
         .iter()
         .filter(|(t, _)| t.0 <= ts.0)
         .max_by_key(|(t, _)| t.0)
-        .map(|(_, m)| *m)
+        .map(|(_, m)| collapse_imm_mu_for_truth(m))
 }
 
 fn mean_mu(samples: &[[f64; 3]]) -> [f64; 3] {
@@ -129,7 +130,7 @@ pub fn study_coast_relock_imm(
         if let Some(mu) = imm_mu_at_or_before(track, switch_ts) {
             switch_mus.push(mu);
             study.imm_dominant_at_switch.record(mu);
-            let imm_d = dominant_imm_index(mu) as usize;
+            let imm_d = dominant_imm_index_collapsed(mu) as usize;
             let from = h.from_truth as usize;
             if let Some(log) = truth_motion_log.get(from) {
                 if let Some(tm) = truth_mode_at_or_before(log, switch_ts) {
@@ -144,8 +145,9 @@ pub fn study_coast_relock_imm(
         let start_ns = switch_ts.0.saturating_sub(window_ns);
         for (ts, mu) in &track.imm_mu {
             if ts.0 >= start_ns && ts.0 <= switch_ts.0 {
-                window_mus.push(*mu);
-                study.imm_dominant_coast_window.record(*mu);
+                let collapsed = collapse_imm_mu_for_truth(mu);
+                window_mus.push(collapsed);
+                study.imm_dominant_coast_window.record(collapsed);
             }
         }
     }
@@ -160,8 +162,9 @@ pub fn study_coast_relock_imm(
     let mut base = Vec::new();
     for track in tracks {
         for (_, mu) in &track.imm_mu {
-            base.push(*mu);
-            study.imm_dominant_baseline.record(*mu);
+            let collapsed = collapse_imm_mu_for_truth(mu);
+            base.push(collapsed);
+            study.imm_dominant_baseline.record(collapsed);
         }
     }
     study.baseline_samples = base.len() as u32;

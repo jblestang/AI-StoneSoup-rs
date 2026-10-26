@@ -1,4 +1,4 @@
-//! 3-model IMM-EKF: Singer CV, constant-acceleration, and coordinated-turn (truth-aligned dynamics).
+//! 4-model IMM-EKF: Singer CV, CA, and coordinated-turn ±ω (truth-aligned dynamics).
 
 use crate::associator::{ProbabilityHypothesis, squared_mahalanobis, MAX_PDA_HYPOTHESES};
 use crate::error::Error;
@@ -11,18 +11,25 @@ use crate::state::GaussianState;
 use crate::time::Timestamp;
 use crate::types::Detection;
 
-use super::imm_dynamics::{ConstantAcceleration6d, CoordinatedTurn6d, SingerCv6d};
+use super::imm_dynamics::{ConstantAcceleration6d, CoordinatedTurn6d, CT_MANEUVER_ACCEL_MPS2, SingerCv6d};
 use super::imm_state6::{
     gm_reduce_6, predict_linear6, GaussianState6, IMM_STATE_DIM,
 };
 
-pub const IMM_MODEL_COUNT: usize = 3;
+pub const IMM_MODEL_COUNT: usize = 4;
+
+/// Collapse CT± into a single CT mass for comparison with 3-mode ground truth.
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+pub fn collapse_imm_mu_for_truth(mu: &[f64; IMM_MODEL_COUNT]) -> [f64; 3] {
+    [mu[0], mu[1], mu[2] + mu[3]]
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ImmModelKind {
     Cv = 0,
     Ca = 1,
-    Ct = 2,
+    CtPos = 2,
+    CtNeg = 3,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -37,19 +44,20 @@ impl ImmEkfConfig {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn dual_radar_default() -> Result<Self, Error> {
         let tpm = [
-            [0.94, 0.03, 0.03],
-            [0.03, 0.94, 0.03],
-            [0.03, 0.03, 0.94],
+            [0.92, 0.02, 0.03, 0.03],
+            [0.02, 0.92, 0.03, 0.03],
+            [0.03, 0.03, 0.92, 0.02],
+            [0.03, 0.03, 0.02, 0.92],
         ];
         Ok(Self {
             cv: SingerCv6d {
-                q_accel: 25.0,
-                alpha: 2.0,
+                q_accel: 18.0,
+                alpha: 3.5,
             },
-            ca: ConstantAcceleration6d { q_accel: 900.0 },
+            ca: ConstantAcceleration6d { q_accel: 650.0 },
             ct: CoordinatedTurn6d {
-                omega_rad_s: 0.12,
-                q_vel: 400.0,
+                max_turn_accel_mps2: CT_MANEUVER_ACCEL_MPS2,
+                q_vel: 350.0,
             },
             tpm,
         })
@@ -67,23 +75,15 @@ impl ImmEkfState {
     pub fn from_gaussian(state: GaussianState) -> Result<Self, Error> {
         let lifted = GaussianState6::from_position_velocity_4d(&state, 200.0)?;
         Ok(Self {
-            models: [lifted, lifted, lifted],
-            mu: [1.0 / 3.0; IMM_MODEL_COUNT],
+            models: [lifted; IMM_MODEL_COUNT],
+            mu: [1.0 / IMM_MODEL_COUNT as f64; IMM_MODEL_COUNT],
         })
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn combined(&self) -> Result<GaussianState, Error> {
-        let means = [
-            self.models[0].mean,
-            self.models[1].mean,
-            self.models[2].mean,
-        ];
-        let covs = [
-            self.models[0].cov,
-            self.models[1].cov,
-            self.models[2].cov,
-        ];
+        let means = model_means(&self.models);
+        let covs = model_covs(&self.models);
         let (mean6, cov6) = gm_reduce_6(&means, &covs, &self.mu)?;
         let s6 = GaussianState6::new(mean6, cov6, self.models[0].timestamp)?;
         s6.marginalize_to_4d()
@@ -193,15 +193,34 @@ impl ImmEkfState {
     }
 }
 
+fn model_means(states: &[GaussianState6; IMM_MODEL_COUNT]) -> [[f64; IMM_STATE_DIM]; IMM_MODEL_COUNT] {
+    [
+        states[0].mean,
+        states[1].mean,
+        states[2].mean,
+        states[3].mean,
+    ]
+}
+
+fn model_covs(
+    states: &[GaussianState6; IMM_MODEL_COUNT],
+) -> [[[f64; IMM_STATE_DIM]; IMM_STATE_DIM]; IMM_MODEL_COUNT] {
+    [states[0].cov, states[1].cov, states[2].cov, states[3].cov]
+}
+
 fn model_kind(j: usize) -> ImmModelKind {
     match j {
         0 => ImmModelKind::Cv,
         1 => ImmModelKind::Ca,
-        _ => ImmModelKind::Ct,
+        2 => ImmModelKind::CtPos,
+        _ => ImmModelKind::CtNeg,
     }
 }
 
-fn mixing_normalizer(mu: &[f64; IMM_MODEL_COUNT], tpm: &[[f64; 3]; 3]) -> [f64; IMM_MODEL_COUNT] {
+fn mixing_normalizer(
+    mu: &[f64; IMM_MODEL_COUNT],
+    tpm: &[[f64; IMM_MODEL_COUNT]; IMM_MODEL_COUNT],
+) -> [f64; IMM_MODEL_COUNT] {
     let mut c = [0.0; IMM_MODEL_COUNT];
     for j in 0..IMM_MODEL_COUNT {
         for i in 0..IMM_MODEL_COUNT {
@@ -229,8 +248,8 @@ fn mix_gaussians_6(
         }
         return GaussianState6::new(states[best].mean, states[best].cov, timestamp);
     }
-    let means = [states[0].mean, states[1].mean, states[2].mean];
-    let covs = [states[0].cov, states[1].cov, states[2].cov];
+    let means = model_means(states);
+    let covs = model_covs(states);
     let (mean, cov) = gm_reduce_6(&means, &covs, weights)?;
     GaussianState6::new(mean, cov, timestamp)
 }
@@ -255,7 +274,16 @@ fn predict_imm_model(
             let (f, q) = cfg.ca.f_q(dt)?;
             predict_linear6(&prior, &f, &q, timestamp)
         }
-        ImmModelKind::Ct => cfg.ct.predict(&prior, timestamp),
+        ImmModelKind::CtPos | ImmModelKind::CtNeg => {
+            let prior = CoordinatedTurn6d::prepare_state(&prior);
+            let vx = prior.mean[1];
+            let vy = prior.mean[4];
+            let speed = libm::sqrt(vx * vx + vy * vy).max(1.0);
+            let omega_mag = cfg.ct.omega_for_speed(speed);
+            let sign = if kind == ImmModelKind::CtPos { 1.0 } else { -1.0 };
+            cfg.ct
+                .predict_with_omega(&prior, timestamp, sign * omega_mag)
+        }
     }
 }
 
@@ -587,6 +615,31 @@ mod tests {
         let pred = predict_imm_model(prior, t1, ImmModelKind::Ca, &cfg).expect("pred");
         assert!((pred.mean[0] - (100_000.0 + 200.0 + 2.5)).abs() < 1e-6);
         assert!((pred.mean[1] - 205.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn ct_turns_with_speed_scaled_omega() {
+        let cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
+        let t0 = Timestamp::ZERO;
+        let dt = Duration::from_seconds(2.0).expect("dt");
+        let speed = 250.0;
+        let mut mean = [0.0; IMM_STATE_DIM];
+        mean[0] = 0.0;
+        mean[1] = speed;
+        mean[3] = 0.0;
+        mean[4] = 0.0;
+        let cov = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
+        let prior = GaussianState6::new(mean, cov, t0).expect("prior");
+        let t1 = t0.checked_add(dt).expect("t1");
+        let pred =
+            predict_imm_model(prior, t1, ImmModelKind::CtPos, &cfg).expect("pred");
+        let omega = cfg.ct.omega_for_speed(speed);
+        let expected_heading = omega * 2.0;
+        let expected_vx = speed * libm::cos(expected_heading);
+        let expected_vy = speed * libm::sin(expected_heading);
+        assert!((pred.mean[1] - expected_vx).abs() < 0.5);
+        assert!((pred.mean[4] - expected_vy).abs() < 0.5);
+        assert!(pred.mean[2].abs() < 1e-9 && pred.mean[5].abs() < 1e-9);
     }
 
     #[test]

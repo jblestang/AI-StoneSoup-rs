@@ -14,7 +14,7 @@ pub struct TrackPath {
     pub id: u32,
     pub states: Vec<(Timestamp, [f64; 4])>,
     /// IMM model probabilities `[CV, CA, CT]` when logged (dual-radar filter paths).
-    pub imm_mu: Vec<(Timestamp, [f64; 3])>,
+    pub imm_mu: Vec<(Timestamp, [f64; crate::IMM_MODEL_COUNT])>,
 }
 
 #[derive(Debug, Clone)]

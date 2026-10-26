@@ -1,10 +1,13 @@
-//! IMM sub-model dynamics aligned with dual-radar truth motion (CV / CA / CT).
+//! IMM sub-model dynamics aligned with dual-radar truth motion (CV / CA / CT±).
 
 use crate::error::Error;
 use crate::linalg::require_finite;
 use crate::time::Duration;
 
 use super::imm_state6::{GaussianState6, IMM_STATE_DIM};
+
+/// Peak centripetal acceleration used to cap turn rate at speed (matches truth CT).
+pub const CT_MANEUVER_ACCEL_MPS2: f64 = 9.0 * 9.806_65;
 
 /// Singer-style CV on 6D state: acceleration is driven noise with exponential decay.
 #[derive(Debug, Clone, Copy)]
@@ -16,7 +19,11 @@ pub struct SingerCv6d {
 
 impl SingerCv6d {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-    pub fn f_q(&self, dt: Duration) -> Result<([[f64; IMM_STATE_DIM]; IMM_STATE_DIM], [[f64; IMM_STATE_DIM]; IMM_STATE_DIM]), Error> {
+    pub fn f_q(
+        &self,
+        dt: Duration,
+    ) -> Result<([[f64; IMM_STATE_DIM]; IMM_STATE_DIM], [[f64; IMM_STATE_DIM]; IMM_STATE_DIM]), Error>
+    {
         let t = dt.as_seconds();
         require_finite(t)?;
         if t < 0.0 {
@@ -60,7 +67,11 @@ pub struct ConstantAcceleration6d {
 
 impl ConstantAcceleration6d {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-    pub fn f_q(&self, dt: Duration) -> Result<([[f64; IMM_STATE_DIM]; IMM_STATE_DIM], [[f64; IMM_STATE_DIM]; IMM_STATE_DIM]), Error> {
+    pub fn f_q(
+        &self,
+        dt: Duration,
+    ) -> Result<([[f64; IMM_STATE_DIM]; IMM_STATE_DIM], [[f64; IMM_STATE_DIM]; IMM_STATE_DIM]), Error>
+    {
         let t = dt.as_seconds();
         require_finite(t)?;
         if t < 0.0 {
@@ -89,20 +100,39 @@ impl ConstantAcceleration6d {
     }
 }
 
-/// Coordinated turn on horizontal velocity (matches truth CT: fixed speed, heading += ωΔt).
+/// Coordinated turn: fixed speed, heading += ωΔt (truth-aligned).
 #[derive(Debug, Clone, Copy)]
 pub struct CoordinatedTurn6d {
-    /// Nominal turn rate magnitude (rad/s); sign comes from velocity–acceleration coupling in likelihood.
-    pub omega_rad_s: f64,
+    pub max_turn_accel_mps2: f64,
     pub q_vel: f64,
 }
 
 impl CoordinatedTurn6d {
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-    pub fn predict(
+    pub fn omega_for_speed(&self, speed_mps: f64) -> f64 {
+        let v = speed_mps.max(30.0);
+        self.max_turn_accel_mps2 / v
+    }
+
+    /// CT sub-models do not use longitudinal acceleration states.
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn prepare_state(prior: &GaussianState6) -> GaussianState6 {
+        let mut mean = prior.mean;
+        mean[2] = 0.0;
+        mean[5] = 0.0;
+        GaussianState6 {
+            mean,
+            cov: prior.cov,
+            timestamp: prior.timestamp,
+        }
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn predict_with_omega(
         &self,
         prior: &GaussianState6,
         timestamp: crate::time::Timestamp,
+        omega_rad_s: f64,
     ) -> Result<GaussianState6, Error> {
         if prior.timestamp == timestamp {
             return Ok(*prior);
@@ -113,18 +143,12 @@ impl CoordinatedTurn6d {
         if t < 0.0 {
             return Err(Error::InvalidTimeStep);
         }
+        let prior = Self::prepare_state(prior);
         let vx = prior.mean[1];
         let vy = prior.mean[4];
-        let ax = prior.mean[2];
-        let ay = prior.mean[5];
         let speed = libm::sqrt(vx * vx + vy * vy).max(1.0);
         let heading = libm::atan2(vy, vx);
-        let w = if speed > 30.0 {
-            let omega_est = (vx * ay - vy * ax) / (speed * speed);
-            omega_est.clamp(-self.omega_rad_s, self.omega_rad_s)
-        } else {
-            0.0
-        };
+        let w = omega_rad_s.clamp(-self.omega_for_speed(speed), self.omega_for_speed(speed));
         let heading_new = heading + w * t;
         let vx2 = speed * libm::cos(heading_new);
         let vy2 = speed * libm::sin(heading_new);
@@ -134,8 +158,10 @@ impl CoordinatedTurn6d {
         let mut mean = prior.mean;
         mean[0] = x2;
         mean[1] = vx2;
+        mean[2] = 0.0;
         mean[3] = y2;
         mean[4] = vy2;
+        mean[5] = 0.0;
 
         let f = jacobian_ct(&prior.mean, t, w, speed)?;
         let fp = super::imm_state6::mat6_mul(&f, &prior.cov);
@@ -159,15 +185,11 @@ fn jacobian_ct(
     w: f64,
     speed: f64,
 ) -> Result<[[f64; IMM_STATE_DIM]; IMM_STATE_DIM], Error> {
-    let vx = s[1];
-    let vy = s[4];
-    let _ = (vx, vy);
     let eps = 1e-4;
     let mut f = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
     for i in 0..IMM_STATE_DIM {
         f[i][i] = 1.0;
     }
-    let base = ct_mean(s, dt, w, speed);
     for col in 0..IMM_STATE_DIM {
         let mut sp = *s;
         let mut sm = *s;
@@ -179,7 +201,6 @@ fn jacobian_ct(
             f[row][col] = (fp[row] - fm[row]) / (2.0 * eps);
         }
     }
-    let _ = base;
     Ok(f)
 }
 

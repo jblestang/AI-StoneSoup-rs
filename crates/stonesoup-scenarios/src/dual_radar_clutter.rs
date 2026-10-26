@@ -20,7 +20,7 @@ use stonesoup_core::{
     MAX_GNN_ASSIGN_DETS, MAX_JPDA_EKF_TRACKS, MAX_PDA_HYPOTHESES,
     jpda_associate_ekf_det_models, jpda_detection_weights, ekf_pda_merged_update,
     GaussianMeasurementPrediction, PDA_GATE_CHI2_2D, squared_mahalanobis,
-    HoldingDeleter, ImmEkfConfig, ImmEkfState, MultiMeasurementInitiator,
+    HoldingDeleter, ImmEkfConfig, ImmEkfState, MultiMeasurementInitiator, IMM_MODEL_COUNT,
 };
 use stonesoup_core::linalg::VecN;
 use stonesoup_core::GroundTruthState;
@@ -898,7 +898,13 @@ impl DualRadarClutterSim {
         });
     }
 
-    fn append_filter_path(&mut self, id: u32, ts: Timestamp, mean: [f64; 4], mu: [f64; 3]) {
+    fn append_filter_path(
+        &mut self,
+        id: u32,
+        ts: Timestamp,
+        mean: [f64; 4],
+        mu: [f64; IMM_MODEL_COUNT],
+    ) {
         if let Some(p) = self.filter_paths.iter_mut().find(|p| p.id == id) {
             if p.states.last().map(|(t, _)| *t != ts).unwrap_or(true) {
                 p.states.push((ts, mean));
@@ -908,7 +914,7 @@ impl DualRadarClutterSim {
     }
 
     fn snapshot_active_paths(&mut self, ts: Timestamp) {
-        let snaps: alloc::vec::Vec<(u32, [f64; 4], [f64; 3])> = self
+        let snaps: alloc::vec::Vec<(u32, [f64; 4], [f64; IMM_MODEL_COUNT])> = self
             .active
             .iter()
             .filter_map(|t| {
