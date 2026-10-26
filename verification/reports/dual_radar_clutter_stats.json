@@ -10125,6 +10125,60 @@
     },
     "switch_diagnosis": {
       "ambiguous_nearest_steps": 22,
+      "coast_relock_imm": {
+        "baseline_imm_samples": 245843,
+        "coast_relock_events": 107,
+        "coast_window_s": 6.0,
+        "description": "IMM sub-model (CV/CA/CT) at coast-then-relock handoffs vs all filter-path samples. Crosstab rows = dominant IMM, cols = prior-truth motion mode.",
+        "dominant_imm_at_switch": {
+          "ca": 105,
+          "ct": 0,
+          "cv": 2
+        },
+        "dominant_imm_baseline": {
+          "ca": 235910,
+          "ct": 1883,
+          "cv": 8050
+        },
+        "dominant_imm_coast_window": {
+          "ca": 2672,
+          "ct": 0,
+          "cv": 2
+        },
+        "imm_truth_crosstab": [
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            39,
+            35,
+            31
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "imm_truth_mode_mismatch_fraction": 0.6728971962616822,
+        "mean_mu_at_switch": [
+          0.337051249745554,
+          0.36058938461172896,
+          0.302359365642717
+        ],
+        "mean_mu_baseline": [
+          0.33476638415098714,
+          0.34998323563363753,
+          0.31525038021520113
+        ],
+        "mean_mu_coast_window": [
+          0.3343979549790481,
+          0.3456700628246892,
+          0.3199319821962637
+        ]
+      },
       "coast_relock_study": {
         "assoc_label_gap_ge_1s": 107,
         "description": "CoastThenRelock = at new TrackToTruth segment start, filter is outside the prior truth BR gate but inside the new truth gate.",

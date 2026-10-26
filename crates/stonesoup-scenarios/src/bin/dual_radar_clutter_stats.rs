@@ -296,6 +296,32 @@ fn run() -> Result<String, ScenarioError> {
                         "median_prior_truth_a_plot_gap_s": stats.radar_a_coast_relock.median_prior_truth_a_plot_gap_s,
                     },
                 },
+                "coast_relock_imm": {
+                    "description": "IMM sub-model (CV/CA/CT) at coast-then-relock handoffs vs all filter-path samples. Crosstab rows = dominant IMM, cols = prior-truth motion mode.",
+                    "coast_relock_events": stats.coast_relock_imm.coast_relock_events,
+                    "coast_window_s": stats.coast_relock_imm.coast_window_s,
+                    "imm_truth_mode_mismatch_fraction": stats.coast_relock_imm.imm_truth_mode_mismatch_at_switch,
+                    "dominant_imm_at_switch": {
+                        "cv": stats.coast_relock_imm.imm_dominant_at_switch.cv,
+                        "ca": stats.coast_relock_imm.imm_dominant_at_switch.ca,
+                        "ct": stats.coast_relock_imm.imm_dominant_at_switch.ct,
+                    },
+                    "dominant_imm_coast_window": {
+                        "cv": stats.coast_relock_imm.imm_dominant_coast_window.cv,
+                        "ca": stats.coast_relock_imm.imm_dominant_coast_window.ca,
+                        "ct": stats.coast_relock_imm.imm_dominant_coast_window.ct,
+                    },
+                    "dominant_imm_baseline": {
+                        "cv": stats.coast_relock_imm.imm_dominant_baseline.cv,
+                        "ca": stats.coast_relock_imm.imm_dominant_baseline.ca,
+                        "ct": stats.coast_relock_imm.imm_dominant_baseline.ct,
+                    },
+                    "baseline_imm_samples": stats.coast_relock_imm.baseline_samples,
+                    "mean_mu_at_switch": stats.coast_relock_imm.mean_mu_at_switch,
+                    "mean_mu_coast_window": stats.coast_relock_imm.mean_mu_coast_window,
+                    "mean_mu_baseline": stats.coast_relock_imm.mean_mu_baseline,
+                    "imm_truth_crosstab": stats.coast_relock_imm.imm_truth_crosstab_at_switch,
+                },
                 "coast_relock_study": {
                     "description": "CoastThenRelock = at new TrackToTruth segment start, filter is outside the prior truth BR gate but inside the new truth gate.",
                     "event_count": stats.switch_diagnosis.coast_relock.event_count,

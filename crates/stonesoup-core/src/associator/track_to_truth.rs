@@ -13,6 +13,8 @@ use super::track_truth_gate::TrackTruthPositionGate;
 pub struct TrackPath {
     pub id: u32,
     pub states: Vec<(Timestamp, [f64; 4])>,
+    /// IMM model probabilities `[CV, CA, CT]` when logged (dual-radar filter paths).
+    pub imm_mu: Vec<(Timestamp, [f64; 3])>,
 }
 
 #[derive(Debug, Clone)]

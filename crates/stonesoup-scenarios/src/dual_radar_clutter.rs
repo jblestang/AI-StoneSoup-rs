@@ -10,7 +10,7 @@ use stonesoup_core::{
     assess_track_quality, associate_tracks_to_truths, continuous_tracks_per_truth,
     diagnose_identity_switches_from_assoc, mod_bearing, study_radar_a_coast_relocks,
     CartesianToBearingRange,
-    SwitchDiagnosisSummary,
+    CoastRelockImmStudy, study_coast_relock_imm, SwitchDiagnosisSummary,
     TrackQualityReport,
     ConstantVelocity2d, ContinuousTruthTrack, Detection, Duration, Error, ExtendedKalmanUpdater,
     GaussianState, JpdaHypothesisSet, KalmanPredictor, KalmanWorkspace, ProbabilityHypothesis,
@@ -308,6 +308,7 @@ pub struct DualRadarStats {
     pub continuous_track_fused_sensor_counts: TruthSensorPlotCounts,
     pub track_quality: TrackQualityReport,
     pub switch_diagnosis: SwitchDiagnosisSummary,
+    pub coast_relock_imm: CoastRelockImmStudy,
     pub sensor_fusion: FusedSensorDiagnostics,
     pub radar_a_coast_relock: stonesoup_core::RadarACoastRelockStudy,
     pub jpda_a_histogram: crate::jpda_a_histogram::JpdaAHistogramReport,
@@ -716,6 +717,14 @@ fn advance_truth(
     GroundTruthState::new(state, ts).map_err(ScenarioError::Core)
 }
 
+fn truth_mode_byte(mode: TruthMotionMode) -> u8 {
+    match mode {
+        TruthMotionMode::Cv => 0,
+        TruthMotionMode::Ca => 1,
+        TruthMotionMode::Ct => 2,
+    }
+}
+
 fn euclidean_xy(a: (f64, f64), b: (f64, f64)) -> f64 {
     let dx = a.0 - b.0;
     let dy = a.1 - b.1;
@@ -751,6 +760,8 @@ pub struct DualRadarClutterSim {
     next_track_id: u32,
     filter_paths: Vec<TrackPath>,
     truth_log: Vec<Vec<(Timestamp, [f64; 4])>>,
+    /// Ground-truth motion mode per step: 0 = CV, 1 = CA, 2 = CT.
+    truth_mode_log: Vec<Vec<(Timestamp, u8)>>,
     truth_speed_mps: Vec<f64>,
     truth_motion: Vec<TruthMotionProfile>,
     truth_birth_range_m: Vec<f64>,
@@ -788,6 +799,7 @@ impl DualRadarClutterSim {
         let truths_plot_seen_a = alloc::vec![false; NUM_TRUTHS];
         let truths_plot_seen_b = alloc::vec![false; NUM_TRUTHS];
         let truth_log = alloc::vec![Vec::new(); NUM_TRUTHS];
+        let truth_mode_log = alloc::vec![Vec::new(); NUM_TRUTHS];
         let coast_steps = libm::ceil(COAST_SECONDS / DT_S) as usize;
         Ok(Self {
             predictor,
@@ -856,6 +868,7 @@ impl DualRadarClutterSim {
             next_track_id: 0,
             filter_paths: Vec::new(),
             truth_log,
+            truth_mode_log,
             truth_speed_mps,
             truth_motion,
             truth_birth_range_m,
@@ -871,6 +884,9 @@ impl DualRadarClutterSim {
             if self.truth_log[i].len() < 4096 {
                 self.truth_log[i].push((ts, gt.state));
             }
+            if self.truth_mode_log[i].len() < 4096 {
+                self.truth_mode_log[i].push((ts, truth_mode_byte(self.truth_motion[i].mode)));
+            }
         }
     }
 
@@ -878,30 +894,32 @@ impl DualRadarClutterSim {
         self.filter_paths.push(TrackPath {
             id,
             states: alloc::vec![(ts, mean)],
+            imm_mu: alloc::vec![],
         });
     }
 
-    fn append_filter_path(&mut self, id: u32, ts: Timestamp, mean: [f64; 4]) {
+    fn append_filter_path(&mut self, id: u32, ts: Timestamp, mean: [f64; 4], mu: [f64; 3]) {
         if let Some(p) = self.filter_paths.iter_mut().find(|p| p.id == id) {
             if p.states.last().map(|(t, _)| *t != ts).unwrap_or(true) {
                 p.states.push((ts, mean));
+                p.imm_mu.push((ts, mu));
             }
         }
     }
 
     fn snapshot_active_paths(&mut self, ts: Timestamp) {
-        let snaps: alloc::vec::Vec<(u32, [f64; 4])> = self
+        let snaps: alloc::vec::Vec<(u32, [f64; 4], [f64; 3])> = self
             .active
             .iter()
             .filter_map(|t| {
                 t.imm
                     .combined()
                     .ok()
-                    .map(|c| (t.id, c.mean.0))
+                    .map(|c| (t.id, c.mean.0, t.imm.mu))
             })
             .collect();
-        for (id, mean) in snaps {
-            let _ = self.append_filter_path(id, ts, mean);
+        for (id, mean, mu) in snaps {
+            let _ = self.append_filter_path(id, ts, mean, mu);
         }
     }
 
@@ -1487,6 +1505,15 @@ impl DualRadarClutterSim {
             40,
         )
         .map_err(ScenarioError::Core)?;
+        let coast_relock_imm = study_coast_relock_imm(
+            &self.filter_paths,
+            &truth_paths,
+            &track_to_truth,
+            &tt_config,
+            &self.truth_mode_log,
+            PERIOD_A_S,
+        )
+        .map_err(ScenarioError::Core)?;
         let truth_plot_sensor_counts = truth_sensor_plot_counts(
             &self.truths_plot_seen_a,
             &self.truths_plot_seen_b,
@@ -1568,6 +1595,7 @@ impl DualRadarClutterSim {
             continuous_track_fused_sensor_counts,
             track_quality,
             switch_diagnosis,
+            coast_relock_imm,
             sensor_fusion,
             radar_a_coast_relock,
             jpda_a_histogram,
