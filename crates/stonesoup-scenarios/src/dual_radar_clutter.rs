@@ -94,6 +94,8 @@ pub const TRACK_TO_TRUTH_CONSEC_MISSES: u8 = 4;
 pub const TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN: f64 = 1.0;
 /// Track–truth metrics gate: ≈4σ in bearing at long range (χ²=16), tightening with range via R.
 pub const TRACK_TO_TRUTH_CHI2_LIMIT: f64 = 16.0;
+/// Wider BR gate to keep an established label through IMM coast between A revisits (~6σ at long range).
+pub const TRACK_TO_TRUTH_CHI2_SUSTAIN: f64 = 36.0;
 
 /// Bearing–range Mahalanobis gate for TrackToTruth / quality metrics (not JPDA detection gating).
 pub fn dual_radar_track_truth_gate() -> TrackTruthPositionGate {
@@ -103,6 +105,7 @@ pub fn dual_radar_track_truth_gate() -> TrackTruthPositionGate {
         bearing_sigma_rad: RADAR_BEARING_SIGMA_DEG * core::f64::consts::PI / 180.0,
         range_sigma_m: RADAR_RANGE_SIGMA_M,
         chi2_limit: TRACK_TO_TRUTH_CHI2_LIMIT,
+        chi2_sustain_limit: TRACK_TO_TRUTH_CHI2_SUSTAIN,
     }
 }
 
@@ -1215,14 +1218,6 @@ impl DualRadarClutterSim {
         let mut det_weights = alloc::vec![0.0; n_dets];
         let n_act = self.active.len();
         if n_act > 0 && !detections.is_empty() && n_act <= MAX_JPDA_EKF_TRACKS {
-            if radar_idx == 0 {
-                for track in &mut self.active {
-                    track
-                        .imm
-                        .interaction_and_predict(ts, &self.imm_cfg, &mut self.ws)
-                        .map_err(ScenarioError::Core)?;
-                }
-            }
             let act_tails: alloc::vec::Vec<GaussianState> = self
                 .active
                 .iter()
@@ -1334,6 +1329,14 @@ impl DualRadarClutterSim {
         let ts = self.ts();
         self.log_truths_at(ts);
         self.prior.timestamp = ts;
+        if self.step > 0 {
+            for track in &mut self.active {
+                track
+                    .imm
+                    .interaction_and_predict(ts, &self.imm_cfg, &mut self.ws)
+                    .map_err(ScenarioError::Core)?;
+            }
+        }
         let mut step_unassoc = Vec::with_capacity(16);
         let mut step_unassoc_models = Vec::with_capacity(16);
         let mut step_all_dets = Vec::with_capacity(32);

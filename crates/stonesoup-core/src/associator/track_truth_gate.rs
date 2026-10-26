@@ -16,7 +16,10 @@ pub enum TrackTruthPositionGate {
         sensor_y: f64,
         bearing_sigma_rad: f64,
         range_sigma_m: f64,
+        /// χ² limit to **acquire** a truth label (strict).
         chi2_limit: f64,
+        /// χ² limit to **retain** an established label through filter coast (≥ ``chi2_limit``).
+        chi2_sustain_limit: f64,
     },
 }
 
@@ -42,7 +45,35 @@ impl TrackTruthPositionGate {
         }
     }
 
-    /// Lower is better. Returns `None` if outside the gate.
+    /// Squared Mahalanobis (BR) or planar distance; `None` if non-finite.
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn raw_score(&self, track: [f64; 4], truth: [f64; 4]) -> Result<Option<f64>, Error> {
+        match self {
+            Self::FixedRadius(_) => {
+                let d = position_distance(track, truth);
+                Ok(Some(d))
+            }
+            Self::BearingRangeChi2 {
+                sensor_x,
+                sensor_y,
+                bearing_sigma_rad,
+                range_sigma_m,
+                ..
+            } => {
+                let sq = bearing_range_mahalanobis_sq(
+                    track,
+                    truth,
+                    *sensor_x,
+                    *sensor_y,
+                    *bearing_sigma_rad,
+                    *range_sigma_m,
+                )?;
+                Ok(Some(sq))
+            }
+        }
+    }
+
+    /// Lower is better. Returns `None` if outside the **acquire** gate.
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     pub fn score(
         &self,
@@ -55,21 +86,41 @@ impl TrackTruthPositionGate {
                 Ok(if d < *r { Some(d) } else { None })
             }
             Self::BearingRangeChi2 {
-                sensor_x,
-                sensor_y,
-                bearing_sigma_rad,
-                range_sigma_m,
                 chi2_limit,
+                ..
             } => {
-                let sq = bearing_range_mahalanobis_sq(
-                    track,
-                    truth,
-                    *sensor_x,
-                    *sensor_y,
-                    *bearing_sigma_rad,
-                    *range_sigma_m,
-                )?;
+                let Some(sq) = self.raw_score(track, truth)? else {
+                    return Ok(None);
+                };
                 Ok(if sq <= *chi2_limit { Some(sq) } else { None })
+            }
+        }
+    }
+
+    /// Retain an existing truth label through inter-visit filter coast (wider BR gate).
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn score_sustain(
+        &self,
+        track: [f64; 4],
+        truth: [f64; 4],
+    ) -> Result<Option<f64>, Error> {
+        match self {
+            Self::FixedRadius(r) => {
+                let d = position_distance(track, truth);
+                Ok(if d < *r * 1.5 { Some(d) } else { None })
+            }
+            Self::BearingRangeChi2 {
+                chi2_sustain_limit,
+                ..
+            } => {
+                let Some(sq) = self.raw_score(track, truth)? else {
+                    return Ok(None);
+                };
+                Ok(if sq <= *chi2_sustain_limit {
+                    Some(sq)
+                } else {
+                    None
+                })
             }
         }
     }
@@ -114,6 +165,7 @@ mod tests {
             bearing_sigma_rad: 0.2_f64.to_radians(),
             range_sigma_m: 30.0,
             chi2_limit: PDA_GATE_CHI2_2D,
+            chi2_sustain_limit: PDA_GATE_CHI2_2D * 1.5,
         };
         let track = [50_000.0, 0.0, 0.0, 0.0];
         let near = [50_050.0, 0.0, 0.0, 0.0];

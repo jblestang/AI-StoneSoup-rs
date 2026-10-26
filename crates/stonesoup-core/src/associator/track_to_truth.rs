@@ -161,8 +161,23 @@ pub fn associate_track_to_truths(
     let mut end_ts: Option<Timestamp> = None;
 
     for (ts, track_state) in &track.states {
-        let (mut min_truth, mut min_score) =
-            best_gated_truth(truths, *ts, *track_state, gate)?;
+        let (mut min_truth, mut min_score) = if let Some(cur) = current_truth {
+            if let Some(truth) = truths.iter().find(|t| t.id == cur) {
+                if let Some(truth_state) = truth_state_at(truth, *ts) {
+                    if let Some(sq) = gate.score_sustain(*track_state, truth_state)? {
+                        (Some(cur), sq)
+                    } else {
+                        best_gated_truth(truths, *ts, *track_state, gate)?
+                    }
+                } else {
+                    best_gated_truth(truths, *ts, *track_state, gate)?
+                }
+            } else {
+                best_gated_truth(truths, *ts, *track_state, gate)?
+            }
+        } else {
+            best_gated_truth(truths, *ts, *track_state, gate)?
+        };
 
         if config.switch_score_margin > 0.0 {
             if let Some(cur) = current_truth {

@@ -232,6 +232,7 @@ fn run() -> Result<String, ScenarioError> {
                 "bearing_sigma_deg": stonesoup_scenarios::RADAR_BEARING_SIGMA_DEG,
                 "range_sigma_m": stonesoup_scenarios::RADAR_RANGE_SIGMA_M,
                 "chi2_limit": stonesoup_scenarios::TRACK_TO_TRUTH_CHI2_LIMIT,
+                "chi2_sustain_limit": stonesoup_scenarios::TRACK_TO_TRUTH_CHI2_SUSTAIN,
                 "max_range_1sigma_cross_range_m": stonesoup_scenarios::TRUTH_ASSOC_MAX_RANGE_SIGMA_M,
             },
             "accuracy_scale_m": stonesoup_scenarios::dual_radar_track_to_truth_config().accuracy_scale_m(),
