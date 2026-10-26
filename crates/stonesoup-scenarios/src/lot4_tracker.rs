@@ -3,9 +3,9 @@
 use stonesoup_core::{
     associate_gnn_2d, associate_gnn_2d_kdtree, initiate_from_detection,
     should_delete_covariance_trace, ConstantVelocity2d, Detection, Duration, GaussianState,
-    GnnAssignment, KalmanPredictor, KalmanUpdater, KalmanWorkspace, LinearGaussianMeasurement, Mat,
-    MeasurementHypothesis, Timestamp, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS,
-    MAX_GNN_ASSIGN_DETS,
+    GnnAssignment, HoldingDeleter, KalmanPredictor, KalmanUpdater, KalmanWorkspace,
+    LinearGaussianMeasurement, Mat, MeasurementHypothesis, MultiMeasurementInitiator, Timestamp,
+    KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS, MAX_GNN_ASSIGN_DETS,
 };
 
 use crate::lot3_meas::push_measurements;
@@ -13,11 +13,6 @@ use crate::registry::ScenarioError;
 
 pub const MAX_LOT4_ACTIVE_TRACKS: usize = 16;
 pub const MAX_LOT4_HOLDING_TRACKS: usize = 64;
-
-struct HoldingTrack {
-    tail: GaussianState,
-    updates: u8,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Lot4GnnAssociator {
@@ -42,7 +37,7 @@ pub struct Lot4MultiTargetTracker {
     updater: KalmanUpdater,
     ws: KalmanWorkspace,
     active: [Option<GaussianState>; MAX_LOT4_ACTIVE_TRACKS],
-    holding: [Option<HoldingTrack>; MAX_LOT4_HOLDING_TRACKS],
+    initiator: MultiMeasurementInitiator,
     step: usize,
     max_steps: usize,
     meas_offsets: &'static [usize],
@@ -65,6 +60,7 @@ impl Lot4MultiTargetTracker {
         r.set(1, 1, params.meas_var).map_err(ScenarioError::Core)?;
         let measurement = LinearGaussianMeasurement::position_2d(r).map_err(ScenarioError::Core)?;
         let updater = KalmanUpdater::new(measurement);
+        let min_points = params.min_points;
         Ok(Self {
             params,
             predictor,
@@ -76,7 +72,11 @@ impl Lot4MultiTargetTracker {
                 r: Mat::zeros(),
             },
             active: [None; MAX_LOT4_ACTIVE_TRACKS],
-            holding: [const { None }; MAX_LOT4_HOLDING_TRACKS],
+            initiator: MultiMeasurementInitiator::new(
+                min_points,
+                true,
+                MAX_LOT4_HOLDING_TRACKS,
+            ),
             step: 0,
             max_steps,
             meas_offsets,
@@ -129,7 +129,11 @@ impl Lot4MultiTargetTracker {
 
     pub fn reset(&mut self) -> Result<(), ScenarioError> {
         self.active = [None; MAX_LOT4_ACTIVE_TRACKS];
-        self.holding = [const { None }; MAX_LOT4_HOLDING_TRACKS];
+        self.initiator = MultiMeasurementInitiator::new(
+            self.params.min_points,
+            true,
+            MAX_LOT4_HOLDING_TRACKS,
+        );
         self.step = 0;
         Ok(())
     }
@@ -138,16 +142,6 @@ impl Lot4MultiTargetTracker {
         for slot in &mut self.active {
             if slot.is_none() {
                 *slot = Some(tail);
-                return Ok(());
-            }
-        }
-        Err(ScenarioError::Core(stonesoup_core::Error::CapacityExceeded))
-    }
-
-    fn insert_holding(&mut self, tail: GaussianState) -> Result<(), ScenarioError> {
-        for slot in &mut self.holding {
-            if slot.is_none() {
-                *slot = Some(HoldingTrack { tail, updates: 1 });
                 return Ok(());
             }
         }
@@ -167,19 +161,6 @@ impl Lot4MultiTargetTracker {
         Ok(())
     }
 
-    fn delete_holding(&mut self) -> Result<(), ScenarioError> {
-        for slot in &mut self.holding {
-            if let Some(ht) = slot {
-                if should_delete_covariance_trace(&ht.tail, self.params.deleter_trace)
-                    .map_err(ScenarioError::Core)?
-                {
-                    *slot = None;
-                }
-            }
-        }
-        Ok(())
-    }
-
     /// Stone Soup ``MultiMeasurementInitiator.initiate`` — returns confirmed track tails.
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
     fn multi_measurement_initiate(
@@ -190,19 +171,14 @@ impl Lot4MultiTargetTracker {
         let mut sure = [None; MAX_LOT4_ACTIVE_TRACKS];
         let mut n_sure = 0usize;
         let mut det_used = [false; MAX_GNN_ASSIGN_DETS];
+        let holding_deleter = HoldingDeleter::covariance_trace(self.params.deleter_trace);
 
-        let mut hold_tails = [self.params.prior; MAX_LOT4_HOLDING_TRACKS];
-        let mut hold_map = [0usize; MAX_LOT4_HOLDING_TRACKS];
-        let mut n_hold = 0usize;
-        for (i, slot) in self.holding.iter().enumerate() {
-            if let Some(h) = slot {
-                hold_tails[n_hold] = h.tail;
-                hold_map[n_hold] = i;
-                n_hold += 1;
-            }
-        }
-
+        let n_hold = self.initiator.holding_len();
         if n_hold > 0 {
+            let mut hold_tails = [self.params.prior; MAX_LOT4_HOLDING_TRACKS];
+            for (i, ht) in self.initiator.holding_tracks().iter().enumerate() {
+                hold_tails[i] = ht.tail;
+            }
             let mut assigns = [GnnAssignment {
                 hypothesis: MeasurementHypothesis {
                     prediction: hold_tails[0],
@@ -217,44 +193,34 @@ impl Lot4MultiTargetTracker {
                 &mut assigns[..n_hold],
             )?;
 
+            let updates_only = self.initiator.updates_only;
             for t in 0..n_hold {
-                let slot = hold_map[t];
                 let h = &assigns[t].hypothesis;
-                let ht = self.holding[slot]
-                    .as_mut()
-                    .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
+                let ht = &mut self.initiator.holding_tracks_mut()[t];
                 if let Some(di) = h.detection_index {
                     let post = self
                         .updater
                         .update(&h.prediction, &detections[di], &mut self.ws)
                         .map_err(ScenarioError::Core)?;
-                    ht.tail = post;
-                    ht.updates = ht.updates.saturating_add(1);
+                    ht.finish_scan(post, true, updates_only);
                     det_used[di] = true;
                 } else {
-                    ht.tail = h.prediction;
+                    ht.finish_scan(h.prediction, false, updates_only);
                 }
             }
 
-            for slot in 0..MAX_LOT4_HOLDING_TRACKS {
-                if let Some(ht) = self.holding[slot].as_ref() {
-                    if ht.updates >= self.params.min_points {
-                        let tail = self.holding[slot]
-                            .take()
-                            .map(|h| h.tail)
-                            .ok_or(ScenarioError::Core(stonesoup_core::Error::InvalidDimension))?;
-                        if n_sure < MAX_LOT4_ACTIVE_TRACKS {
-                            sure[n_sure] = Some(tail);
-                            n_sure += 1;
-                        } else {
-                            return Err(ScenarioError::Core(
-                                stonesoup_core::Error::CapacityExceeded,
-                            ));
-                        }
-                    }
+            let confirmed = self
+                .initiator
+                .confirm_and_prune(&holding_deleter)
+                .map_err(ScenarioError::Core)?;
+            for tail in confirmed {
+                if n_sure < MAX_LOT4_ACTIVE_TRACKS {
+                    sure[n_sure] = Some(tail);
+                    n_sure += 1;
+                } else {
+                    return Err(ScenarioError::Core(stonesoup_core::Error::CapacityExceeded));
                 }
             }
-            self.delete_holding()?;
         }
 
         for (i, det) in detections.iter().enumerate() {
@@ -264,7 +230,9 @@ impl Lot4MultiTargetTracker {
             let init =
                 initiate_from_detection(&self.params.prior, det, &self.updater, &mut self.ws)
                     .map_err(ScenarioError::Core)?;
-            self.insert_holding(init)?;
+            self.initiator
+                .try_add_holding(init)
+                .map_err(ScenarioError::Core)?;
         }
 
         Ok(sure)
