@@ -1,4 +1,5 @@
 //! Dual rotating radar network — plot and track statistics (JSON report).
+#![recursion_limit = "256"]
 
 use std::fs;
 use std::io;
@@ -58,6 +59,15 @@ fn run() -> Result<String, ScenarioError> {
     };
     let mut dur_true_sorted = dur_true.clone();
     let mut dur_false_sorted = dur_false.clone();
+    let sf = &stats.sensor_fusion;
+    let jpda_json = |c: stonesoup_scenarios::JpdaPassCounters| {
+        serde_json::json!({
+            "passes_with_dets_and_actives": c.passes_with_dets_and_actives,
+            "track_meas_above_thresh": c.track_meas_above_thresh,
+            "track_meas_below_thresh": c.track_meas_below_thresh,
+            "track_meas_zero": c.track_meas_zero,
+        })
+    };
     let payload = serde_json::json!({
         "parameters": {
             "implementation": "rust",
@@ -114,7 +124,21 @@ fn run() -> Result<String, ScenarioError> {
             "simulation_time_s": stats.simulation_steps as f64 * DT_S,
             "max_simulation_steps": max_simulation_steps(),
         },
-        "truths": {
+        "sensor_fusion": {
+    "description": "Why fused tracks are A-only vs A+B. B max range is ~179 km; A is 400 km. Mask bit set only when JPDA meas mass >= 0.35 on that radar pass.",
+    "truths_spawn_outside_b_range": sf.truths_spawn_outside_b_range,
+    "truths_spawn_inside_b_range": sf.truths_spawn_inside_b_range,
+    "inside_b_never_b_plotted": sf.inside_b_never_b_plotted,
+    "inside_b_b_plotted": sf.inside_b_b_plotted,
+    "inside_b_plotted_fused_b_updated": sf.inside_b_plotted_fused_b_updated,
+    "inside_b_plotted_fused_a_only": sf.inside_b_plotted_fused_a_only,
+    "inside_b_plotted_no_continuous_track": sf.inside_b_plotted_no_continuous_track,
+    "a_plots_total": sf.a_plots_total,
+    "b_plots_total": sf.b_plots_total,
+    "jpda_radar_a": jpda_json(sf.jpda_radar_a),
+    "jpda_radar_b": jpda_json(sf.jpda_radar_b),
+  },
+  "truths": {
             "simulated": NUM_TRUTHS,
             "with_any_plot": stats.truths_with_any_plot,
             "with_labeled_fused_track": stats.truths_with_labeled_fused_track,
@@ -201,6 +225,23 @@ fn run() -> Result<String, ScenarioError> {
                     "coast_then_relock": stats.switch_diagnosis.switch_causes.coast_then_relock,
                     "diverged_relock": stats.switch_diagnosis.switch_causes.diverged_relock,
                     "unknown": stats.switch_diagnosis.switch_causes.unknown,
+                },
+                "radar_a_coast_relock": {
+                    "description": "Coast-relock handoffs vs radar-A 6 s rotation: gaps since last A JPDA update on the filter track and since A last plotted the prior truth.",
+                    "coast_relock_events": stats.switch_diagnosis.coast_relock.event_count,
+                    "study": {
+                        "coast_relock_events": stats.radar_a_coast_relock.coast_relock_events,
+                        "filter_no_a_jpda_ge_rotation": stats.radar_a_coast_relock.filter_no_a_jpda_ge_rotation,
+                        "filter_no_a_jpda_between_1s_and_rotation": stats.radar_a_coast_relock.filter_no_a_jpda_between_1s_and_rotation,
+                        "filter_a_jpda_within_1s": stats.radar_a_coast_relock.filter_a_jpda_within_1s,
+                        "prior_truth_a_plot_gap_ge_rotation": stats.radar_a_coast_relock.prior_truth_a_plot_gap_ge_rotation,
+                        "prior_truth_a_plot_gap_between_1s_and_rotation": stats.radar_a_coast_relock.prior_truth_a_plot_gap_between_1s_and_rotation,
+                        "prior_truth_a_plotted_within_1s": stats.radar_a_coast_relock.prior_truth_a_plotted_within_1s,
+                        "mean_filter_a_jpda_gap_s": stats.radar_a_coast_relock.mean_filter_a_jpda_gap_s,
+                        "mean_prior_truth_a_plot_gap_s": stats.radar_a_coast_relock.mean_prior_truth_a_plot_gap_s,
+                        "median_filter_a_jpda_gap_s": stats.radar_a_coast_relock.median_filter_a_jpda_gap_s,
+                        "median_prior_truth_a_plot_gap_s": stats.radar_a_coast_relock.median_prior_truth_a_plot_gap_s,
+                    },
                 },
                 "coast_relock_study": {
                     "description": "CoastThenRelock = at new TrackToTruth segment start, filter is outside the prior truth BR gate but inside the new truth gate.",

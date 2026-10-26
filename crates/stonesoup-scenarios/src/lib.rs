@@ -88,7 +88,8 @@ pub use dual_radar_clutter::{
     SIM_DURATION_S, INITIATOR_MIN_POINTS, HOLDING_TIME_STEPS_DELETER, TRUTH_ASSOC_MAX_RANGE_SIGMA_M,
     TRACK_TO_TRUTH_CHI2_LIMIT, TRACK_TO_TRUTH_CONSEC_PAIRS, TRACK_TO_TRUTH_CONSEC_MISSES,
     TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
-    dual_radar_track_to_truth_config, dual_radar_track_truth_gate,
+    dual_radar_track_to_truth_config, dual_radar_track_truth_gate, FusedSensorDiagnostics,
+    JpdaPassCounters,
     TRUTH_SPEED_250_KNOTS_MPS, TRUTH_SPEED_400_KNOTS_MPS, TRUTH_SPEED_800_KNOTS_MPS,
     TRUTH_SPEED_MACH1_MPS, TRUTH_SPEED_MACH2_MPS, TRUTH_MAX_MANEUVER_G,
 };

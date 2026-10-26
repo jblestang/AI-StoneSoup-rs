@@ -56,6 +56,30 @@
     "true_plots_in_overlap_disk": 5338,
     "true_plots_in_overlap_fraction": 0.3832842679686939
   },
+  "sensor_fusion": {
+    "a_plots_total": 10419,
+    "b_plots_total": 3567,
+    "description": "Why fused tracks are A-only vs A+B. B max range is ~179 km; A is 400 km. Mask bit set only when JPDA meas mass >= 0.35 on that radar pass.",
+    "inside_b_b_plotted": 173,
+    "inside_b_never_b_plotted": 0,
+    "inside_b_plotted_fused_a_only": 0,
+    "inside_b_plotted_fused_b_updated": 172,
+    "inside_b_plotted_no_continuous_track": 0,
+    "jpda_radar_a": {
+      "passes_with_dets_and_actives": 200,
+      "track_meas_above_thresh": 8666,
+      "track_meas_below_thresh": 877,
+      "track_meas_zero": 197799
+    },
+    "jpda_radar_b": {
+      "passes_with_dets_and_actives": 207,
+      "track_meas_above_thresh": 3583,
+      "track_meas_below_thresh": 1044,
+      "track_meas_zero": 211636
+    },
+    "truths_spawn_inside_b_range": 173,
+    "truths_spawn_outside_b_range": 827
+  },
   "track_quality": {
     "accuracy_scale_m": 698.7759810259178,
     "by_truth": [
@@ -10037,6 +10061,23 @@
       "identity_switches_at_confirm_1": 122,
       "identity_switches_if_confirm_3": 122,
       "per_step_nearest_truth_flips": 31,
+      "radar_a_coast_relock": {
+        "coast_relock_events": 101,
+        "description": "Coast-relock handoffs vs radar-A 6 s rotation: gaps since last A JPDA update on the filter track and since A last plotted the prior truth.",
+        "study": {
+          "coast_relock_events": 101,
+          "filter_a_jpda_within_1s": 44,
+          "filter_no_a_jpda_between_1s_and_rotation": 48,
+          "filter_no_a_jpda_ge_rotation": 9,
+          "mean_filter_a_jpda_gap_s": 3.0767326732673266,
+          "mean_prior_truth_a_plot_gap_s": 2.0866336633663365,
+          "median_filter_a_jpda_gap_s": 1.5,
+          "median_prior_truth_a_plot_gap_s": 1.25,
+          "prior_truth_a_plot_gap_between_1s_and_rotation": 56,
+          "prior_truth_a_plot_gap_ge_rotation": 0,
+          "prior_truth_a_plotted_within_1s": 45
+        }
+      },
       "sample_events": [
         {
           "cause": "ambiguous_nearest_neighbor",

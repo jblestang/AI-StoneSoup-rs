@@ -8,6 +8,7 @@ mod kdtree2;
 mod kdtree_gnn;
 mod nearest_neighbour;
 mod pda;
+mod radar_a_coast_relock;
 mod switch_diagnosis;
 mod track_quality;
 mod track_to_truth;
@@ -33,6 +34,7 @@ pub use pda::{
     gm_reduce_single, pda_hypotheses, pda_merged_update, ProbabilityHypothesis, MAX_PDA_HYPOTHESES,
     PDA_GATE_CHI2_2D,
 };
+pub use radar_a_coast_relock::{study_radar_a_coast_relocks, RadarACoastRelockStudy};
 pub use switch_diagnosis::{
     diagnose_identity_switches_from_assoc, study_coast_relocks, CoastRelockStudy,
     IdentitySwitchEvent, SwitchCause, SwitchCauseCounts, SwitchDiagnosisSummary,

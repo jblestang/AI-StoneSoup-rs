@@ -8,7 +8,8 @@ use alloc::vec::Vec;
 use stonesoup_core::linalg::Mat;
 use stonesoup_core::{
     assess_track_quality, associate_tracks_to_truths, continuous_tracks_per_truth,
-    diagnose_identity_switches_from_assoc, mod_bearing, CartesianToBearingRange,
+    diagnose_identity_switches_from_assoc, mod_bearing, study_radar_a_coast_relocks,
+    CartesianToBearingRange,
     SwitchDiagnosisSummary,
     TrackQualityReport,
     ConstantVelocity2d, ContinuousTruthTrack, Detection, Duration, Error, ExtendedKalmanUpdater,
@@ -288,6 +289,37 @@ pub struct DualRadarStats {
     pub continuous_track_fused_sensor_counts: TruthSensorPlotCounts,
     pub track_quality: TrackQualityReport,
     pub switch_diagnosis: SwitchDiagnosisSummary,
+    pub sensor_fusion: FusedSensorDiagnostics,
+    pub radar_a_coast_relock: stonesoup_core::RadarACoastRelockStudy,
+}
+
+/// Why fused tracks show A-only vs both-sensor JPDA updates.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct JpdaPassCounters {
+    pub passes_with_dets_and_actives: u64,
+    pub track_meas_above_thresh: u64,
+    /// Association mass on a measurement, but below ``JPDA_MEAS_UPDATE_THRESH``.
+    pub track_meas_below_thresh: u64,
+    pub track_meas_zero: u64,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct FusedSensorDiagnostics {
+    pub truths_spawn_outside_b_range: u32,
+    pub truths_spawn_inside_b_range: u32,
+    /// Inside B disk at spawn but never received a true B plot in 60 s.
+    pub inside_b_never_b_plotted: u32,
+    /// B plotted the truth at least once.
+    pub inside_b_b_plotted: u32,
+    /// Continuous track + B plotted + fused mask includes B.
+    pub inside_b_plotted_fused_b_updated: u32,
+    /// B plotted but fused track never got B JPDA meas update (A-only mask).
+    pub inside_b_plotted_fused_a_only: u32,
+    pub inside_b_plotted_no_continuous_track: u32,
+    pub jpda_radar_a: JpdaPassCounters,
+    pub jpda_radar_b: JpdaPassCounters,
+    pub b_plots_total: usize,
+    pub a_plots_total: usize,
 }
 
 fn half_fov_rad() -> f64 {
@@ -699,6 +731,10 @@ pub struct DualRadarClutterSim {
     truth_log: Vec<Vec<(Timestamp, [f64; 4])>>,
     truth_speed_mps: Vec<f64>,
     truth_motion: Vec<TruthMotionProfile>,
+    truth_birth_range_m: Vec<f64>,
+    jpda_pass: [JpdaPassCounters; 2],
+    truth_a_plot_steps: Vec<Vec<usize>>,
+    filter_a_meas_steps: BTreeMap<u32, Vec<usize>>,
 }
 
 impl DualRadarClutterSim {
@@ -717,6 +753,10 @@ impl DualRadarClutterSim {
         let mut rng = SplitMix64::new(SEED);
         let truth_speed_mps = init_truth_speeds_mps(&mut rng);
         let truths = init_truths(ts0, &truth_speed_mps, &mut rng)?;
+        let truth_birth_range_m = truths
+            .iter()
+            .map(|gt| libm::sqrt(gt.state[0] * gt.state[0] + gt.state[2] * gt.state[2]))
+            .collect();
         let truth_motion = init_truth_motion_profiles(&mut rng);
         let truths_plot_seen = alloc::vec![false; NUM_TRUTHS];
         let truths_plot_seen_a = alloc::vec![false; NUM_TRUTHS];
@@ -791,6 +831,10 @@ impl DualRadarClutterSim {
             truth_log,
             truth_speed_mps,
             truth_motion,
+            truth_birth_range_m,
+            jpda_pass: [JpdaPassCounters::default(), JpdaPassCounters::default()],
+            truth_a_plot_steps: alloc::vec![Vec::new(); NUM_TRUTHS],
+            filter_a_meas_steps: BTreeMap::new(),
         })
     }
 
@@ -912,6 +956,7 @@ impl DualRadarClutterSim {
                         self.truths_plot_seen[ti] = true;
                         if radar_idx == 0 {
                             self.truths_plot_seen_a[ti] = true;
+                            self.truth_a_plot_steps[ti].push(self.step);
                         } else {
                             self.truths_plot_seen_b[ti] = true;
                         }
@@ -1195,13 +1240,26 @@ impl DualRadarClutterSim {
                 &mut sets,
             )
             .map_err(ScenarioError::Core)?;
+            let pass = &mut self.jpda_pass[radar_idx];
+            pass.passes_with_dets_and_actives += 1;
             for (track, set) in self.active.iter_mut().zip(sets.iter()) {
                 let meas_p = Self::meas_association_prob(set);
                 if meas_p >= JPDA_MEAS_UPDATE_THRESH {
+                    pass.track_meas_above_thresh += 1;
                     track.last_meas_step = self.step;
                     if radar_idx < 2 {
                         track.sensors_meas_mask |= 1 << radar_idx;
                     }
+                    if radar_idx == 0 {
+                        self.filter_a_meas_steps
+                            .entry(track.id)
+                            .or_default()
+                            .push(self.step);
+                    }
+                } else if meas_p > 1e-8 {
+                    pass.track_meas_below_thresh += 1;
+                } else {
+                    pass.track_meas_zero += 1;
                 }
             }
             for (track, set) in self.active.iter_mut().zip(sets.iter()) {
@@ -1397,6 +1455,29 @@ impl DualRadarClutterSim {
             .collect();
         let continuous_track_fused_sensor_counts =
             continuous_tracks_by_fused_sensor_mask(&continuous_truth_tracks, &id_to_mask);
+        let sensor_fusion = compute_fused_sensor_diagnostics(
+            &self.truth_birth_range_m,
+            &self.truths_plot_seen_b,
+            &completed,
+            &continuous_truth_tracks,
+        );
+        let mut sensor_fusion = sensor_fusion;
+        sensor_fusion.jpda_radar_a = self.jpda_pass[0];
+        sensor_fusion.jpda_radar_b = self.jpda_pass[1];
+        sensor_fusion.a_plots_total = self.plot_counts[0];
+        sensor_fusion.b_plots_total = self.plot_counts[1];
+
+        let radar_a_coast_relock = study_radar_a_coast_relocks(
+            &self.filter_paths,
+            &truth_paths,
+            &track_to_truth,
+            &tt_config,
+            &self.filter_a_meas_steps,
+            &self.truth_a_plot_steps,
+            DT_S,
+            PERIOD_A_S,
+        )
+        .map_err(ScenarioError::Core)?;
 
         for ri in 0..2 {
             let rt = &mut self.radar_rt[ri];
@@ -1428,8 +1509,63 @@ impl DualRadarClutterSim {
             continuous_track_fused_sensor_counts,
             track_quality,
             switch_diagnosis,
+            sensor_fusion,
+            radar_a_coast_relock,
         })
     }
+}
+
+fn compute_fused_sensor_diagnostics(
+    birth_range_m: &[f64],
+    seen_b: &[bool],
+    completed: &[CompletedTrack],
+    continuous: &[ContinuousTruthTrack],
+) -> FusedSensorDiagnostics {
+    let mut out = FusedSensorDiagnostics::default();
+    let mut fused_mask_by_truth = [0u8; NUM_TRUTHS];
+    for c in completed {
+        if let Some(tid) = c.truth_id {
+            let i = tid as usize;
+            if i < NUM_TRUTHS {
+                fused_mask_by_truth[i] |= c.sensors_meas_mask;
+            }
+        }
+    }
+    let mut has_continuous = [false; NUM_TRUTHS];
+    for ct in continuous {
+        let i = ct.truth_id as usize;
+        if i < NUM_TRUTHS {
+            has_continuous[i] = true;
+        }
+    }
+    for tid in 0..NUM_TRUTHS {
+        let in_b = birth_range_m
+            .get(tid)
+            .copied()
+            .unwrap_or(f64::INFINITY)
+            <= RANGE_B_M;
+        if !in_b {
+            out.truths_spawn_outside_b_range += 1;
+            continue;
+        }
+        out.truths_spawn_inside_b_range += 1;
+        if !seen_b.get(tid).copied().unwrap_or(false) {
+            out.inside_b_never_b_plotted += 1;
+            continue;
+        }
+        out.inside_b_b_plotted += 1;
+        if !has_continuous[tid] {
+            out.inside_b_plotted_no_continuous_track += 1;
+            continue;
+        }
+        let mask = fused_mask_by_truth[tid];
+        if mask & 0b10 != 0 {
+            out.inside_b_plotted_fused_b_updated += 1;
+        } else if mask & 0b01 != 0 {
+            out.inside_b_plotted_fused_a_only += 1;
+        }
+    }
+    out
 }
 
 fn truth_step_nanos() -> i64 {

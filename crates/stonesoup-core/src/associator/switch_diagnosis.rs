@@ -177,7 +177,7 @@ fn in_gate(
         .is_some()
 }
 
-fn classify_switch(
+pub(crate) fn classify_switch(
     track: &TrackPath,
     from_truth: u16,
     to_truth: u16,
