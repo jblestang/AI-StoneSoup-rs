@@ -45,6 +45,37 @@ impl CartesianToBearingRange {
     }
 
     #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    /// Measurement from 6D IMM state `[x, vx, ax, y, vy, ay]`.
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn h6(&self, state: &[f64; 6]) -> Result<[f64; 2], Error> {
+        let s4 = [state[0], state[1], state[3], state[4]];
+        self.h(s4)
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn jacobian6(&self, state: &[f64; 6]) -> Result<Mat<2, 6>, Error> {
+        let s4 = [state[0], state[1], state[3], state[4]];
+        if self.antenna_heading_rad != 0.0 {
+            let model = *self;
+            return crate::numeric::jacobian::jacobian6x2(*state, |x| model.h6(&x));
+        }
+        let dx = s4[0] - self.sensor_x;
+        let dy = s4[2] - self.sensor_y;
+        require_finite(dx)?;
+        require_finite(dy)?;
+        let r2 = dx * dx + dy * dy;
+        if r2 <= 0.0 {
+            return Err(Error::NumericalFailure);
+        }
+        let r = libm::sqrt(r2);
+        let mut h = Mat::<2, 6>::zeros();
+        h.set(0, 0, -dy / r2)?;
+        h.set(0, 3, dx / r2)?;
+        h.set(1, 0, dx / r)?;
+        h.set(1, 3, dy / r)?;
+        Ok(h)
+    }
+
     pub fn h(&self, state: [f64; 4]) -> Result<[f64; 2], Error> {
         let (rx, ry) = self.rotated_xy(state)?;
         let bearing = mod_bearing(libm::atan2(ry, rx))?;
