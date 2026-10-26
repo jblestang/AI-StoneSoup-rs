@@ -597,6 +597,25 @@ fn count_unique_truth_labels(completed: &[CompletedTrack]) -> usize {
     seen.iter().filter(|&&x| x).count()
 }
 
+/// Dominant truth id on a filter path from TrackToTruth segment durations.
+fn primary_truth_for_filter_track(
+    assoc: &[TrackTruthAssociation],
+    filter_track_id: u32,
+) -> Option<u16> {
+    let mut covered_ns: BTreeMap<u16, i64> = BTreeMap::new();
+    for a in assoc {
+        if a.track_id != filter_track_id {
+            continue;
+        }
+        let ns = a.range.end.0.saturating_sub(a.range.start.0);
+        *covered_ns.entry(a.truth_id).or_default() += ns;
+    }
+    covered_ns
+        .into_iter()
+        .max_by_key(|(_, ns)| *ns)
+        .map(|(tid, _)| tid)
+}
+
 fn advance_truth(
     gt: GroundTruthState,
     speed_mps: f64,
@@ -1326,7 +1345,6 @@ impl DualRadarClutterSim {
             c.truth_id = best_id;
             completed.push(c);
         }
-        let truths_with_labeled = count_unique_truth_labels(&completed);
         let truths_with_any_plot = self.truths_plot_seen.iter().filter(|&&x| x).count();
 
         let truth_paths: Vec<TruthPath> = self
@@ -1341,6 +1359,12 @@ impl DualRadarClutterSim {
         let tt_config = dual_radar_track_to_truth_config();
         let track_to_truth = associate_tracks_to_truths(&self.filter_paths, &truth_paths, &tt_config)
             .map_err(ScenarioError::Core)?;
+        for c in &mut completed {
+            if let Some(tid) = primary_truth_for_filter_track(&track_to_truth, c.filter_track_id) {
+                c.truth_id = Some(tid);
+            }
+        }
+        let truths_with_labeled = count_unique_truth_labels(&completed);
         let continuous_truth_tracks =
             continuous_tracks_per_truth(&track_to_truth, NUM_TRUTHS as u16);
         let track_quality = assess_track_quality(
