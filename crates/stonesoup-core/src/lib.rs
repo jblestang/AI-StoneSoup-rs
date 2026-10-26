@@ -33,13 +33,15 @@ pub use associator::{
     ProbabilityHypothesis, KDTREE_GNN_COV_MULTIPLIER, KDTREE_GNN_NEIGHBOURS, MAX_GNN_ASSIGN_DETS,
     MAX_GNN_TRACKS, MAX_KDTREE_POINTS, MAX_PDA_HYPOTHESES, PDA_GATE_CHI2_2D,
     assess_track_quality, associate_tracks_to_truths, continuous_tracks_per_truth,
-    diagnose_identity_switches_from_assoc, list_coast_relock_handoffs, study_coast_relocks,
+    diagnose_identity_switches_from_assoc, list_coast_relock_handoffs, study_coast_relock_imm,
+    study_coast_relocks, CoastRelockImmStudy, ImmDominantCounts,
     study_radar_a_coast_relocks, CoastRelockHandoff, CoastRelockStudy, RadarACoastRelockStudy,
     SwitchCause,
     SwitchDiagnosisSummary,
     squared_mahalanobis, ContinuousTruthQuality, ContinuousTruthTrack, FilterTrackQuality,
     TrackQualityReport,
-    TrackPath, TrackToTruthConfig, TrackTruthAssociation, TrackTruthPositionGate, TruthPath,
+    RadarRevisitTrackToTruth, TrackPath, TrackToTruthConfig, TrackTruthAssociation,
+    TrackTruthPositionGate, TruthPath,
 };
 pub use deleter::{
     covariance_trace, holding_should_delete, should_delete_covariance_trace, HoldingDeleter,

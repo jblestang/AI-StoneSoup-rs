@@ -11,6 +11,7 @@ mod pda;
 mod radar_a_coast_relock;
 mod switch_diagnosis;
 mod track_quality;
+mod coast_relock_imm;
 mod track_to_truth;
 mod track_truth_gate;
 
@@ -35,6 +36,9 @@ pub use pda::{
     PDA_GATE_CHI2_2D,
 };
 pub use radar_a_coast_relock::{study_radar_a_coast_relocks, RadarACoastRelockStudy};
+pub use coast_relock_imm::{
+    study_coast_relock_imm, CoastRelockImmStudy, ImmDominantCounts,
+};
 pub use switch_diagnosis::{
     diagnose_identity_switches_from_assoc, list_coast_relock_handoffs, study_coast_relocks,
     CoastRelockHandoff, CoastRelockStudy, IdentitySwitchEvent, SwitchCause, SwitchCauseCounts,
@@ -45,6 +49,6 @@ pub use track_quality::{
 };
 pub use track_to_truth::{
     associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack, TrackPath,
-    TrackToTruthConfig, TrackTruthAssociation, TruthPath,
+    RadarRevisitTrackToTruth, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
 };
 pub use track_truth_gate::TrackTruthPositionGate;

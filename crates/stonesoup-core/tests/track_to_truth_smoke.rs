@@ -16,6 +16,7 @@ fn track_to_truth_links_one_path() {
     }];
     let tracks = vec![TrackPath {
         id: 1,
+        imm_mu: vec![],
         states: vec![
             (Timestamp::ZERO, [100.5, 0.0, 0.0, 0.0]),
             (Timestamp::from_nanos(1_000_000_000), [101.5, 0.0, 0.0, 0.0]),

@@ -13,6 +13,8 @@ use super::track_truth_gate::TrackTruthPositionGate;
 pub struct TrackPath {
     pub id: u32,
     pub states: Vec<(Timestamp, [f64; 4])>,
+    /// IMM model probabilities `[CV, CA, CT]` when logged (dual-radar filter paths).
+    pub imm_mu: Vec<(Timestamp, [f64; 3])>,
 }
 
 #[derive(Debug, Clone)]
@@ -32,6 +34,35 @@ pub struct TrackTruthAssociation {
     pub track_id: u32,
     pub truth_id: u16,
     pub range: TimeRange,
+}
+
+/// Per-radar revisit timing for TrackToTruth segment rules (rotation period vs filter step).
+#[derive(Debug, Clone, Copy)]
+pub struct RadarRevisitTrackToTruth {
+    pub period_s: f64,
+    pub dt_s: f64,
+    pub consec_pairs_confirm: u8,
+}
+
+impl RadarRevisitTrackToTruth {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn new(period_s: f64, dt_s: f64, consec_pairs_confirm: u8) -> Self {
+        Self {
+            period_s,
+            dt_s,
+            consec_pairs_confirm,
+        }
+    }
+
+    /// Consecutive filter steps outside the gate before ending a label (~one beam rotation).
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn consec_misses_end(&self) -> u8 {
+        if self.dt_s <= 0.0 || self.period_s <= 0.0 {
+            return 2;
+        }
+        let steps = libm::ceil(self.period_s / self.dt_s);
+        steps.clamp(1.0, 255.0) as u8
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -55,6 +86,20 @@ impl Default for TrackToTruthConfig {
 }
 
 impl TrackToTruthConfig {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn from_radar_revisit(
+        position_gate: TrackTruthPositionGate,
+        revisit: RadarRevisitTrackToTruth,
+        switch_score_margin: f64,
+    ) -> Self {
+        Self {
+            position_gate,
+            consec_pairs_confirm: revisit.consec_pairs_confirm,
+            consec_misses_end: revisit.consec_misses_end(),
+            switch_score_margin,
+        }
+    }
+
     /// Planar scale for RMSE quality heuristics (mid-range σ for bearing–range gates).
     pub fn accuracy_scale_m(&self) -> f64 {
         match self.position_gate {
@@ -342,4 +387,23 @@ pub fn continuous_tracks_per_truth(
         });
     }
     out
+}
+
+#[cfg(test)]
+mod revisit_tests {
+    use super::*;
+
+    #[test]
+    fn consec_misses_end_matches_rotation_period() {
+        let r = RadarRevisitTrackToTruth::new(6.0, 0.25, 3);
+        assert_eq!(r.consec_misses_end(), 24);
+        let cfg = TrackToTruthConfig::from_radar_revisit(
+            TrackTruthPositionGate::FixedRadius(1000.0),
+            r,
+            0.0,
+        );
+        assert_eq!(cfg.consec_misses_end, 24);
+        let b = RadarRevisitTrackToTruth::new(3.0, 0.25, 3);
+        assert_eq!(b.consec_misses_end(), 12);
+    }
 }

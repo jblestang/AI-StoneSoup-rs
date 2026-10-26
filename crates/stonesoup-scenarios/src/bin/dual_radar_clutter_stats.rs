@@ -251,8 +251,23 @@ fn run() -> Result<String, ScenarioError> {
             "switch_diagnosis": {
                 "description": "Why TrackToTruth reports identity switches. Often label flicker in dense scenes, not filter physically jumping.",
                 "t2t_consec_pairs_confirm": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_PAIRS,
-                "t2t_consec_misses_end": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_MISSES,
+                "t2t_consec_misses_end": stonesoup_scenarios::dual_radar_track_to_truth_config()
+                    .consec_misses_end,
                 "t2t_switch_score_margin": stonesoup_scenarios::TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
+                "t2t_revisit_by_radar": {
+                    "radar_a": {
+                        "period_s": stonesoup_scenarios::PERIOD_A_S,
+                        "dt_s": stonesoup_scenarios::DT_S,
+                        "consec_misses_end": stonesoup_scenarios::radar_a_track_to_truth_revisit().consec_misses_end(),
+                        "note": "Active dual-radar TrackToTruth uses A bearing–range gate and this revisit window.",
+                    },
+                    "radar_b": {
+                        "period_s": stonesoup_scenarios::PERIOD_B_S,
+                        "dt_s": stonesoup_scenarios::DT_S,
+                        "consec_misses_end": stonesoup_scenarios::radar_b_track_to_truth_revisit().consec_misses_end(),
+                        "note": "Reference only until B-specific TrackToTruth gate is wired.",
+                    },
+                },
                 "identity_switches_at_confirm_1": stats.switch_diagnosis.identity_switches_t2t,
                 "identity_switches_if_confirm_3": stats.switch_diagnosis.identity_switches_confirm3,
                 "per_step_nearest_truth_flips": stats.switch_diagnosis.per_step_nearest_truth_flips,
@@ -280,6 +295,32 @@ fn run() -> Result<String, ScenarioError> {
                         "median_filter_a_jpda_gap_s": stats.radar_a_coast_relock.median_filter_a_jpda_gap_s,
                         "median_prior_truth_a_plot_gap_s": stats.radar_a_coast_relock.median_prior_truth_a_plot_gap_s,
                     },
+                },
+                "coast_relock_imm": {
+                    "description": "IMM sub-model (CV/CA/CT) at coast-then-relock handoffs vs all filter-path samples. Crosstab rows = dominant IMM, cols = prior-truth motion mode.",
+                    "coast_relock_events": stats.coast_relock_imm.coast_relock_events,
+                    "coast_window_s": stats.coast_relock_imm.coast_window_s,
+                    "imm_truth_mode_mismatch_fraction": stats.coast_relock_imm.imm_truth_mode_mismatch_at_switch,
+                    "dominant_imm_at_switch": {
+                        "cv": stats.coast_relock_imm.imm_dominant_at_switch.cv,
+                        "ca": stats.coast_relock_imm.imm_dominant_at_switch.ca,
+                        "ct": stats.coast_relock_imm.imm_dominant_at_switch.ct,
+                    },
+                    "dominant_imm_coast_window": {
+                        "cv": stats.coast_relock_imm.imm_dominant_coast_window.cv,
+                        "ca": stats.coast_relock_imm.imm_dominant_coast_window.ca,
+                        "ct": stats.coast_relock_imm.imm_dominant_coast_window.ct,
+                    },
+                    "dominant_imm_baseline": {
+                        "cv": stats.coast_relock_imm.imm_dominant_baseline.cv,
+                        "ca": stats.coast_relock_imm.imm_dominant_baseline.ca,
+                        "ct": stats.coast_relock_imm.imm_dominant_baseline.ct,
+                    },
+                    "baseline_imm_samples": stats.coast_relock_imm.baseline_samples,
+                    "mean_mu_at_switch": stats.coast_relock_imm.mean_mu_at_switch,
+                    "mean_mu_coast_window": stats.coast_relock_imm.mean_mu_coast_window,
+                    "mean_mu_baseline": stats.coast_relock_imm.mean_mu_baseline,
+                    "imm_truth_crosstab": stats.coast_relock_imm.imm_truth_crosstab_at_switch,
                 },
                 "coast_relock_study": {
                     "description": "CoastThenRelock = at new TrackToTruth segment start, filter is outside the prior truth BR gate but inside the new truth gate.",

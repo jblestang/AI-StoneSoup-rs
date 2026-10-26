@@ -318,6 +318,7 @@ mod tests {
         ];
         let tracks = vec![TrackPath {
             id: 7,
+            imm_mu: vec![],
             states: vec![
                 (Timestamp::ZERO, [1.0, 0.0, 0.0, 0.0]),
                 (Timestamp::from_nanos(1_000_000_000), [1.0, 0.0, 0.0, 0.0]),
