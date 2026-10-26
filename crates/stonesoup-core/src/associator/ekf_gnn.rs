@@ -30,7 +30,7 @@ fn missed_hypothesis(prediction: GaussianState, gate: f64) -> MeasurementHypothe
     }
 }
 
-fn ekf_meas_pred(
+pub(crate) fn ekf_meas_pred(
     model: &CartesianToBearingRange,
     predicted: &GaussianState,
     ws: &mut KalmanWorkspace,

@@ -1,0 +1,703 @@
+//! 4-model IMM-EKF: Singer CV, CA, and coordinated-turn ±ω (truth-aligned dynamics).
+
+use crate::associator::{ProbabilityHypothesis, squared_mahalanobis, MAX_PDA_HYPOTHESES};
+use crate::error::Error;
+use crate::filter::ekf::ExtendedKalmanUpdater;
+use crate::filter::kalman::{GaussianMeasurementPrediction, KalmanWorkspace};
+use crate::linalg::fixed::inv2;
+use crate::linalg::{Mat, VecN};
+use crate::models::bearing_range::CartesianToBearingRange;
+use crate::state::GaussianState;
+use crate::time::Timestamp;
+use crate::types::Detection;
+
+use super::imm_dynamics::{
+    ConstantAcceleration6d, CoordinatedTurn6d, CT_MANEUVER_ACCEL_MPS2, SingerCv6d,
+};
+use super::imm_state6::{
+    gm_reduce_6, predict_linear6, GaussianState6, IMM_STATE_DIM,
+};
+
+pub const IMM_MODEL_COUNT: usize = 4;
+
+/// Collapse CT± into a single CT mass for comparison with 3-mode ground truth.
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+pub fn collapse_imm_mu_for_truth(mu: &[f64; IMM_MODEL_COUNT]) -> [f64; 3] {
+    [mu[0], mu[1], mu[2] + mu[3]]
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ImmModelKind {
+    Cv = 0,
+    Ca = 1,
+    CtPos = 2,
+    CtNeg = 3,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ImmEkfConfig {
+    pub cv: SingerCv6d,
+    pub ca: ConstantAcceleration6d,
+    pub ct: CoordinatedTurn6d,
+    pub tpm: [[f64; IMM_MODEL_COUNT]; IMM_MODEL_COUNT],
+}
+
+impl ImmEkfConfig {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn dual_radar_default() -> Result<Self, Error> {
+        let tpm = [
+            [0.92, 0.03, 0.03, 0.02],
+            [0.03, 0.92, 0.03, 0.02],
+            [0.03, 0.03, 0.92, 0.02],
+            [0.03, 0.03, 0.02, 0.92],
+        ];
+        Ok(Self {
+            cv: SingerCv6d {
+                q_accel: 18.0,
+                alpha: 3.5,
+            },
+            ca: ConstantAcceleration6d { q_accel: 650.0 },
+            ct: CoordinatedTurn6d {
+                max_turn_accel_mps2: CT_MANEUVER_ACCEL_MPS2,
+                q_vel: 350.0,
+                omega_scale: 1.0,
+                omega_speed_floor_mps: 30.0,
+                min_turn_rate_rad_s: super::imm_dynamics::CT_MIN_TURN_RATE_RAD_S,
+            },
+            tpm,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ImmEkfState {
+    pub models: [GaussianState6; IMM_MODEL_COUNT],
+    pub mu: [f64; IMM_MODEL_COUNT],
+}
+
+impl ImmEkfState {
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn from_gaussian(state: GaussianState) -> Result<Self, Error> {
+        let lifted = GaussianState6::from_position_velocity_4d(&state, 200.0)?;
+        Ok(Self {
+            models: [lifted; IMM_MODEL_COUNT],
+            mu: [1.0 / IMM_MODEL_COUNT as f64; IMM_MODEL_COUNT],
+        })
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn combined(&self) -> Result<GaussianState, Error> {
+        let means = model_means(&self.models);
+        let covs = model_covs(&self.models);
+        let (mean6, cov6) = gm_reduce_6(&means, &covs, &self.mu)?;
+        let s6 = GaussianState6::new(mean6, cov6, self.models[0].timestamp)?;
+        s6.marginalize_to_4d()
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn interaction_and_predict(
+        &mut self,
+        timestamp: Timestamp,
+        cfg: &ImmEkfConfig,
+        _ws: &mut KalmanWorkspace,
+    ) -> Result<(), Error> {
+        let c_bar = mixing_normalizer(&self.mu, &cfg.tpm);
+        let mut mixed = [self.models[0]; IMM_MODEL_COUNT];
+        for j in 0..IMM_MODEL_COUNT {
+            let mut w = [0.0; IMM_MODEL_COUNT];
+            for i in 0..IMM_MODEL_COUNT {
+                w[i] = if c_bar[j] > 1e-18 {
+                    self.mu[i] * cfg.tpm[i][j] / c_bar[j]
+                } else {
+                    0.0
+                };
+            }
+            let wsum: f64 = w.iter().sum();
+            mixed[j] = if c_bar[j] > 1e-18 && wsum > 1e-18 {
+                mix_gaussians_6(&self.models, &w, self.models[0].timestamp)?
+            } else {
+                self.models[j]
+            };
+        }
+        for j in 0..IMM_MODEL_COUNT {
+            self.models[j] = match predict_imm_model(mixed[j], timestamp, model_kind(j), cfg) {
+                Ok(s) => s,
+                Err(_) => mixed[j],
+            };
+        }
+        Ok(())
+    }
+
+    #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+    pub fn jpda_update(
+        &mut self,
+        hyps: &[ProbabilityHypothesis],
+        n_hyps: usize,
+        detections: &[Detection],
+        det_models: &[CartesianToBearingRange],
+        association_time: Timestamp,
+        updater: &mut ExtendedKalmanUpdater,
+        cfg: &ImmEkfConfig,
+        ws: &mut KalmanWorkspace,
+    ) -> Result<(), Error> {
+        if n_hyps == 0 {
+            return Err(Error::InvalidDimension);
+        }
+        let c_bar = mixing_normalizer(&self.mu, &cfg.tpm);
+        let mut likelihoods = [0.0; IMM_MODEL_COUNT];
+        let mut updated = self.models;
+        for j in 0..IMM_MODEL_COUNT {
+            likelihoods[j] = jpda_mixture_likelihood_6(
+                self.models[j],
+                model_kind(j),
+                association_time,
+                hyps,
+                n_hyps,
+                detections,
+                det_models,
+                updater,
+                cfg,
+            )?;
+            let retargeted = retarget_hypotheses_6(
+                self.models[j],
+                model_kind(j),
+                association_time,
+                hyps,
+                n_hyps,
+                detections,
+                cfg,
+            )?;
+            updated[j] = match ekf_pda_merged_update_6(
+                &retargeted,
+                n_hyps,
+                detections,
+                det_models,
+                updater,
+                ws,
+            ) {
+                Ok(s) => s,
+                Err(Error::SingularInnovation)
+                | Err(Error::InvalidParameter)
+                | Err(Error::NumericalFailure) => self.models[j],
+                Err(e) => return Err(e),
+            };
+        }
+        self.models = updated;
+        let mut mu_new = [0.0; IMM_MODEL_COUNT];
+        let mut sum = 0.0;
+        for j in 0..IMM_MODEL_COUNT {
+            mu_new[j] = c_bar[j] * likelihoods[j];
+            sum += mu_new[j];
+        }
+        if sum > 1e-300 {
+            for j in 0..IMM_MODEL_COUNT {
+                self.mu[j] = mu_new[j] / sum;
+            }
+        }
+        Ok(())
+    }
+}
+
+fn model_means(states: &[GaussianState6; IMM_MODEL_COUNT]) -> [[f64; IMM_STATE_DIM]; IMM_MODEL_COUNT] {
+    [
+        states[0].mean,
+        states[1].mean,
+        states[2].mean,
+        states[3].mean,
+    ]
+}
+
+fn model_covs(
+    states: &[GaussianState6; IMM_MODEL_COUNT],
+) -> [[[f64; IMM_STATE_DIM]; IMM_STATE_DIM]; IMM_MODEL_COUNT] {
+    [states[0].cov, states[1].cov, states[2].cov, states[3].cov]
+}
+
+fn model_kind(j: usize) -> ImmModelKind {
+    match j {
+        0 => ImmModelKind::Cv,
+        1 => ImmModelKind::Ca,
+        2 => ImmModelKind::CtPos,
+        _ => ImmModelKind::CtNeg,
+    }
+}
+
+fn mixing_normalizer(
+    mu: &[f64; IMM_MODEL_COUNT],
+    tpm: &[[f64; IMM_MODEL_COUNT]; IMM_MODEL_COUNT],
+) -> [f64; IMM_MODEL_COUNT] {
+    let mut c = [0.0; IMM_MODEL_COUNT];
+    for j in 0..IMM_MODEL_COUNT {
+        for i in 0..IMM_MODEL_COUNT {
+            c[j] += mu[i] * tpm[i][j];
+        }
+    }
+    c
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mix_gaussians_6(
+    states: &[GaussianState6; IMM_MODEL_COUNT],
+    weights: &[f64; IMM_MODEL_COUNT],
+    timestamp: Timestamp,
+) -> Result<GaussianState6, Error> {
+    let wsum: f64 = weights.iter().sum();
+    if wsum <= 1e-18 {
+        let mut best = 0usize;
+        let mut bw = weights[0];
+        for i in 1..IMM_MODEL_COUNT {
+            if weights[i] > bw {
+                bw = weights[i];
+                best = i;
+            }
+        }
+        return GaussianState6::new(states[best].mean, states[best].cov, timestamp);
+    }
+    let means = model_means(states);
+    let covs = model_covs(states);
+    let (mean, cov) = gm_reduce_6(&means, &covs, weights)?;
+    GaussianState6::new(mean, cov, timestamp)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn predict_imm_model(
+    prior: GaussianState6,
+    timestamp: Timestamp,
+    kind: ImmModelKind,
+    cfg: &ImmEkfConfig,
+) -> Result<GaussianState6, Error> {
+    if prior.timestamp == timestamp {
+        return Ok(prior);
+    }
+    let dt = timestamp.checked_sub(prior.timestamp)?;
+    match kind {
+        ImmModelKind::Cv => {
+            let (f, q) = cfg.cv.f_q(dt)?;
+            predict_linear6(&prior, &f, &q, timestamp)
+        }
+        ImmModelKind::Ca => {
+            let (f, q) = cfg.ca.f_q(dt)?;
+            predict_linear6(&prior, &f, &q, timestamp)
+        }
+        ImmModelKind::CtPos | ImmModelKind::CtNeg => {
+            let prior = CoordinatedTurn6d::prepare_state(&prior);
+            let vx = prior.mean[1];
+            let vy = prior.mean[4];
+            let speed = libm::sqrt(vx * vx + vy * vy).max(1.0);
+            let omega_mag = cfg.ct.omega_for_speed(speed);
+            let sign = if kind == ImmModelKind::CtPos { 1.0 } else { -1.0 };
+            cfg.ct
+                .predict_with_omega(&prior, timestamp, sign * omega_mag)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Hypothesis6 {
+    prediction: GaussianState6,
+    detection_index: Option<usize>,
+    probability: f64,
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn retarget_hypotheses_6(
+    model_state: GaussianState6,
+    kind: ImmModelKind,
+    association_time: Timestamp,
+    hyps: &[ProbabilityHypothesis],
+    n_hyps: usize,
+    detections: &[Detection],
+    cfg: &ImmEkfConfig,
+) -> Result<[Hypothesis6; MAX_PDA_HYPOTHESES], Error> {
+    let mut out = [Hypothesis6 {
+        prediction: model_state,
+        detection_index: None,
+        probability: 0.0,
+    }; MAX_PDA_HYPOTHESES];
+    for (k, h) in hyps.iter().take(n_hyps).enumerate() {
+        let ts = match h.detection_index {
+            None => association_time,
+            Some(i) => detections.get(i).map(|d| d.timestamp).unwrap_or(association_time),
+        };
+        let prediction = match predict_imm_model(model_state, ts, kind, cfg) {
+            Ok(s) => s,
+            Err(_) => model_state,
+        };
+        out[k] = Hypothesis6 {
+            prediction,
+            detection_index: h.detection_index,
+            probability: h.probability,
+        };
+    }
+    Ok(out)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn jpda_mixture_likelihood_6(
+    model_state: GaussianState6,
+    kind: ImmModelKind,
+    association_time: Timestamp,
+    hyps: &[ProbabilityHypothesis],
+    n_hyps: usize,
+    detections: &[Detection],
+    det_models: &[CartesianToBearingRange],
+    updater: &mut ExtendedKalmanUpdater,
+    cfg: &ImmEkfConfig,
+) -> Result<f64, Error> {
+    let mut like: f64 = 0.0;
+    for h in hyps.iter().take(n_hyps) {
+        let ts = match h.detection_index {
+            None => association_time,
+            Some(i) => detections.get(i).map(|d| d.timestamp).unwrap_or(association_time),
+        };
+        let pred = match predict_imm_model(model_state, ts, kind, cfg) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+        if let Some(i) = h.detection_index {
+            let det = detections.get(i).ok_or(Error::InvalidDimension)?;
+            updater.measurement = det_models.get(i).copied().ok_or(Error::InvalidDimension)?;
+            let meas = match predict_measurement_6(updater, &pred) {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+            let innov = match CartesianToBearingRange::innovation(det.vector.0, meas.mean.0) {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+            if let Ok(m2) = squared_mahalanobis(
+                VecN(innov),
+                &GaussianMeasurementPrediction {
+                    mean: VecN([0.0, 0.0]),
+                    cov: meas.cov,
+                },
+            ) {
+                like += h.probability * libm::exp(-0.5 * m2);
+            }
+        } else {
+            like += h.probability;
+        }
+    }
+    Ok(like.max(1e-12))
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn predict_measurement_6(
+    updater: &ExtendedKalmanUpdater,
+    predicted: &GaussianState6,
+) -> Result<GaussianMeasurementPrediction, Error> {
+    let h = updater.measurement.jacobian6(&predicted.mean)?;
+    let r = updater.measurement.r();
+    let z = updater.measurement.h6(&predicted.mean)?;
+    let hp = mul2x6_6x6(h, predicted.cov);
+    let ht = transpose2x6(h);
+    let hph = mul2x6_6x2(hp, ht);
+    let cov = add2x2(hph, r)?;
+    Ok(GaussianMeasurementPrediction {
+        mean: VecN(z),
+        cov,
+    })
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn ekf_update_6(
+    updater: &ExtendedKalmanUpdater,
+    predicted: &GaussianState6,
+    detection: &Detection,
+) -> Result<GaussianState6, Error> {
+    let h = updater.measurement.jacobian6(&predicted.mean)?;
+    let r = updater.measurement.r();
+    let z_pred = updater.measurement.h6(&predicted.mean)?;
+    let innovation = CartesianToBearingRange::innovation(detection.vector.0, z_pred)?;
+    let hp = mul2x6_6x6(h, predicted.cov);
+    let ht = transpose2x6(h);
+    let hph = mul2x6_6x2(hp, ht);
+    let s = add2x2(hph, r)?;
+    let s_inv = inv2(s)?;
+    let pht = mul6x6_6x2(predicted.cov, ht);
+    let k = mul6x2_2x2(pht, s_inv);
+    let k_innov = mul6x2_2x1(k, VecN(innovation));
+    let mut mean = predicted.mean;
+    for i in 0..IMM_STATE_DIM {
+        mean[i] += k_innov.0[i];
+    }
+    let kh = mul6x2_2x6(k, h);
+    let i_kh = i_minus_kh6(kh)?;
+    let cov = mul6x6_6x6(i_kh, predicted.cov);
+    GaussianState6::new(mean, cov, predicted.timestamp)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn ekf_pda_merged_update_6(
+    hyps: &[Hypothesis6],
+    n: usize,
+    detections: &[Detection],
+    det_models: &[CartesianToBearingRange],
+    updater: &mut ExtendedKalmanUpdater,
+    _ws: &mut KalmanWorkspace,
+) -> Result<GaussianState6, Error> {
+    if n == 0 {
+        return Err(Error::InvalidDimension);
+    }
+    let mut means = [[0.0; IMM_STATE_DIM]; MAX_PDA_HYPOTHESES];
+    let mut covs = [[[0.0; IMM_STATE_DIM]; IMM_STATE_DIM]; MAX_PDA_HYPOTHESES];
+    let mut weights = [0.0f64; MAX_PDA_HYPOTHESES];
+    let ts = hyps
+        .iter()
+        .take(n)
+        .find_map(|h| h.detection_index)
+        .and_then(|i| detections.get(i).map(|d| d.timestamp))
+        .unwrap_or(hyps[0].prediction.timestamp);
+    for (k, h) in hyps.iter().take(n).enumerate() {
+        weights[k] = h.probability;
+        let state = match h.detection_index {
+            None => h.prediction,
+            Some(i) => {
+                let det = detections.get(i).ok_or(Error::InvalidDimension)?;
+                updater.measurement = det_models.get(i).copied().ok_or(Error::InvalidDimension)?;
+                match ekf_update_6(updater, &h.prediction, det) {
+                    Ok(s) => s,
+                    Err(Error::SingularInnovation)
+                    | Err(Error::NumericalFailure)
+                    | Err(Error::InvalidParameter) => h.prediction,
+                    Err(e) => return Err(e),
+                }
+            }
+        };
+        means[k] = state.mean;
+        covs[k] = state.cov;
+    }
+    let (m, c) = gm_reduce_6(&means[..n], &covs[..n], &weights[..n])?;
+    GaussianState6::new(m, c, ts)
+}
+
+// --- small 6D EKF linear algebra ---
+
+type Cov6 = [[f64; IMM_STATE_DIM]; IMM_STATE_DIM];
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mul2x6_6x6(h: Mat<2, 6>, p: Cov6) -> Mat<2, 6> {
+    let mut out = Mat::<2, 6>::zeros();
+    for r in 0..2 {
+        for c in 0..IMM_STATE_DIM {
+            let mut s = 0.0;
+            for k in 0..IMM_STATE_DIM {
+                s += h.0[r][k] * p[k][c];
+            }
+            let _ = out.set(r, c, s);
+        }
+    }
+    out
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn transpose2x6(h: Mat<2, 6>) -> Mat<6, 2> {
+    let mut out = Mat::<6, 2>::zeros();
+    for r in 0..2 {
+        for c in 0..IMM_STATE_DIM {
+            let _ = out.set(c, r, h.0[r][c]);
+        }
+    }
+    out
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mul2x6_6x2(a: Mat<2, 6>, b: Mat<6, 2>) -> Mat<2, 2> {
+    let mut out = Mat::<2, 2>::zeros();
+    for r in 0..2 {
+        for c in 0..2 {
+            let mut s = 0.0;
+            for k in 0..IMM_STATE_DIM {
+                s += a.0[r][k] * b.0[k][c];
+            }
+            let _ = out.set(r, c, s);
+        }
+    }
+    out
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn add2x2(a: Mat<2, 2>, b: Mat<2, 2>) -> Result<Mat<2, 2>, Error> {
+    let mut out = Mat::<2, 2>::zeros();
+    for r in 0..2 {
+        for c in 0..2 {
+            out.set(r, c, a.0[r][c] + b.0[r][c])?;
+        }
+    }
+    Ok(out)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mul6x6_6x2(p: Cov6, ht: Mat<6, 2>) -> Mat<6, 2> {
+    let mut out = Mat::<6, 2>::zeros();
+    for r in 0..IMM_STATE_DIM {
+        for c in 0..2 {
+            let mut s = 0.0;
+            for k in 0..IMM_STATE_DIM {
+                s += p[r][k] * ht.0[k][c];
+            }
+            let _ = out.set(r, c, s);
+        }
+    }
+    out
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mul6x2_2x2(a: Mat<6, 2>, b: Mat<2, 2>) -> Mat<6, 2> {
+    let mut out = Mat::<6, 2>::zeros();
+    for r in 0..IMM_STATE_DIM {
+        for c in 0..2 {
+            let mut s = 0.0;
+            for k in 0..2 {
+                s += a.0[r][k] * b.0[k][c];
+            }
+            let _ = out.set(r, c, s);
+        }
+    }
+    out
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mul6x2_2x1(k: Mat<6, 2>, v: VecN<2>) -> VecN<6> {
+    let mut out = [0.0; 6];
+    for r in 0..IMM_STATE_DIM {
+        out[r] = k.0[r][0] * v.0[0] + k.0[r][1] * v.0[1];
+    }
+    VecN(out)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mul6x2_2x6(k: Mat<6, 2>, h: Mat<2, 6>) -> Cov6 {
+    let mut out = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
+    for r in 0..IMM_STATE_DIM {
+        for c in 0..IMM_STATE_DIM {
+            out[r][c] = k.0[r][0] * h.0[0][c] + k.0[r][1] * h.0[1][c];
+        }
+    }
+    out
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn i_minus_kh6(kh: Cov6) -> Result<Cov6, Error> {
+    let mut out = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
+    for r in 0..IMM_STATE_DIM {
+        for c in 0..IMM_STATE_DIM {
+            let v = if r == c { 1.0 - kh[r][c] } else { -kh[r][c] };
+            if !v.is_finite() {
+                return Err(Error::NumericalFailure);
+            }
+            out[r][c] = v;
+        }
+    }
+    Ok(out)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+fn mul6x6_6x6(a: Cov6, b: Cov6) -> Cov6 {
+    super::imm_state6::mat6_mul(&a, &b)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::filter::imm_dynamics::CT_MIN_TURN_RATE_RAD_S;
+    use crate::time::Duration;
+
+    #[test]
+    fn ca_model_integrates_acceleration_on_mean() {
+        let cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
+        let t0 = Timestamp::ZERO;
+        let dt = Duration::from_seconds(1.0).expect("dt");
+        let mut mean = [0.0; IMM_STATE_DIM];
+        mean[0] = 100_000.0;
+        mean[1] = 200.0;
+        mean[2] = 5.0;
+        mean[3] = 50_000.0;
+        mean[4] = -50.0;
+        mean[5] = -2.0;
+        let cov = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
+        let prior = GaussianState6::new(mean, cov, t0).expect("prior");
+        let t1 = t0.checked_add(dt).expect("t1");
+        let pred = predict_imm_model(prior, t1, ImmModelKind::Ca, &cfg).expect("pred");
+        assert!((pred.mean[0] - (100_000.0 + 200.0 + 2.5)).abs() < 1e-6);
+        assert!((pred.mean[1] - 205.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn ct_straight_when_turn_rate_below_one_degree_per_second() {
+        let mut cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
+        cfg.ct.max_turn_accel_mps2 = 0.5;
+        cfg.ct.omega_scale = 0.01;
+        cfg.ct.min_turn_rate_rad_s = CT_MIN_TURN_RATE_RAD_S;
+        let t0 = Timestamp::ZERO;
+        let dt = Duration::from_seconds(2.0).expect("dt");
+        let speed = 250.0;
+        let mut mean = [0.0; IMM_STATE_DIM];
+        mean[1] = speed;
+        let cov = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
+        let prior = GaussianState6::new(mean, cov, t0).expect("prior");
+        let t1 = t0.checked_add(dt).expect("t1");
+        let pred =
+            predict_imm_model(prior, t1, ImmModelKind::CtPos, &cfg).expect("pred");
+        assert!(
+            (pred.mean[0] - speed * 2.0).abs() < 1e-3,
+            "expected straight east motion, x={}",
+            pred.mean[0]
+        );
+        assert!((pred.mean[4]).abs() < 1e-6);
+        assert!(cfg.ct.omega_for_speed(speed) < CT_MIN_TURN_RATE_RAD_S);
+    }
+
+    #[test]
+    fn ct_turns_with_speed_scaled_omega() {
+        let cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
+        let t0 = Timestamp::ZERO;
+        let dt = Duration::from_seconds(2.0).expect("dt");
+        let speed = 250.0;
+        let mut mean = [0.0; IMM_STATE_DIM];
+        mean[0] = 0.0;
+        mean[1] = speed;
+        mean[3] = 0.0;
+        mean[4] = 0.0;
+        let cov = [[0.0; IMM_STATE_DIM]; IMM_STATE_DIM];
+        let prior = GaussianState6::new(mean, cov, t0).expect("prior");
+        let t1 = t0.checked_add(dt).expect("t1");
+        let pred =
+            predict_imm_model(prior, t1, ImmModelKind::CtPos, &cfg).expect("pred");
+        let omega = cfg.ct.omega_for_speed(speed);
+        let expected_heading = omega * 2.0;
+        let expected_vx = speed * libm::cos(expected_heading);
+        let expected_vy = speed * libm::sin(expected_heading);
+        assert!((pred.mean[1] - expected_vx).abs() < 0.5);
+        assert!((pred.mean[4] - expected_vy).abs() < 0.5);
+        assert!(pred.mean[2].abs() < 1e-9 && pred.mean[5].abs() < 1e-9);
+    }
+
+    #[test]
+    fn interaction_and_predict_coasts_without_measurements() {
+        let cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
+        let mut ws = KalmanWorkspace {
+            f: Mat::<4, 4>::zeros(),
+            q: Mat::<4, 4>::zeros(),
+            h: Mat::<2, 4>::zeros(),
+            r: Mat::<2, 2>::zeros(),
+        };
+        let t0 = Timestamp::ZERO;
+        let dt = Duration::from_seconds(0.25).expect("dt");
+        let mut cov = Mat::<4, 4>::zeros();
+        for i in 0..4 {
+            cov.0[i][i] = 1e4;
+        }
+        let mut imm = ImmEkfState::from_gaussian(
+            GaussianState::new_from_array([100_000.0, 200.0, 50_000.0, -100.0], cov, t0)
+                .expect("state"),
+        )
+        .expect("imm");
+        let p0 = imm.combined().expect("combined").cov.0[0][0];
+        let t1 = t0.checked_add(dt).expect("t1");
+        imm.interaction_and_predict(t1, &cfg, &mut ws)
+            .expect("predict");
+        let p1 = imm.combined().expect("combined").cov.0[0][0];
+        assert!(p1 > p0, "coast step should inflate position variance: {p0} -> {p1}");
+    }
+}

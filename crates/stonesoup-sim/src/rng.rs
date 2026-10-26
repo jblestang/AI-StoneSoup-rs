@@ -18,6 +18,11 @@ impl SplitMix64 {
         z ^ (z >> 31)
     }
 
+    /// Uniform on `(0, 1]`.
+    pub fn uniform01(&mut self) -> f64 {
+        (self.next_u64() as f64 + 1.0) / (u64::MAX as f64 + 1.0)
+    }
+
     /// Standard normal via Box–Muller (uses two uniforms per call).
     pub fn standard_normal(&mut self) -> Result<f64, Error> {
         let u1 = (self.next_u64() as f64 + 1.0) / (u64::MAX as f64 + 1.0);

@@ -38,6 +38,9 @@ impl KalmanPredictor {
         timestamp: Timestamp,
         ws: &mut KalmanWorkspace,
     ) -> Result<GaussianState, Error> {
+        if prior.timestamp == timestamp {
+            return Ok(*prior);
+        }
         let dt = timestamp.checked_sub(prior.timestamp)?;
         if dt.0 < 0 {
             return Err(Error::InvalidTimeStep);

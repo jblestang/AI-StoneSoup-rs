@@ -17,7 +17,7 @@ use super::distance::squared_mahalanobis;
 /// Chi-squared gate :math:`\chi^2_{0.95,2}` (Stone Soup `PDAHypothesiser` default `prob_gate`).
 pub const PDA_GATE_CHI2_2D: f64 = 5.991_464_547_107_982;
 
-pub const MAX_PDA_HYPOTHESES: usize = 32;
+pub const MAX_PDA_HYPOTHESES: usize = 128;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ProbabilityHypothesis {
@@ -27,7 +27,7 @@ pub struct ProbabilityHypothesis {
 }
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-fn logpdf2(z: VecN<2>, mean: VecN<2>, cov: Mat<2, 2>) -> Result<f64, Error> {
+pub(crate) fn logpdf2(z: VecN<2>, mean: VecN<2>, cov: Mat<2, 2>) -> Result<f64, Error> {
     let mp = crate::filter::kalman::GaussianMeasurementPrediction { mean, cov };
     let sq = squared_mahalanobis(z, &mp)?;
     let det = cov.0[0][0] * cov.0[1][1] - cov.0[0][1] * cov.0[1][0];
@@ -40,7 +40,7 @@ fn logpdf2(z: VecN<2>, mean: VecN<2>, cov: Mat<2, 2>) -> Result<f64, Error> {
 }
 
 #[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
-fn normalize_probs(hyps: &mut [ProbabilityHypothesis], n: usize) -> Result<(), Error> {
+pub(crate) fn normalize_probs(hyps: &mut [ProbabilityHypothesis], n: usize) -> Result<(), Error> {
     let mut sum = 0.0;
     for h in hyps.iter().take(n) {
         sum += h.probability;
