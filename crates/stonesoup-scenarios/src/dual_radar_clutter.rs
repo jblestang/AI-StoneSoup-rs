@@ -1205,6 +1205,20 @@ impl DualRadarClutterSim {
         Ok(())
     }
 
+    /// IMM interaction + per-model predict for every active track at the simulation step time.
+    ///
+    /// Runs before any sensor pass so filter states coast through radar rotation gaps and
+    /// zero-detection steps with growing process noise, not a frozen posterior.
+    fn imm_coast_predict_actives(&mut self, ts: Timestamp) -> Result<(), ScenarioError> {
+        for track in &mut self.active {
+            track
+                .imm
+                .interaction_and_predict(ts, &self.imm_cfg, &mut self.ws)
+                .map_err(ScenarioError::Core)?;
+        }
+        Ok(())
+    }
+
     /// JPDA + EKF on the current active set for one sensor's detections (no initiation).
     fn associate_update_actives(
         &mut self,
@@ -1225,13 +1239,14 @@ impl DualRadarClutterSim {
                 .collect::<Result<_, _>>()?;
             let template = act_tails[0];
             let mut sets = alloc::vec![Self::empty_jpda_set(template); n_act];
+            // Tails are already at ``ts`` from ``imm_coast_predict_actives``; JPDA ``predict`` is a no-op.
             jpda_associate_ekf_det_models(
                 &act_tails,
                 ts,
                 detections,
                 JPDA_PROB_DETECT,
                 clutter_density,
-                &self.predictor,
+                &self.imm_cfg.cv,
                 &self.updater,
                 det_models,
                 &mut self.ws,
@@ -1330,12 +1345,7 @@ impl DualRadarClutterSim {
         self.log_truths_at(ts);
         self.prior.timestamp = ts;
         if self.step > 0 {
-            for track in &mut self.active {
-                track
-                    .imm
-                    .interaction_and_predict(ts, &self.imm_cfg, &mut self.ws)
-                    .map_err(ScenarioError::Core)?;
-            }
+            self.imm_coast_predict_actives(ts)?;
         }
         let mut step_unassoc = Vec::with_capacity(16);
         let mut step_unassoc_models = Vec::with_capacity(16);

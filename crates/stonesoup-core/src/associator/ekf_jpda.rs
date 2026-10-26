@@ -63,6 +63,7 @@ pub fn ekf_pda_hypotheses(
         return Err(Error::CapacityExceeded);
     }
     let prob_gate = 0.95;
+    // Caller may already have IMM-predicted to ``association_time`` (inter-scan coast steps).
     let missed = predictor.predict(track_tail, association_time, ws)?;
     out[0] = ProbabilityHypothesis {
         prediction: missed,

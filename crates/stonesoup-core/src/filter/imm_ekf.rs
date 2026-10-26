@@ -321,3 +321,38 @@ fn jpda_mixture_likelihood(
     }
     Ok(like.max(1e-12))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::time::Duration;
+
+    #[test]
+    fn interaction_and_predict_coasts_without_measurements() {
+        let cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
+        let mut ws = KalmanWorkspace::default();
+        let t0 = Timestamp::ZERO;
+        let dt = Duration::from_seconds(0.25).expect("dt");
+        let mut cov = crate::linalg::Mat::<4, 4>::identity();
+        for i in 0..4 {
+            cov.0[i][i] = 1e4;
+        }
+        let mut imm = ImmEkfState::from_gaussian(
+            GaussianState::new_from_array([100_000.0, 200.0, 50_000.0, -100.0], cov, t0)
+                .expect("state"),
+        );
+        let p0 = imm.combined().expect("combined").cov.0[0][0];
+        let t1 = t0.checked_add(dt).expect("t1");
+        imm.interaction_and_predict(t1, &cfg, &mut ws)
+            .expect("predict");
+        let p1 = imm.combined().expect("combined").cov.0[0][0];
+        assert!(
+            p1 > p0,
+            "coast step should inflate position variance: {p0} -> {p1}"
+        );
+        assert_eq!(
+            imm.models[0].timestamp, t1,
+            "model times advance each coast step"
+        );
+    }
+}
