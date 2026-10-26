@@ -34,8 +34,8 @@ pub use pda::{
     PDA_GATE_CHI2_2D,
 };
 pub use switch_diagnosis::{
-    diagnose_identity_switches_from_assoc, IdentitySwitchEvent, SwitchCause, SwitchCauseCounts,
-    SwitchDiagnosisSummary,
+    diagnose_identity_switches_from_assoc, study_coast_relocks, CoastRelockStudy,
+    IdentitySwitchEvent, SwitchCause, SwitchCauseCounts, SwitchDiagnosisSummary,
 };
 pub use track_quality::{
     assess_track_quality, ContinuousTruthQuality, FilterTrackQuality, TrackQualityReport,

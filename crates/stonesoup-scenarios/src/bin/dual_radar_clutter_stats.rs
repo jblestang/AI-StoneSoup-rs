@@ -202,6 +202,19 @@ fn run() -> Result<String, ScenarioError> {
                     "diverged_relock": stats.switch_diagnosis.switch_causes.diverged_relock,
                     "unknown": stats.switch_diagnosis.switch_causes.unknown,
                 },
+                "coast_relock_study": {
+                    "description": "CoastThenRelock = at new TrackToTruth segment start, filter is outside the prior truth BR gate but inside the new truth gate.",
+                    "event_count": stats.switch_diagnosis.coast_relock.event_count,
+                    "filter_closer_to_new_truth": stats.switch_diagnosis.coast_relock.filter_closer_to_new_truth,
+                    "prior_in_gate_recently_then_miss": stats.switch_diagnosis.coast_relock.prior_in_gate_recently_then_miss,
+                    "assoc_label_gap_ge_1s": stats.switch_diagnosis.coast_relock.assoc_label_gap_ge_1s,
+                    "mean_assoc_gap_s": stats.switch_diagnosis.coast_relock.mean_assoc_gap_s,
+                    "median_dist_to_prior_truth_m": stats.switch_diagnosis.coast_relock.median_dist_to_prior_truth_m,
+                    "median_dist_to_new_truth_m": stats.switch_diagnosis.coast_relock.median_dist_to_new_truth_m,
+                    "prior_truth_dist_ge_2km": stats.switch_diagnosis.coast_relock.prior_truth_dist_ge_2km,
+                    "ping_pong_track_count": stats.switch_diagnosis.coast_relock.ping_pong_track_count,
+                    "ping_pong_event_count": stats.switch_diagnosis.coast_relock.ping_pong_event_count,
+                },
                 "sample_events": stats.switch_diagnosis.events.iter().map(|e| {
                     serde_json::json!({
                         "track_id": e.track_id,

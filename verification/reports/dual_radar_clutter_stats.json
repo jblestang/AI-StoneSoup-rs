@@ -10020,6 +10020,19 @@
     },
     "switch_diagnosis": {
       "ambiguous_nearest_steps": 15,
+      "coast_relock_study": {
+        "assoc_label_gap_ge_1s": 90,
+        "description": "CoastThenRelock = at new TrackToTruth segment start, filter is outside the prior truth BR gate but inside the new truth gate.",
+        "event_count": 101,
+        "filter_closer_to_new_truth": 80,
+        "mean_assoc_gap_s": 9.886138613861386,
+        "median_dist_to_new_truth_m": 734.9476324871736,
+        "median_dist_to_prior_truth_m": 2423.416083697129,
+        "ping_pong_event_count": 40,
+        "ping_pong_track_count": 19,
+        "prior_in_gate_recently_then_miss": 58,
+        "prior_truth_dist_ge_2km": 60
+      },
       "description": "Why TrackToTruth reports identity switches. Often label flicker in dense scenes, not filter physically jumping.",
       "identity_switches_at_confirm_1": 122,
       "identity_switches_if_confirm_3": 122,

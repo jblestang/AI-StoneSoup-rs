@@ -2,7 +2,7 @@
 
 extern crate alloc;
 
-use alloc::collections::BTreeSet;
+use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::vec::Vec;
 
 use crate::error::Error;
@@ -55,7 +55,32 @@ pub struct SwitchDiagnosisSummary {
     pub total_path_samples: u32,
     pub switch_causes: SwitchCauseCounts,
     pub events: Vec<IdentitySwitchEvent>,
+    pub coast_relock: CoastRelockStudy,
 }
+
+/// Deeper breakdown of ``CoastThenRelock`` switches (filter outside prior-truth gate at re-label time).
+#[derive(Debug, Clone, Default)]
+pub struct CoastRelockStudy {
+    pub event_count: u32,
+    /// At handoff, planar distance to new truth is less than to prior truth.
+    pub filter_closer_to_new_truth: u32,
+    /// Prior truth was outside the gate at handoff but was inside within the lookback window.
+    pub prior_in_gate_recently_then_miss: u32,
+    /// Gap between TrackToTruth segment end (prior truth) and new segment start ≥ 1 s.
+    pub assoc_label_gap_ge_1s: u32,
+    pub mean_assoc_gap_s: f64,
+    pub median_dist_to_prior_truth_m: f64,
+    pub median_dist_to_new_truth_m: f64,
+    /// Prior truth planar distance ≥ 2 km at handoff (large lag / wrong track).
+    pub prior_truth_dist_ge_2km: u32,
+    /// Tracks with ≥1 inverse pair (A→B and B→A coast-relock).
+    pub ping_pong_track_count: u32,
+    pub ping_pong_event_count: u32,
+}
+
+const COAST_LOOKBACK_NS: i64 = 5_000_000_000;
+const ASSOC_GAP_1S_NS: i64 = 1_000_000_000;
+const PRIOR_FAR_M: f64 = 2_000.0;
 
 fn truth_state_at_index(truth: &TruthPath, ts: Timestamp) -> Option<[f64; 4]> {
     if truth.states.is_empty() {
@@ -219,6 +244,137 @@ fn classify_switch(
     })
 }
 
+fn prior_truth_in_gate_lookback(
+    track: &TrackPath,
+    truths: &[TruthPath],
+    from_truth: u16,
+    switch_ts: Timestamp,
+    lookback_ns: i64,
+    gate: TrackTruthPositionGate,
+) -> Result<bool, Error> {
+    let Some(from_path) = truths.iter().find(|t| t.id == from_truth) else {
+        return Ok(false);
+    };
+    let start_ns = switch_ts.0.saturating_sub(lookback_ns);
+    for (ts, state) in &track.states {
+        if ts.0 < start_ns || ts.0 >= switch_ts.0 {
+            continue;
+        }
+        let Some(truth_state) = truth_state_at_index(from_path, *ts) else {
+            continue;
+        };
+        if in_gate(gate, *state, truth_state) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn median(mut xs: Vec<f64>) -> f64 {
+    if xs.is_empty() {
+        return 0.0;
+    }
+    xs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal));
+    let m = xs.len() / 2;
+    if xs.len() % 2 == 1 {
+        xs[m]
+    } else {
+        (xs[m - 1] + xs[m]) * 0.5
+    }
+}
+
+/// Classify all coast-then-relock handoffs (TrackToTruth segment boundaries).
+pub fn study_coast_relocks(
+    tracks: &[TrackPath],
+    truths: &[TruthPath],
+    assoc: &[TrackTruthAssociation],
+    config: &TrackToTruthConfig,
+) -> Result<CoastRelockStudy, Error> {
+    let gate = config.position_gate;
+    let mut study = CoastRelockStudy::default();
+    let mut gap_secs = Vec::new();
+    let mut dist_prior = Vec::new();
+    let mut dist_new = Vec::new();
+    let mut pairs_by_track: BTreeMap<u32, Vec<(u16, u16)>> = BTreeMap::new();
+
+    for track in tracks {
+        let mut segs: Vec<&TrackTruthAssociation> =
+            assoc.iter().filter(|a| a.track_id == track.id).collect();
+        if segs.len() < 2 {
+            continue;
+        }
+        segs.sort_by_key(|a| a.range.start);
+        for w in segs.windows(2) {
+            if w[0].truth_id == w[1].truth_id {
+                continue;
+            }
+            let ev = classify_switch(
+                track,
+                w[0].truth_id,
+                w[1].truth_id,
+                w[1].range.start,
+                truths,
+                gate,
+            )?;
+            if ev.cause != SwitchCause::CoastThenRelock {
+                continue;
+            }
+            study.event_count += 1;
+            dist_prior.push(ev.dist_to_from_m);
+            dist_new.push(ev.dist_to_to_m);
+            if ev.dist_to_to_m < ev.dist_to_from_m {
+                study.filter_closer_to_new_truth += 1;
+            }
+            if ev.dist_to_from_m >= PRIOR_FAR_M {
+                study.prior_truth_dist_ge_2km += 1;
+            }
+            if prior_truth_in_gate_lookback(
+                track,
+                truths,
+                w[0].truth_id,
+                w[1].range.start,
+                COAST_LOOKBACK_NS,
+                gate,
+            )? {
+                study.prior_in_gate_recently_then_miss += 1;
+            }
+            let gap_ns = w[1].range.start.0.saturating_sub(w[0].range.end.0);
+            let gap_s = gap_ns as f64 / 1e9;
+            gap_secs.push(gap_s);
+            if gap_ns >= ASSOC_GAP_1S_NS {
+                study.assoc_label_gap_ge_1s += 1;
+            }
+            pairs_by_track
+                .entry(track.id)
+                .or_default()
+                .push((w[0].truth_id, w[1].truth_id));
+        }
+    }
+
+    study.mean_assoc_gap_s = if gap_secs.is_empty() {
+        0.0
+    } else {
+        gap_secs.iter().sum::<f64>() / gap_secs.len() as f64
+    };
+    study.median_dist_to_prior_truth_m = median(dist_prior);
+    study.median_dist_to_new_truth_m = median(dist_new);
+
+    for pairs in pairs_by_track.values() {
+        let mut ping_events = 0u32;
+        for &(a, b) in pairs {
+            if pairs.iter().any(|&(x, y)| x == b && y == a) {
+                ping_events += 1;
+            }
+        }
+        if ping_events > 0 {
+            study.ping_pong_track_count += 1;
+            study.ping_pong_event_count += ping_events;
+        }
+    }
+
+    Ok(study)
+}
+
 fn for_each_switch<F>(
     tracks: &[TrackPath],
     truths: &[TruthPath],
@@ -317,6 +473,8 @@ pub fn diagnose_identity_switches_from_assoc(
         }
     })?;
 
+    let coast_relock = study_coast_relocks(tracks, truths, assoc, &config)?;
+
     Ok(SwitchDiagnosisSummary {
         identity_switches_t2t,
         identity_switches_confirm3,
@@ -325,6 +483,7 @@ pub fn diagnose_identity_switches_from_assoc(
         total_path_samples,
         switch_causes,
         events,
+        coast_relock,
     })
 }
 
