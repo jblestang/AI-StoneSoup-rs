@@ -45,6 +45,6 @@ pub use track_quality::{
 };
 pub use track_to_truth::{
     associate_tracks_to_truths, continuous_tracks_per_truth, ContinuousTruthTrack, TrackPath,
-    TrackToTruthConfig, TrackTruthAssociation, TruthPath,
+    RadarRevisitTrackToTruth, TrackToTruthConfig, TrackTruthAssociation, TruthPath,
 };
 pub use track_truth_gate::TrackTruthPositionGate;

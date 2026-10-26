@@ -251,8 +251,23 @@ fn run() -> Result<String, ScenarioError> {
             "switch_diagnosis": {
                 "description": "Why TrackToTruth reports identity switches. Often label flicker in dense scenes, not filter physically jumping.",
                 "t2t_consec_pairs_confirm": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_PAIRS,
-                "t2t_consec_misses_end": stonesoup_scenarios::TRACK_TO_TRUTH_CONSEC_MISSES,
+                "t2t_consec_misses_end": stonesoup_scenarios::dual_radar_track_to_truth_config()
+                    .consec_misses_end,
                 "t2t_switch_score_margin": stonesoup_scenarios::TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
+                "t2t_revisit_by_radar": {
+                    "radar_a": {
+                        "period_s": stonesoup_scenarios::PERIOD_A_S,
+                        "dt_s": stonesoup_scenarios::DT_S,
+                        "consec_misses_end": stonesoup_scenarios::radar_a_track_to_truth_revisit().consec_misses_end(),
+                        "note": "Active dual-radar TrackToTruth uses A bearing–range gate and this revisit window.",
+                    },
+                    "radar_b": {
+                        "period_s": stonesoup_scenarios::PERIOD_B_S,
+                        "dt_s": stonesoup_scenarios::DT_S,
+                        "consec_misses_end": stonesoup_scenarios::radar_b_track_to_truth_revisit().consec_misses_end(),
+                        "note": "Reference only until B-specific TrackToTruth gate is wired.",
+                    },
+                },
                 "identity_switches_at_confirm_1": stats.switch_diagnosis.identity_switches_t2t,
                 "identity_switches_if_confirm_3": stats.switch_diagnosis.identity_switches_confirm3,
                 "per_step_nearest_truth_flips": stats.switch_diagnosis.per_step_nearest_truth_flips,

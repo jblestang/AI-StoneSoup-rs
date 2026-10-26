@@ -14,7 +14,8 @@ use stonesoup_core::{
     TrackQualityReport,
     ConstantVelocity2d, ContinuousTruthTrack, Detection, Duration, Error, ExtendedKalmanUpdater,
     GaussianState, JpdaHypothesisSet, KalmanPredictor, KalmanWorkspace, ProbabilityHypothesis,
-    SensorId, Timestamp, TrackPath, TrackToTruthConfig, TrackTruthAssociation, TrackTruthPositionGate,
+    RadarRevisitTrackToTruth, SensorId, Timestamp, TrackPath, TrackToTruthConfig,
+    TrackTruthAssociation, TrackTruthPositionGate,
     TruthPath,
     MAX_GNN_ASSIGN_DETS, MAX_JPDA_EKF_TRACKS, MAX_PDA_HYPOTHESES,
     jpda_associate_ekf_det_models, jpda_detection_weights, ekf_pda_merged_update,
@@ -89,7 +90,8 @@ pub const TRUTH_ASSOC_MAX_RANGE_SIGMA_M: f64 = {
 };
 /// Avoid nearest-neighbour truth label flicker in the 1000-target field.
 pub const TRACK_TO_TRUTH_CONSEC_PAIRS: u8 = 3;
-pub const TRACK_TO_TRUTH_CONSEC_MISSES: u8 = 4;
+/// Legacy 1 s @ 0.25 s steps; prefer [`track_to_truth_consec_misses_for_period`].
+pub const TRACK_TO_TRUTH_CONSEC_MISSES_LEGACY: u8 = 4;
 /// Require one χ² unit better score before TrackToTruth steals the label from the current truth.
 pub const TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN: f64 = 1.0;
 /// Track–truth metrics gate: ≈4σ in bearing at long range (χ²=16), tightening with range via R.
@@ -109,13 +111,27 @@ pub fn dual_radar_track_truth_gate() -> TrackTruthPositionGate {
     }
 }
 
+/// TrackToTruth segment timing for radar A (bearing–range gate sensor): end label after ~one rotation.
+pub fn radar_a_track_to_truth_revisit() -> RadarRevisitTrackToTruth {
+    RadarRevisitTrackToTruth::new(PERIOD_A_S, DT_S, TRACK_TO_TRUTH_CONSEC_PAIRS)
+}
+
+/// Reference timing for radar B (faster rotation); metrics gate is still A-centric today.
+pub fn radar_b_track_to_truth_revisit() -> RadarRevisitTrackToTruth {
+    RadarRevisitTrackToTruth::new(PERIOD_B_S, DT_S, TRACK_TO_TRUTH_CONSEC_PAIRS)
+}
+
+#[cfg_attr(feature = "no-panic-cert", no_panic::no_panic)]
+pub fn track_to_truth_consec_misses_for_period(period_s: f64, dt_s: f64) -> u8 {
+    RadarRevisitTrackToTruth::new(period_s, dt_s, TRACK_TO_TRUTH_CONSEC_PAIRS).consec_misses_end()
+}
+
 pub fn dual_radar_track_to_truth_config() -> TrackToTruthConfig {
-    TrackToTruthConfig {
-        position_gate: dual_radar_track_truth_gate(),
-        consec_pairs_confirm: TRACK_TO_TRUTH_CONSEC_PAIRS,
-        consec_misses_end: TRACK_TO_TRUTH_CONSEC_MISSES,
-        switch_score_margin: TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
-    }
+    TrackToTruthConfig::from_radar_revisit(
+        dual_radar_track_truth_gate(),
+        radar_a_track_to_truth_revisit(),
+        TRACK_TO_TRUTH_SWITCH_SCORE_MARGIN,
+    )
 }
 /// Coprime stride to rotate truth scan order each 360° (fair plot budget at cap).
 pub const PLOT_SCAN_CURSOR_STRIDE: usize = 127;

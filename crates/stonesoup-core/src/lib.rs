@@ -39,7 +39,8 @@ pub use associator::{
     SwitchDiagnosisSummary,
     squared_mahalanobis, ContinuousTruthQuality, ContinuousTruthTrack, FilterTrackQuality,
     TrackQualityReport,
-    TrackPath, TrackToTruthConfig, TrackTruthAssociation, TrackTruthPositionGate, TruthPath,
+    RadarRevisitTrackToTruth, TrackPath, TrackToTruthConfig, TrackTruthAssociation,
+    TrackTruthPositionGate, TruthPath,
 };
 pub use deleter::{
     covariance_trace, holding_should_delete, should_delete_covariance_trace, HoldingDeleter,
