@@ -330,10 +330,15 @@ mod tests {
     #[test]
     fn interaction_and_predict_coasts_without_measurements() {
         let cfg = ImmEkfConfig::dual_radar_default().expect("cfg");
-        let mut ws = KalmanWorkspace::default();
+        let mut ws = KalmanWorkspace {
+            f: crate::linalg::Mat::<4, 4>::zeros(),
+            q: crate::linalg::Mat::<4, 4>::zeros(),
+            h: crate::linalg::Mat::<2, 4>::zeros(),
+            r: crate::linalg::Mat::<2, 2>::zeros(),
+        };
         let t0 = Timestamp::ZERO;
         let dt = Duration::from_seconds(0.25).expect("dt");
-        let mut cov = crate::linalg::Mat::<4, 4>::identity();
+        let mut cov = crate::linalg::Mat::<4, 4>::zeros();
         for i in 0..4 {
             cov.0[i][i] = 1e4;
         }
