@@ -708,6 +708,8 @@ fn euclidean_xy(a: (f64, f64), b: (f64, f64)) -> f64 {
 
 pub struct DualRadarClutterSim {
     predictor: KalmanPredictor,
+    /// JPDA gating on marginalized 4D combined state (CV spectral density, not IMM sub-model F).
+    imm_gating_predictor: KalmanPredictor,
     imm_cfg: ImmEkfConfig,
     updater: ExtendedKalmanUpdater,
     ws: KalmanWorkspace,
@@ -748,6 +750,9 @@ impl DualRadarClutterSim {
         let predictor = KalmanPredictor::new(
             ConstantVelocity2d::new(80.0, 80.0).map_err(ScenarioError::Core)?,
         );
+        let imm_gating_predictor = KalmanPredictor::new(
+            ConstantVelocity2d::new(40.0, 40.0).map_err(ScenarioError::Core)?,
+        );
         let imm_cfg = ImmEkfConfig::dual_radar_default().map_err(ScenarioError::Core)?;
         let updater = ExtendedKalmanUpdater::new(radar_model(0.0)?);
         let truth_cfg = TruthStepConfig {
@@ -770,6 +775,7 @@ impl DualRadarClutterSim {
         let coast_steps = libm::ceil(COAST_SECONDS / DT_S) as usize;
         Ok(Self {
             predictor,
+            imm_gating_predictor,
             imm_cfg,
             updater,
             ws: KalmanWorkspace {
@@ -1010,7 +1016,7 @@ impl DualRadarClutterSim {
         self.start_filter_path(id, ts, tail.mean.0);
         self.active.push(ActiveTrack {
             id,
-            imm: ImmEkfState::from_gaussian(tail),
+            imm: ImmEkfState::from_gaussian(tail).map_err(ScenarioError::Core)?,
             last_meas_step: step,
             birth_step: step,
             sensors_meas_mask: 0,
@@ -1246,7 +1252,7 @@ impl DualRadarClutterSim {
                 detections,
                 JPDA_PROB_DETECT,
                 clutter_density,
-                &self.imm_cfg.cv,
+                &self.imm_gating_predictor,
                 &self.updater,
                 det_models,
                 &mut self.ws,
