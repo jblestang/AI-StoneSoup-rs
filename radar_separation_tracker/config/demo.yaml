@@ -38,7 +38,8 @@ hypothesis:
   complexity_penalty: 3.0
   common_origin_lookback_scans: 8
   common_origin_sigma_multiplier: 3.0
-  separation_confirmation_scans: 5
+  # 2 scans consécutifs à 2+ détections après le split (≈2 s @ 1 Hz, pas 5+ s)
+  separation_confirmation_scans: 2
   separation_score_threshold: -8.0
 
 performance:

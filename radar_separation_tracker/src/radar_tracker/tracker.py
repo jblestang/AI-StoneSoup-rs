@@ -313,7 +313,9 @@ class RadarSeparationTracker:
 
         ev_key = parent.track_id
         pending = self._pending_separations.get(ev_key, {"count": 0, "score": 0.0})
-        pending["count"] += 1
+        # Ne confirmer que sur des scans où la séparation est observable (≥2 mesures)
+        if batch.detections and len(batch.detections) >= 2:
+            pending["count"] += 1
         cor = common_origin_score(
             parent.position_history,
             child.position_history,
