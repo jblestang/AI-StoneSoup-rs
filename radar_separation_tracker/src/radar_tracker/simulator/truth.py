@@ -269,8 +269,8 @@ def generate_scenario_truth(
             n_steps,
             times,
             scan_interval_s,
-            max_load_g=2.5,
-            gentle_turn_deg_per_s=0.6,
+            max_load_g=5.5,
+            gentle_turn_deg_per_s=15.0,
         )
         targets.append(
             TruthTarget("AC", s_ac, ts_ac, times[0], parent_id=None, separation_time=None)

@@ -54,8 +54,8 @@ simulation:
   max_detections_per_scan: 1000
   # Scénario B : avion porteur + missile air-mer (lâcher à 60 s)
   scenario: probable_detach_opposite
-  aircraft_max_load_g: 2.5
-  aircraft_turn_deg_per_s: 0.6
+  aircraft_max_load_g: 5.5  # hyp. pour tenir 15°/s ~ v·ω à ~155 m/s
+  aircraft_turn_deg_per_s: 15.0
   missile_boost_accel_mps2: 40.0
   missile_boost_duration_s: 7.0
   missile_pitch_down_deg: 25.0

@@ -75,7 +75,7 @@ Une bifurcation dans l'arbre **n'est pas** un événement ; export seulement apr
 
 Hypothèses **simulation** :
 
-- **AC (avion)** : ~155 m/s, altitude ~8,5 km, virage lent (~0,6°/s, charge ≤ ~2,5 g) — **pas de demi-tour instantané**.
+- **AC (avion)** : ~155 m/s, altitude ~8,5 km, lacet **15°/s** (demi-tour en ~12 s, charge ~5 g à cette vitesse — hyp. simulation) — **pas de flip instantané**.
 - **MS (missile)** : lâcher à t = 60 s avec l’état du porteur ; boost ~**40 m/s²** pendant ~**7 s** ; cap de tir incliné ~**25°** vers la mer ; descente ensuite (gravité réduite en phase terminale simplifiée).
 - Événement : `probable_detach` (porteur + fille missile), pas une preuve balistique.
 
