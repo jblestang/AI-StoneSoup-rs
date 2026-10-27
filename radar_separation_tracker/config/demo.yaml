@@ -52,10 +52,13 @@ simulation:
   duration_s: 120
   scan_interval_s: 1.0
   max_detections_per_scan: 1000
-  # Scénario B : 120 s, séparation à 60 s, leader + cassure chasseur (4 g, ~20 s)
+  # Scénario B : avion porteur + missile air-mer (lâcher à 60 s)
   scenario: probable_detach_opposite
-  fighter_breakaway_max_load_g: 4.0  # hyp. simulation
-  fighter_breakaway_climb_mps2: 2.5
+  aircraft_max_load_g: 2.5
+  aircraft_turn_deg_per_s: 0.6
+  missile_boost_accel_mps2: 40.0
+  missile_boost_duration_s: 7.0
+  missile_pitch_down_deg: 25.0
 
 benchmark:
   scenarios:

@@ -129,7 +129,7 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
     det_scan = meta.get("detection_scan")
 
     # accumulate truth trails
-    trails: dict[str, list[tuple[float, float]]] = {"T1": [], "T2": []}
+    trails: dict[str, list[tuple[float, float]]] = {"AC": [], "MS": []}
     parent_trail: list[tuple[float, float]] = []
     child_trail: list[tuple[float, float]] = []
 
@@ -147,8 +147,8 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
     fig.patch.set_facecolor("#0f1419")
     ax.set_facecolor("#0f1419")
 
-    (line_t1,) = ax.plot([], [], color="#4fc3f7", lw=2, label="Vérité T1 (continue)")
-    (line_t2,) = ax.plot([], [], color="#ff8a65", lw=2, label="Vérité T2 (cassure chasseur)")
+    (line_t1,) = ax.plot([], [], color="#4fc3f7", lw=2, label="Avion porteur (AC)")
+    (line_t2,) = ax.plot([], [], color="#ff8a65", lw=2, label="Missile air-mer (MS)")
     (line_p,) = ax.plot([], [], color="#aed581", lw=2, ls="--", label="Piste estimée parent")
     (line_c,) = ax.plot([], [], color="#fff176", lw=2, ls="--", label="Piste estimée fille")
     scat_det = ax.scatter([], [], s=18, c="#b0bec5", alpha=0.7, label="Détections scan")
@@ -194,13 +194,12 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
             art.remove()
         marker_artists = []
         fr = frames[i]
-        if "T1" in fr.truth_xy:
-            trails["T1"].append(fr.truth_xy["T1"])
-        if "T2" in fr.truth_xy:
-            trails["T2"].append(fr.truth_xy["T2"])
+        for tid in ("AC", "MS"):
+            if tid in fr.truth_xy:
+                trails[tid].append(fr.truth_xy[tid])
 
-        line_t1.set_data([p[0] for p in trails["T1"]], [p[1] for p in trails["T1"]])
-        line_t2.set_data([p[0] for p in trails["T2"]], [p[1] for p in trails["T2"]])
+        line_t1.set_data([p[0] for p in trails["AC"]], [p[1] for p in trails["AC"]])
+        line_t2.set_data([p[0] for p in trails["MS"]], [p[1] for p in trails["MS"]])
 
         keys = sorted(fr.track_xy.keys())
         p_id = keys[0] if keys else None
@@ -244,11 +243,12 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
             msg = "◆ DÉTECTION CONFIRMÉE (tracker)"
         banner.set_text(msg)
 
-        if gt_scan is not None and i == gt_scan and "T1" in fr.truth_xy:
+        ac_key = "AC" if "AC" in fr.truth_xy else next(iter(fr.truth_xy.keys()), None)
+        if gt_scan is not None and i == gt_scan and ac_key:
             marker_artists.append(
                 ax.scatter(
-                    [fr.truth_xy["T1"][0]],
-                    [fr.truth_xy["T1"][1]],
+                    [fr.truth_xy[ac_key][0]],
+                    [fr.truth_xy[ac_key][1]],
                     s=400,
                     facecolors="none",
                     edgecolors="#ef5350",
@@ -258,9 +258,9 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
             )
             marker_artists.append(
                 ax.text(
-                    fr.truth_xy["T1"][0],
-                    fr.truth_xy["T1"][1] + 800,
-                    "Séparation\nvérité",
+                    fr.truth_xy[ac_key][0],
+                    fr.truth_xy[ac_key][1] + 800,
+                    "Lâcher\nmissile",
                     color="#ef5350",
                     ha="center",
                     fontweight="bold",

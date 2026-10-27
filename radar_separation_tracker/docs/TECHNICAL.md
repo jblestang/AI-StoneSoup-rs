@@ -71,14 +71,13 @@ Une bifurcation dans l'arbre **n'est pas** un événement ; export seulement apr
 - Gating χ² (3 dof, `gate_probability`).
 - Pas d'énumération globale jointe.
 
-## Cassure chasseur (`probable_detach_opposite`)
+## Avion + missile air-mer (`probable_detach_opposite`, alias `aircraft_asm`)
 
-Hypothèses **simulation** (remplaçables dans la vérité terrain) :
+Hypothèses **simulation** :
 
-- Leader T1 : CV ~155 m/s horizontal (ordre de grandeur patrouille subsonique).
-- À t = 60 s, T2 naît avec **le même état** que T1.
-- T2 : accélération horizontale bornée à **4 g**, composante latérale de cassure + rampe vers cap **opposé** sur ~20 s, montée légère (~2,5 m/s²).
-- Pas de vitesse opposée instantanée (non physique pour un avion).
+- **AC (avion)** : ~155 m/s, altitude ~8,5 km, virage lent (~0,6°/s, charge ≤ ~2,5 g) — **pas de demi-tour instantané**.
+- **MS (missile)** : lâcher à t = 60 s avec l’état du porteur ; boost ~**40 m/s²** pendant ~**7 s** ; cap de tir incliné ~**25°** vers la mer ; descente ensuite (gravité réduite en phase terminale simplifiée).
+- Événement : `probable_detach` (porteur + fille missile), pas une preuve balistique.
 
 ## Limites v1
 

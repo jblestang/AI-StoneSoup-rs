@@ -43,69 +43,104 @@ def _integrate_cv(state: np.ndarray, dt: float) -> np.ndarray:
     return np.array([x + vx * dt, vx, y + vy * dt, vy, z + vz * dt, vz])
 
 
-def _fighter_breakaway_states(
+def _aircraft_patrol_states(
+    x0: tuple[float, float, float],
+    v0: tuple[float, float, float],
+    n_steps: int,
+    times: list,
+    dt: float,
+    *,
+    max_load_g: float = 2.5,
+    gentle_turn_deg_per_s: float = 0.6,
+) -> tuple[list[np.ndarray], list]:
+    """Avion porteur : vol nivelé + virage très lent (pas de demi-tour instantané).
+
+    Hypothèse simulation : charge latérale bornée, taux de lacet ``gentle_turn_deg_per_s``.
+    """
+    import math
+
+    g = 9.81
+    max_accel = max_load_g * g
+    state = np.array([x0[0], v0[0], x0[1], v0[1], x0[2], v0[2]], dtype=float)
+    states: list[np.ndarray] = []
+    ts = []
+    omega = math.radians(gentle_turn_deg_per_s)
+    for i in range(n_steps):
+        states.append(state.copy())
+        ts.append(times[i])
+        vx, vy, vz = state[1], state[3], state[5]
+        v_h = np.array([vx, vy], dtype=float)
+        speed = float(np.linalg.norm(v_h))
+        if speed > 10.0 and abs(omega) > 1e-9:
+            # rotation horizontale lente (virage coordonné simplifié)
+            c, s = math.cos(omega * dt), math.sin(omega * dt)
+            vx, vy = v_h[0], v_h[1]
+            state[1] = c * vx - s * vy
+            state[3] = s * vx + c * vy
+            # centripète bornée
+            a_lat = speed * abs(omega)
+            if a_lat > max_accel:
+                scale = max_accel / a_lat
+                state[1] = vx + (state[1] - vx) * scale
+                state[3] = vy + (state[3] - vy) * scale
+        state[0] += state[1] * dt
+        state[2] += state[3] * dt
+        state[4] += state[5] * dt
+    return states, ts
+
+
+def _missile_air_sea_states(
     initial: np.ndarray,
     n_steps: int,
     sep_idx: int,
     times: list,
     dt: float,
     *,
-    max_load_g: float = 4.0,
-    climb_accel_mps2: float = 2.5,
-    lateral_break_bias: float = 0.65,
+    boost_accel_mps2: float = 40.0,
+    boost_duration_s: float = 7.0,
+    pitch_down_deg: float = 25.0,
+    sea_level_m: float = 0.0,
 ) -> tuple[list[np.ndarray], list]:
-    """Cassure chasseur post-séparation : même vitesse initiale, virage chargé limité en g.
+    """Missile air-mer : lâcher, boost, plongée vers la mer (hyp. simulation).
 
-    Hypothèse simulation (pas mesurée) : charge max ``max_load_g``, reprendre le cap
-    opposé horizontalement sur ~15–25 s via accélération bornée (pas de flip instantané).
+    Vitesse initiale = porteur au lâcher ; propulsion le long du cap de tir incliné vers la mer.
     """
-    g = 9.81
-    max_accel = max_load_g * g
+    import math
+
     state = initial.astype(float).copy()
     states: list[np.ndarray] = []
     ts = []
-    v0 = np.array([state[1], state[3], state[5]], dtype=float)
-    v0_h = v0.copy()
-    v0_h[2] = 0.0
-    v0_norm = float(np.linalg.norm(v0_h))
-    if v0_norm < 1.0:
-        target_h = np.array([-1.0, 0.0, 0.0])
-    else:
-        target_h = -v0_h / v0_norm
+    vx, vy, vz = state[1], state[3], state[5]
+    v_h = np.array([vx, vy, 0.0], dtype=float)
+    hn = float(np.linalg.norm(v_h))
+    forward = v_h / hn if hn > 1.0 else np.array([1.0, 0.0])
+    pitch = math.radians(pitch_down_deg)
+    launch_dir = np.array(
+        [forward[0] * math.cos(pitch), forward[1] * math.cos(pitch), -math.sin(pitch)],
+        dtype=float,
+    )
+    ln = float(np.linalg.norm(launch_dir))
+    if ln > 1e-9:
+        launch_dir /= ln
 
     for i in range(sep_idx, n_steps):
+        if state[4] <= sea_level_m:
+            break
         states.append(state.copy())
         ts.append(times[i])
-        vx, vy, vz = state[1], state[3], state[5]
-        v_h = np.array([vx, vy, 0.0])
-        speed = float(np.linalg.norm(v_h))
-        if speed < 5.0:
-            state = _integrate_cv(state, dt)
-            continue
-        cur = v_h / speed
-        # Cassure : composante latérale (bias droit) + rétrogradation progressive vers cap opposé
-        lateral = np.array([cur[1], -cur[0], 0.0])
-        lat_n = float(np.linalg.norm(lateral))
-        if lat_n > 1e-6:
-            lateral /= lat_n
-        blend = min(1.0, (i - sep_idx) / max(1, int(20 / dt)))
-        desired_dir = (1.0 - blend) * cur + blend * target_h
-        desired_dir = desired_dir + lateral_break_bias * lateral
-        desired_dir[2] = 0.0
-        dn = float(np.linalg.norm(desired_dir))
-        if dn > 1e-6:
-            desired_dir /= dn
-        desired_v = desired_dir * speed
-        accel_h = desired_v - v_h
-        a_norm = float(np.linalg.norm(accel_h))
-        if a_norm > max_accel:
-            accel_h *= max_accel / a_norm
-        state[1] += accel_h[0] * dt
-        state[3] += accel_h[1] * dt
-        state[5] += climb_accel_mps2 * dt
+        age = (i - sep_idx) * dt
+        if age <= boost_duration_s:
+            state[1] += launch_dir[0] * boost_accel_mps2 * dt
+            state[3] += launch_dir[1] * boost_accel_mps2 * dt
+            state[5] += launch_dir[2] * boost_accel_mps2 * dt
+        else:
+            # phase sustentation / gravité légère sur la trajectoire balistique simplifiée
+            state[5] -= 9.81 * 0.15 * dt
         state[0] += state[1] * dt
         state[2] += state[3] * dt
         state[4] += state[5] * dt
+        if state[4] < sea_level_m:
+            state[4] = sea_level_m
 
     return states, ts
 
@@ -219,32 +254,48 @@ def generate_scenario_truth(
             )
         )
 
-    elif name in ("probable_detach_opposite", "detach_opposite_1min"):
-        # Scénario B : 120 s, séparation à 60 s — leader poursuit, #2 casse en chasseur
-        # (virage chargé ~4 g, remise de cap opposée sur ~20 s, légère montée).
-        v_continue = (155.0, 85.0, 0.0)  # ~310 m/s horizontal (hyp. démo subsonique)
-        make_track("T1", (32000.0, 22000.0, 8500.0), v_continue)
+    elif name in (
+        "probable_detach_opposite",
+        "detach_opposite_1min",
+        "aircraft_asm",
+        "aircraft_missile_sea",
+    ):
+        # Scénario B : avion porteur + lancement missile air-mer à t=60 s (120 s total).
+        v_patrol = (155.0, 85.0, 0.0)
+        alt_m = 8500.0
+        s_ac, ts_ac = _aircraft_patrol_states(
+            (32000.0, 22000.0, alt_m),
+            v_patrol,
+            n_steps,
+            times,
+            scan_interval_s,
+            max_load_g=2.5,
+            gentle_turn_deg_per_s=0.6,
+        )
+        targets.append(
+            TruthTarget("AC", s_ac, ts_ac, times[0], parent_id=None, separation_time=None)
+        )
         sep_idx = int(60 / scan_interval_s)
         if sep_idx >= n_steps:
             sep_idx = max(1, n_steps // 2)
-        parent_state = targets[0].states[sep_idx]
-        s2, ts2 = _fighter_breakaway_states(
+        parent_state = s_ac[sep_idx]
+        s_ms, ts_ms = _missile_air_sea_states(
             parent_state,
             n_steps,
             sep_idx,
             times,
             scan_interval_s,
-            max_load_g=4.0,
-            climb_accel_mps2=2.5,
-            lateral_break_bias=0.55,
+            boost_accel_mps2=40.0,
+            boost_duration_s=7.0,
+            pitch_down_deg=25.0,
         )
         targets.append(
             TruthTarget(
-                target_id="T2",
-                states=s2,
-                timestamps=ts2,
+                target_id="MS",
+                states=s_ms,
+                timestamps=ts_ms,
                 birth_time=times[sep_idx],
-                parent_id="T1",
+                parent_id="AC",
                 separation_time=times[sep_idx],
             )
         )
@@ -253,8 +304,8 @@ def generate_scenario_truth(
                 event_id="E1",
                 event_type="probable_detach",
                 time=times[sep_idx],
-                parent_ids=["T1"],
-                child_ids=["T1", "T2"],
+                parent_ids=["AC"],
+                child_ids=["AC", "MS"],
                 first_resolvable_time=times[min(sep_idx + 3, n_steps - 1)],
             )
         )
