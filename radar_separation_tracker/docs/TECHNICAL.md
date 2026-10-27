@@ -79,6 +79,11 @@ Hypothèses **simulation** :
 - **MS (missile)** : lâcher à t = 60 s avec l’état du porteur ; boost ~**40 m/s²** pendant ~**7 s** ; cap de tir incliné ~**25°** vers la mer ; descente ensuite (gravité réduite en phase terminale simplifiée).
 - Événement : `probable_detach` (porteur + fille missile), pas une preuve balistique.
 
+## Clutter de simulation
+
+`simulation.clutter_fraction` (ex. **0,20**) : fausses alarmes par scan via
+`n_clutter = ceil((f / (1 - f)) * n_vraies)` pour viser **f** comme part du total.
+
 ## Limites v1
 
 - Au plus **une** détection par cible résolue et par scan (pas de multi-échos / filiation automatique).

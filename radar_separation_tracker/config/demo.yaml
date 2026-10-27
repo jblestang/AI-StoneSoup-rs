@@ -59,6 +59,8 @@ simulation:
   missile_boost_accel_mps2: 40.0
   missile_boost_duration_s: 7.0
   missile_pitch_down_deg: 25.0
+  # Fausses alarmes : ~20 % des détections par scan (par rapport au total)
+  clutter_fraction: 0.20
 
 benchmark:
   scenarios:
