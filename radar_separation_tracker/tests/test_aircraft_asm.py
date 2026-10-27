@@ -31,6 +31,13 @@ def test_aircraft_turn_rate_15_deg_per_s_after_launch():
     a2 = math.degrees(math.atan2(v2[1], v2[0]))
     d2 = (a2 - a1 + 180) % 360 - 180
     assert abs(d2 - 15.0) < 0.5
+    v_turn_start = np.array([ac.states[sep][1], ac.states[sep][3]], dtype=float)
+    v_after_half = np.array([ac.states[sep + 12][1], ac.states[sep + 12][3]], dtype=float)
+    v_steady = np.array([ac.states[sep + 13][1], ac.states[sep + 13][3]], dtype=float)
+    dot_half = float(np.dot(v_turn_start, v_after_half))
+    n = float(np.linalg.norm(v_turn_start) * np.linalg.norm(v_after_half))
+    assert dot_half < -0.95 * n
+    assert float(np.dot(v_after_half, v_steady)) > 0.99 * n
 
 
 def test_missile_launch_and_dive():

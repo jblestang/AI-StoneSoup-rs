@@ -53,10 +53,11 @@ def _aircraft_patrol_states(
     max_load_g: float = 2.5,
     gentle_turn_deg_per_s: float = 0.6,
     turn_start_index: int = 0,
+    turn_duration_s: float | None = None,
 ) -> tuple[list[np.ndarray], list]:
-    """Avion porteur : vol nivelé + virage très lent (pas de demi-tour instantané).
+    """Avion porteur : vol nivelé, puis virage à taux fixe sur une durée bornée.
 
-    Hypothèse simulation : charge latérale bornée, taux de lacet ``gentle_turn_deg_per_s``.
+    Ex. 15°/s pendant 12 s → demi-tour (180°), puis cap stabilisé.
     """
     import math
 
@@ -72,7 +73,11 @@ def _aircraft_patrol_states(
         vx, vy, vz = state[1], state[3], state[5]
         v_h = np.array([vx, vy], dtype=float)
         speed = float(np.linalg.norm(v_h))
-        omega = omega_rate if i >= turn_start_index else 0.0
+        age_s = (i - turn_start_index) * dt if i >= turn_start_index else -1.0
+        if turn_duration_s is not None and age_s >= turn_duration_s:
+            omega = 0.0
+        else:
+            omega = omega_rate if i >= turn_start_index else 0.0
         if speed > 10.0 and abs(omega) > 1e-9:
             # rotation horizontale lente (virage coordonné simplifié)
             c, s = math.cos(omega * dt), math.sin(omega * dt)
@@ -277,6 +282,7 @@ def generate_scenario_truth(
             max_load_g=5.5,
             gentle_turn_deg_per_s=15.0,
             turn_start_index=sep_idx,
+            turn_duration_s=12.0,
         )
         targets.append(
             TruthTarget("AC", s_ac, ts_ac, times[0], parent_id=None, separation_time=None)
