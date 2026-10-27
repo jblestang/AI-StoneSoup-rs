@@ -55,8 +55,10 @@ simulation:
   # Scénario B : avion porteur + missile air-mer (lâcher à 60 s)
   scenario: probable_detach_opposite
   aircraft_max_load_g: 5.5  # hyp. pour tenir 15°/s ~ v·ω à ~155 m/s
-  aircraft_turn_deg_per_s: 15.0
-  aircraft_turn_duration_s: 12.0  # demi-tour 180° à 15°/s
+  # Démo vidéo : avion cap constant (pas de virage → pas de « boucle » sur la carte)
+  aircraft_turn_deg_per_s: 0.0
+  aircraft_turn_duration_s: 0.0
+  # Virage 15°/s × 12 s : scénario aircraft_half_turn_asm
   missile_boost_accel_mps2: 40.0
   missile_boost_duration_s: 7.0
   missile_pitch_down_deg: 25.0

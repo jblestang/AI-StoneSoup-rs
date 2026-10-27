@@ -280,9 +280,9 @@ def generate_scenario_truth(
             times,
             scan_interval_s,
             max_load_g=5.5,
-            gentle_turn_deg_per_s=15.0,
+            gentle_turn_deg_per_s=0.0,
             turn_start_index=sep_idx,
-            turn_duration_s=12.0,
+            turn_duration_s=0.0,
         )
         targets.append(
             TruthTarget("AC", s_ac, ts_ac, times[0], parent_id=None, separation_time=None)
@@ -316,6 +316,49 @@ def generate_scenario_truth(
                 parent_ids=["AC"],
                 child_ids=["AC", "MS"],
                 first_resolvable_time=times[min(sep_idx + 3, n_steps - 1)],
+            )
+        )
+
+    elif name == "aircraft_half_turn_asm":
+        # Avion : 15°/s pendant 12 s après lâcher (180°), missile air-mer — trajectoire en arc.
+        v_patrol = (155.0, 85.0, 0.0)
+        alt_m = 8500.0
+        sep_idx = int(60 / scan_interval_s)
+        s_ac, ts_ac = _aircraft_patrol_states(
+            (32000.0, 22000.0, alt_m),
+            v_patrol,
+            n_steps,
+            times,
+            scan_interval_s,
+            max_load_g=5.5,
+            gentle_turn_deg_per_s=15.0,
+            turn_start_index=sep_idx,
+            turn_duration_s=12.0,
+        )
+        targets.append(
+            TruthTarget("AC", s_ac, ts_ac, times[0], parent_id=None, separation_time=None)
+        )
+        parent_state = s_ac[sep_idx]
+        s_ms, ts_ms = _missile_air_sea_states(
+            parent_state, n_steps, sep_idx, times, scan_interval_s
+        )
+        targets.append(
+            TruthTarget(
+                target_id="MS",
+                states=s_ms,
+                timestamps=ts_ms,
+                birth_time=times[sep_idx],
+                parent_id="AC",
+                separation_time=times[sep_idx],
+            )
+        )
+        events.append(
+            GroundTruthEvent(
+                event_id="E1",
+                event_type="probable_detach",
+                time=times[sep_idx],
+                parent_ids=["AC"],
+                child_ids=["AC", "MS"],
             )
         )
 
