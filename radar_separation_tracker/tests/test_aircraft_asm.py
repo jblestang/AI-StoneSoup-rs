@@ -9,15 +9,7 @@ def test_aircraft_no_instant_reverse():
     sep = 60
     v0 = np.array([ac.states[sep][1], ac.states[sep][3]])
     v1 = np.array([ac.states[sep + 1][1], ac.states[sep + 1][3]])
-    np.testing.assert_allclose(v0, v1, rtol=0.01)
-
-
-def test_aircraft_asm_straight_leg():
-    truth = generate_scenario_truth("aircraft_asm", 120, 1.0, seed=42)
-    ac = next(t for t in truth.targets if t.target_id == "AC")
-    v0 = np.array([ac.states[0][1], ac.states[0][3]])
-    v1 = np.array([ac.states[119][1], ac.states[119][3]])
-    assert float(np.dot(v0, v1)) > 0.999 * float(np.linalg.norm(v0) * np.linalg.norm(v1))
+    assert float(np.dot(v0, v1)) > 0.94 * float(np.linalg.norm(v0) * np.linalg.norm(v1))
 
 
 def test_aircraft_turn_rate_15_deg_per_s_after_launch():
