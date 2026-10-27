@@ -266,7 +266,7 @@ class RadarSeparationTracker:
     def _try_init_tracks(self, batch: ScanBatch) -> None:
         if len(self._init_buffer) < 2:
             return
-        if any(t.life == TrackLifeState.CONFIRMED for t in self.tracks.values()):
+        if any(t.life != TrackLifeState.REJECTED for t in self.tracks.values()):
             return
         recent = self._init_buffer[-3:]
         scan_ids = {s for s, _, _ in recent}

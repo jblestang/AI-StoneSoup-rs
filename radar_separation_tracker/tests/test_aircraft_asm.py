@@ -13,17 +13,24 @@ def test_aircraft_no_instant_reverse():
     assert float(np.dot(v0, v1)) > 0.94 * float(np.linalg.norm(v0) * np.linalg.norm(v1))
 
 
-def test_aircraft_turn_rate_15_deg_per_s():
-    truth = generate_scenario_truth("aircraft_asm", 30, 1.0, seed=42)
+def test_aircraft_turn_rate_15_deg_per_s_after_launch():
+    truth = generate_scenario_truth("aircraft_asm", 120, 1.0, seed=42)
     ac = next(t for t in truth.targets if t.target_id == "AC")
     import math
 
-    v0 = np.array([ac.states[0][1], ac.states[0][3]], dtype=float)
-    v1 = np.array([ac.states[1][1], ac.states[1][3]], dtype=float)
-    ang0 = math.degrees(math.atan2(v0[1], v0[0]))
-    ang1 = math.degrees(math.atan2(v1[1], v1[0]))
+    sep = 60
+    v_straight = np.array([ac.states[sep - 1][1], ac.states[sep - 1][3]], dtype=float)
+    v_turn = np.array([ac.states[sep][1], ac.states[sep][3]], dtype=float)
+    ang0 = math.degrees(math.atan2(v_straight[1], v_straight[0]))
+    ang1 = math.degrees(math.atan2(v_turn[1], v_turn[0]))
     delta = (ang1 - ang0 + 180) % 360 - 180
-    assert abs(delta - 15.0) < 0.5
+    assert abs(delta) < 0.5
+    v1 = np.array([ac.states[sep][1], ac.states[sep][3]], dtype=float)
+    v2 = np.array([ac.states[sep + 1][1], ac.states[sep + 1][3]], dtype=float)
+    a1 = math.degrees(math.atan2(v1[1], v1[0]))
+    a2 = math.degrees(math.atan2(v2[1], v2[0]))
+    d2 = (a2 - a1 + 180) % 360 - 180
+    assert abs(d2 - 15.0) < 0.5
 
 
 def test_missile_launch_and_dive():

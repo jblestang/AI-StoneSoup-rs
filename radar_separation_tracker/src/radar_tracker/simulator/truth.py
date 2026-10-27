@@ -52,6 +52,7 @@ def _aircraft_patrol_states(
     *,
     max_load_g: float = 2.5,
     gentle_turn_deg_per_s: float = 0.6,
+    turn_start_index: int = 0,
 ) -> tuple[list[np.ndarray], list]:
     """Avion porteur : vol nivelé + virage très lent (pas de demi-tour instantané).
 
@@ -64,13 +65,14 @@ def _aircraft_patrol_states(
     state = np.array([x0[0], v0[0], x0[1], v0[1], x0[2], v0[2]], dtype=float)
     states: list[np.ndarray] = []
     ts = []
-    omega = math.radians(gentle_turn_deg_per_s)
+    omega_rate = math.radians(gentle_turn_deg_per_s)
     for i in range(n_steps):
         states.append(state.copy())
         ts.append(times[i])
         vx, vy, vz = state[1], state[3], state[5]
         v_h = np.array([vx, vy], dtype=float)
         speed = float(np.linalg.norm(v_h))
+        omega = omega_rate if i >= turn_start_index else 0.0
         if speed > 10.0 and abs(omega) > 1e-9:
             # rotation horizontale lente (virage coordonné simplifié)
             c, s = math.cos(omega * dt), math.sin(omega * dt)
@@ -99,7 +101,7 @@ def _missile_air_sea_states(
     boost_accel_mps2: float = 40.0,
     boost_duration_s: float = 7.0,
     pitch_down_deg: float = 25.0,
-    sea_level_m: float = 0.0,
+    sea_level_m: float = 50.0,
 ) -> tuple[list[np.ndarray], list]:
     """Missile air-mer : lâcher, boost, plongée vers la mer (hyp. simulation).
 
@@ -263,6 +265,9 @@ def generate_scenario_truth(
         # Scénario B : avion porteur + lancement missile air-mer à t=60 s (120 s total).
         v_patrol = (155.0, 85.0, 0.0)
         alt_m = 8500.0
+        sep_idx = int(60 / scan_interval_s)
+        if sep_idx >= n_steps:
+            sep_idx = max(1, n_steps // 2)
         s_ac, ts_ac = _aircraft_patrol_states(
             (32000.0, 22000.0, alt_m),
             v_patrol,
@@ -271,13 +276,11 @@ def generate_scenario_truth(
             scan_interval_s,
             max_load_g=5.5,
             gentle_turn_deg_per_s=15.0,
+            turn_start_index=sep_idx,
         )
         targets.append(
             TruthTarget("AC", s_ac, ts_ac, times[0], parent_id=None, separation_time=None)
         )
-        sep_idx = int(60 / scan_interval_s)
-        if sep_idx >= n_steps:
-            sep_idx = max(1, n_steps // 2)
         parent_state = s_ac[sep_idx]
         s_ms, ts_ms = _missile_air_sea_states(
             parent_state,

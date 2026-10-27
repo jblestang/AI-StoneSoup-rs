@@ -23,6 +23,7 @@ from radar_tracker.coordinates import spherical_to_cartesian
 from radar_tracker.csv_reader import DetectionRecord, ScanBatch
 from radar_tracker.simulator.sensor import simulate_scan
 from radar_tracker.simulator.truth import generate_scenario_truth
+from radar_tracker.events import TrackLifeState
 from radar_tracker.tracker import RadarSeparationTracker
 
 
@@ -32,7 +33,8 @@ class FrameState:
     timestamp_str: str
     truth_xy: dict[str, tuple[float, float]]
     det_xy: list[tuple[float, float]]
-    track_xy: dict[str, tuple[float, float]]
+    parent_track_xy: tuple[float, float] | None
+    child_track_xy: tuple[float, float] | None
     n_dets: int
 
 
@@ -88,11 +90,29 @@ def build_frames(cfg, scenario: str, seed: int) -> tuple[list[FrameState], dict,
             tuple(spherical_to_cartesian(d.range_m, d.azimuth_rad, d.elevation_rad, radar_pos)[:2])
             for d in batch.detections
         ]
-        track_xy = {}
-        for tid, tr in tracker.tracks.items():
-            if tr.state is not None:
-                sv = tr.state.state_vector.ravel()
-                track_xy[tid] = (float(sv[0]), float(sv[2]))
+        confirmed = [
+            (tid, tr)
+            for tid, tr in tracker.tracks.items()
+            if tr.life == TrackLifeState.CONFIRMED and tr.state is not None
+        ]
+        confirmed.sort(key=lambda x: x[1].age_scans, reverse=True)
+        parent_xy = None
+        child_xy = None
+        if confirmed:
+            p_tid, p_tr = confirmed[0]
+            parent_xy = (
+                float(p_tr.state.state_vector.ravel()[0]),
+                float(p_tr.state.state_vector.ravel()[2]),
+            )
+            for tid, tr in confirmed[1:] + [(t, tracker.tracks[t]) for t in tracker.tracks]:
+                if tid == p_tid or tr.state is None:
+                    continue
+                if tr.parent_track_id == p_tid and tr.life != TrackLifeState.REJECTED:
+                    child_xy = (
+                        float(tr.state.state_vector.ravel()[0]),
+                        float(tr.state.state_vector.ravel()[2]),
+                    )
+                    break
 
         frames.append(
             FrameState(
@@ -100,7 +120,8 @@ def build_frames(cfg, scenario: str, seed: int) -> tuple[list[FrameState], dict,
                 timestamp_str=batch.timestamp.strftime("%H:%M:%S"),
                 truth_xy=truth_xy,
                 det_xy=det_xy,
-                track_xy=track_xy,
+                parent_track_xy=parent_xy,
+                child_track_xy=child_xy,
                 n_dets=len(batch.detections),
             )
         )
@@ -136,12 +157,13 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
     all_x = []
     all_y = []
     for fr in frames:
-        for xy in fr.det_xy + list(fr.truth_xy.values()) + list(fr.track_xy.values()):
+        for xy in list(fr.truth_xy.values()):
             all_x.append(xy[0])
             all_y.append(xy[1])
-    pad = 2000
+    pad = 8000
     xmin, xmax = min(all_x) - pad, max(all_x) + pad
     ymin, ymax = min(all_y) - pad, max(all_y) + pad
+    span = max(xmax - xmin, ymax - ymin)
 
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.patch.set_facecolor("#0f1419")
@@ -201,17 +223,19 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
         line_t1.set_data([p[0] for p in trails["AC"]], [p[1] for p in trails["AC"]])
         line_t2.set_data([p[0] for p in trails["MS"]], [p[1] for p in trails["MS"]])
 
-        keys = sorted(fr.track_xy.keys())
-        p_id = keys[0] if keys else None
-        c_id = keys[1] if len(keys) > 1 else None
-
-        if p_id and p_id in fr.track_xy:
-            parent_trail.append(fr.track_xy[p_id])
-        if c_id and c_id in fr.track_xy:
-            child_trail.append(fr.track_xy[c_id])
+        if fr.parent_track_xy:
+            parent_trail.append(fr.parent_track_xy)
+        if fr.child_track_xy:
+            child_trail.append(fr.child_track_xy)
 
         line_p.set_data([p[0] for p in parent_trail], [p[1] for p in parent_trail])
         line_c.set_data([p[0] for p in child_trail], [p[1] for p in child_trail])
+
+        if "AC" in fr.truth_xy:
+            cx, cy = fr.truth_xy["AC"]
+            half = span / 2
+            ax.set_xlim(cx - half, cx + half)
+            ax.set_ylim(cy - half, cy + half)
 
         if fr.det_xy:
             scat_det.set_offsets(np.array(fr.det_xy))
