@@ -156,11 +156,13 @@ def simulate_scan(
     n_clutter = scenario_flags.get("n_clutter", 0)
     clutter_fraction = float(cfg.simulation.get("clutter_fraction", 0.0))
     if clutter_fraction > 0.0 and "n_clutter" not in scenario_flags:
-        # 20 % clutter → ~20 % du total : n_c ≈ fraction/(1-fraction) × n_vraies
+        # Part cible f dans le total : E[n_clutter] = n_true × f / (1 − f)
         n_true = len(dets)
         if n_true > 0:
-            ratio = clutter_fraction / max(1e-9, 1.0 - clutter_fraction)
-            n_clutter = max(1, int(math.ceil(ratio * n_true)))
+            expected = n_true * clutter_fraction / max(1e-9, 1.0 - clutter_fraction)
+            n_clutter = int(math.floor(expected))
+            if rng.random() < (expected - n_clutter):
+                n_clutter += 1
     if truth.name == "dense_clutter" or scenario_flags.get("clutter"):
         n_clutter = scenario_flags.get("n_clutter", 200)
     if truth.name == "stress_1000_det":

@@ -61,8 +61,8 @@ simulation:
   missile_boost_accel_mps2: 40.0
   missile_boost_duration_s: 7.0
   missile_pitch_down_deg: 25.0
-  # Fausses alarmes (0 = désactivé pour la démo vidéo ; remettre ex. 0.20 pour stress-test)
-  clutter_fraction: 0.0
+  # Fausses alarmes ~10 % du total par scan (léger stress-test)
+  clutter_fraction: 0.10
 
 benchmark:
   scenarios:

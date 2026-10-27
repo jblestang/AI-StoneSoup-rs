@@ -8,6 +8,7 @@ from radar_tracker.simulator.truth import generate_scenario_truth
 def test_clutter_fraction_about_twenty_percent():
     cfg = load_config("config/demo.yaml")
     cfg.simulation["clutter_fraction"] = 0.20
+    cfg.simulation["seed"] = 42
     truth = generate_scenario_truth("aircraft_asm", 10, 1.0, seed=42)
     rng = np.random.default_rng(42)
     totals = []
