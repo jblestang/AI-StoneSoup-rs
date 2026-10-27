@@ -160,16 +160,16 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
         for xy in list(fr.truth_xy.values()):
             all_x.append(xy[0])
             all_y.append(xy[1])
-    pad = 8000
+    pad = 3000
     xmin, xmax = min(all_x) - pad, max(all_x) + pad
     ymin, ymax = min(all_y) - pad, max(all_y) + pad
-    span = max(xmax - xmin, ymax - ymin)
 
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.patch.set_facecolor("#0f1419")
     ax.set_facecolor("#0f1419")
 
-    (line_t1,) = ax.plot([], [], color="#4fc3f7", lw=2, label="Avion porteur (AC)")
+    (line_ac_straight,) = ax.plot([], [], color="#4fc3f7", lw=2.5, label="Avion — avant / après virage")
+    (line_ac_arc,) = ax.plot([], [], color="#00e5ff", lw=4, label="Avion — demi-tour (arc 12 s)")
     (line_t2,) = ax.plot([], [], color="#ff8a65", lw=2, label="Missile air-mer (MS)")
     (line_p,) = ax.plot([], [], color="#aed581", lw=2, ls="--", label="Piste estimée parent")
     (line_c,) = ax.plot([], [], color="#fff176", lw=2, ls="--", label="Piste estimée fille")
@@ -220,7 +220,19 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
             if tid in fr.truth_xy:
                 trails[tid].append(fr.truth_xy[tid])
 
-        line_t1.set_data([p[0] for p in trails["AC"]], [p[1] for p in trails["AC"]])
+        ac_pts = trails["AC"]
+        if gt_scan is not None:
+            straight = ac_pts[: gt_scan + 1]
+            arc = ac_pts[gt_scan : gt_scan + 13]
+            after = ac_pts[gt_scan + 12 :]
+            line_ac_straight.set_data(
+                [p[0] for p in straight + after],
+                [p[1] for p in straight + after],
+            )
+            line_ac_arc.set_data([p[0] for p in arc], [p[1] for p in arc])
+        else:
+            line_ac_straight.set_data([p[0] for p in ac_pts], [p[1] for p in ac_pts])
+            line_ac_arc.set_data([], [])
         line_t2.set_data([p[0] for p in trails["MS"]], [p[1] for p in trails["MS"]])
 
         if fr.parent_track_xy:
@@ -230,12 +242,6 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
 
         line_p.set_data([p[0] for p in parent_trail], [p[1] for p in parent_trail])
         line_c.set_data([p[0] for p in child_trail], [p[1] for p in child_trail])
-
-        if "AC" in fr.truth_xy:
-            cx, cy = fr.truth_xy["AC"]
-            half = span / 2
-            ax.set_xlim(cx - half, cx + half)
-            ax.set_ylim(cy - half, cy + half)
 
         if fr.det_xy:
             scat_det.set_offsets(np.array(fr.det_xy))
@@ -262,7 +268,9 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
 
         msg = ""
         if gt_scan is not None and i == gt_scan:
-            msg = "◆ SÉPARATION PHYSIQUE (simulation)"
+            msg = "◆ LÂCHER MISSILE + DÉBUT DEMI-TOUR"
+        elif gt_scan is not None and gt_scan < i < gt_scan + 12:
+            msg = "◆ DEMI-TOUR AVION (arc 15°/s × 12 s)"
         elif det_scan is not None and i == det_scan:
             msg = "◆ DÉTECTION CONFIRMÉE (tracker)"
         banner.set_text(msg)
@@ -314,7 +322,7 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
                 )
             )
 
-        artists = [line_t1, line_t2, line_p, line_c, scat_det, title, hud, banner]
+        artists = [line_ac_straight, line_ac_arc, line_t2, line_p, line_c, scat_det, title, hud, banner]
         return artists
 
     writer = FFMpegWriter(fps=fps, bitrate=4000)
