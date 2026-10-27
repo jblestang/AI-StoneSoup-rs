@@ -43,6 +43,73 @@ def _integrate_cv(state: np.ndarray, dt: float) -> np.ndarray:
     return np.array([x + vx * dt, vx, y + vy * dt, vy, z + vz * dt, vz])
 
 
+def _fighter_breakaway_states(
+    initial: np.ndarray,
+    n_steps: int,
+    sep_idx: int,
+    times: list,
+    dt: float,
+    *,
+    max_load_g: float = 4.0,
+    climb_accel_mps2: float = 2.5,
+    lateral_break_bias: float = 0.65,
+) -> tuple[list[np.ndarray], list]:
+    """Cassure chasseur post-séparation : même vitesse initiale, virage chargé limité en g.
+
+    Hypothèse simulation (pas mesurée) : charge max ``max_load_g``, reprendre le cap
+    opposé horizontalement sur ~15–25 s via accélération bornée (pas de flip instantané).
+    """
+    g = 9.81
+    max_accel = max_load_g * g
+    state = initial.astype(float).copy()
+    states: list[np.ndarray] = []
+    ts = []
+    v0 = np.array([state[1], state[3], state[5]], dtype=float)
+    v0_h = v0.copy()
+    v0_h[2] = 0.0
+    v0_norm = float(np.linalg.norm(v0_h))
+    if v0_norm < 1.0:
+        target_h = np.array([-1.0, 0.0, 0.0])
+    else:
+        target_h = -v0_h / v0_norm
+
+    for i in range(sep_idx, n_steps):
+        states.append(state.copy())
+        ts.append(times[i])
+        vx, vy, vz = state[1], state[3], state[5]
+        v_h = np.array([vx, vy, 0.0])
+        speed = float(np.linalg.norm(v_h))
+        if speed < 5.0:
+            state = _integrate_cv(state, dt)
+            continue
+        cur = v_h / speed
+        # Cassure : composante latérale (bias droit) + rétrogradation progressive vers cap opposé
+        lateral = np.array([cur[1], -cur[0], 0.0])
+        lat_n = float(np.linalg.norm(lateral))
+        if lat_n > 1e-6:
+            lateral /= lat_n
+        blend = min(1.0, (i - sep_idx) / max(1, int(20 / dt)))
+        desired_dir = (1.0 - blend) * cur + blend * target_h
+        desired_dir = desired_dir + lateral_break_bias * lateral
+        desired_dir[2] = 0.0
+        dn = float(np.linalg.norm(desired_dir))
+        if dn > 1e-6:
+            desired_dir /= dn
+        desired_v = desired_dir * speed
+        accel_h = desired_v - v_h
+        a_norm = float(np.linalg.norm(accel_h))
+        if a_norm > max_accel:
+            accel_h *= max_accel / a_norm
+        state[1] += accel_h[0] * dt
+        state[3] += accel_h[1] * dt
+        state[5] += climb_accel_mps2 * dt
+        state[0] += state[1] * dt
+        state[2] += state[3] * dt
+        state[4] += state[5] * dt
+
+    return states, ts
+
+
 def generate_scenario_truth(
     name: str,
     duration_s: float,
@@ -153,22 +220,33 @@ def generate_scenario_truth(
         )
 
     elif name in ("probable_detach_opposite", "detach_opposite_1min"):
-        # Scénario B explicite : 2 min de vol, séparation à t=60 s,
-        # une cible poursuit, l'autre repart quasi en sens inverse (détachement).
-        v_continue = (120.0, 70.0, 0.0)
+        # Scénario B : 120 s, séparation à 60 s — leader poursuit, #2 casse en chasseur
+        # (virage chargé ~4 g, remise de cap opposée sur ~20 s, légère montée).
+        v_continue = (155.0, 85.0, 0.0)  # ~310 m/s horizontal (hyp. démo subsonique)
         make_track("T1", (32000.0, 22000.0, 8500.0), v_continue)
         sep_idx = int(60 / scan_interval_s)
         if sep_idx >= n_steps:
             sep_idx = max(1, n_steps // 2)
         parent_state = targets[0].states[sep_idx]
-        v_reverse = (-0.95 * parent_state[1], -0.95 * parent_state[3], 0.0)
-        make_track(
-            "T2",
-            (parent_state[0], parent_state[2], parent_state[4]),
-            v_reverse,
+        s2, ts2 = _fighter_breakaway_states(
+            parent_state,
+            n_steps,
             sep_idx,
-            parent="T1",
-            sep_time=times[sep_idx],
+            times,
+            scan_interval_s,
+            max_load_g=4.0,
+            climb_accel_mps2=2.5,
+            lateral_break_bias=0.55,
+        )
+        targets.append(
+            TruthTarget(
+                target_id="T2",
+                states=s2,
+                timestamps=ts2,
+                birth_time=times[sep_idx],
+                parent_id="T1",
+                separation_time=times[sep_idx],
+            )
         )
         events.append(
             GroundTruthEvent(
@@ -177,7 +255,7 @@ def generate_scenario_truth(
                 time=times[sep_idx],
                 parent_ids=["T1"],
                 child_ids=["T1", "T2"],
-                first_resolvable_time=times[min(sep_idx + 2, n_steps - 1)],
+                first_resolvable_time=times[min(sep_idx + 3, n_steps - 1)],
             )
         )
 

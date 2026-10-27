@@ -68,7 +68,7 @@ Réordonnancement interne vers Stone Soup : `[élévation, azimut, distance]`.
 
 | Nom | Description |
 |-----|-------------|
-| `probable_detach_opposite` | **Démo par défaut** : 120 s, séparation à **60 s**, une cible **continue**, l’autre repart **quasi en sens inverse** (scénario B) |
+| `probable_detach_opposite` | **Démo par défaut** : 120 s, séparation à **60 s**, leader en cap stable, second **casse** avec virage ~**4 g** et remise de cap opposée sur ~20 s (chasseur, hyp. simulation) |
 | `single_target` | Pas de séparation |
 | `unresolved_group_disperses` | Scénario A : deux cibles toujours présentes mais **fusionnées** en mesure jusqu’à la résolution (séparation à 40 s dans la démo) |
 | `probable_detach` | Détachement avec poursuite (écart de vitesse modéré, séparation à 50 s) |

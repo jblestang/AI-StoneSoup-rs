@@ -52,8 +52,10 @@ simulation:
   duration_s: 120
   scan_interval_s: 1.0
   max_detections_per_scan: 1000
-  # Scénario B : 120 s, séparation à 60 s, poursuite + sens inverse
+  # Scénario B : 120 s, séparation à 60 s, leader + cassure chasseur (4 g, ~20 s)
   scenario: probable_detach_opposite
+  fighter_breakaway_max_load_g: 4.0  # hyp. simulation
+  fighter_breakaway_climb_mps2: 2.5
 
 benchmark:
   scenarios:

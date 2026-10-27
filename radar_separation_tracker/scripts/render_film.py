@@ -148,7 +148,7 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
     ax.set_facecolor("#0f1419")
 
     (line_t1,) = ax.plot([], [], color="#4fc3f7", lw=2, label="Vérité T1 (continue)")
-    (line_t2,) = ax.plot([], [], color="#ff8a65", lw=2, label="Vérité T2 (sens inverse)")
+    (line_t2,) = ax.plot([], [], color="#ff8a65", lw=2, label="Vérité T2 (cassure chasseur)")
     (line_p,) = ax.plot([], [], color="#aed581", lw=2, ls="--", label="Piste estimée parent")
     (line_c,) = ax.plot([], [], color="#fff176", lw=2, ls="--", label="Piste estimée fille")
     scat_det = ax.scatter([], [], s=18, c="#b0bec5", alpha=0.7, label="Détections scan")

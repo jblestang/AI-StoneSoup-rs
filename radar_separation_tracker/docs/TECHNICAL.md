@@ -71,6 +71,15 @@ Une bifurcation dans l'arbre **n'est pas** un événement ; export seulement apr
 - Gating χ² (3 dof, `gate_probability`).
 - Pas d'énumération globale jointe.
 
+## Cassure chasseur (`probable_detach_opposite`)
+
+Hypothèses **simulation** (remplaçables dans la vérité terrain) :
+
+- Leader T1 : CV ~155 m/s horizontal (ordre de grandeur patrouille subsonique).
+- À t = 60 s, T2 naît avec **le même état** que T1.
+- T2 : accélération horizontale bornée à **4 g**, composante latérale de cassure + rampe vers cap **opposé** sur ~20 s, montée légère (~2,5 m/s²).
+- Pas de vitesse opposée instantanée (non physique pour un avion).
+
 ## Limites v1
 
 - Au plus **une** détection par cible résolue et par scan (pas de multi-échos / filiation automatique).
