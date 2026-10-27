@@ -33,7 +33,13 @@ python scripts/run_tracking.py --detections output/unresolved_group_disperses_de
 ### 3. Visualiser
 
 ```bash
-python scripts/visualize.py --detections output/unresolved_group_disperses_detections.csv --output output/plot.png
+python scripts/visualize.py --detections output/probable_detach_opposite_detections.csv --output output/plot.png
+```
+
+### Film (séparation vérité vs détection)
+
+```bash
+python scripts/render_film.py --scenario probable_detach_opposite --output output/simulation_film.mp4 --fps 6
 ```
 
 ### 4. Tests
