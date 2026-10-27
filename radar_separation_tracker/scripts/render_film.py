@@ -32,10 +32,12 @@ class FrameState:
     scan_index: int
     timestamp_str: str
     truth_xy: dict[str, tuple[float, float]]
-    det_xy: list[tuple[float, float]]
+    det_xy_true: list[tuple[float, float]]
+    det_xy_clutter: list[tuple[float, float]]
     parent_track_xy: tuple[float, float] | None
     child_track_xy: tuple[float, float] | None
     n_dets: int
+    n_clutter: int
 
 
 def build_frames(cfg, scenario: str, seed: int) -> tuple[list[FrameState], dict, list]:
@@ -86,10 +88,14 @@ def build_frames(cfg, scenario: str, seed: int) -> tuple[list[FrameState], dict,
                     truth_xy[tgt.target_id] = (float(s[0]), float(s[2]))
                     break
 
-        det_xy = [
-            tuple(spherical_to_cartesian(d.range_m, d.azimuth_rad, d.elevation_rad, radar_pos)[:2])
-            for d in batch.detections
-        ]
+        det_xy_true = []
+        det_xy_clutter = []
+        for d in sim_dets:
+            xy = tuple(spherical_to_cartesian(d.range_m, d.azimuth_rad, d.elevation_rad, radar_pos)[:2])
+            if d.detection_id.startswith("C"):
+                det_xy_clutter.append(xy)
+            else:
+                det_xy_true.append(xy)
         confirmed = [
             (tid, tr)
             for tid, tr in tracker.tracks.items()
@@ -119,10 +125,12 @@ def build_frames(cfg, scenario: str, seed: int) -> tuple[list[FrameState], dict,
                 scan_index=si,
                 timestamp_str=batch.timestamp.strftime("%H:%M:%S"),
                 truth_xy=truth_xy,
-                det_xy=det_xy,
+                det_xy_true=det_xy_true,
+                det_xy_clutter=det_xy_clutter,
                 parent_track_xy=parent_xy,
                 child_track_xy=child_xy,
                 n_dets=len(batch.detections),
+                n_clutter=len(det_xy_clutter),
             )
         )
 
@@ -173,7 +181,19 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
     (line_t2,) = ax.plot([], [], color="#ff8a65", lw=2, label="Missile air-mer (MS)")
     (line_p,) = ax.plot([], [], color="#aed581", lw=2, ls="--", label="Piste estimée parent")
     (line_c,) = ax.plot([], [], color="#fff176", lw=2, ls="--", label="Piste estimée fille")
-    scat_det = ax.scatter([], [], s=18, c="#b0bec5", alpha=0.7, label="Détections scan")
+    scat_true = ax.scatter([], [], s=55, c="#ffffff", edgecolors="#4fc3f7", linewidths=1.2, alpha=0.95, label="Cibles (scan)")
+    scat_clutter = ax.scatter(
+        [],
+        [],
+        s=120,
+        marker="x",
+        c="#ff4081",
+        linewidths=2.2,
+        alpha=0.95,
+        label="Clutter (scan + persistance)",
+    )
+    clutter_persist: list[tuple[float, float]] = []
+    clutter_persist_depth = 15
     gt_line = ax.axvline(x=0, color="#ef5350", ls=":", lw=0)  # placeholder
     det_line = ax.axvline(x=0, color="#66bb6a", ls=":", lw=0)
 
@@ -211,7 +231,7 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
     marker_artists: list = []
 
     def update(i: int):
-        nonlocal marker_artists
+        nonlocal marker_artists, clutter_persist
         for art in marker_artists:
             art.remove()
         marker_artists = []
@@ -243,10 +263,18 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
         line_p.set_data([p[0] for p in parent_trail], [p[1] for p in parent_trail])
         line_c.set_data([p[0] for p in child_trail], [p[1] for p in child_trail])
 
-        if fr.det_xy:
-            scat_det.set_offsets(np.array(fr.det_xy))
+        clutter_persist.extend(fr.det_xy_clutter)
+        if len(clutter_persist) > clutter_persist_depth * 3:
+            clutter_persist = clutter_persist[-clutter_persist_depth * 3 :]
+        show_clutter = clutter_persist + fr.det_xy_clutter
+        if fr.det_xy_true:
+            scat_true.set_offsets(np.array(fr.det_xy_true))
         else:
-            scat_det.set_offsets(np.empty((0, 2)))
+            scat_true.set_offsets(np.empty((0, 2)))
+        if show_clutter:
+            scat_clutter.set_offsets(np.array(show_clutter))
+        else:
+            scat_clutter.set_offsets(np.empty((0, 2)))
 
         delay_s = None
         if gt_scan is not None and det_scan is not None and i >= det_scan:
@@ -254,7 +282,7 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
 
         title.set_text(
             f"Scénario détachement — scan {fr.scan_index}/{len(frames)-1}  |  t = {fr.timestamp_str}  |  "
-            f"{fr.n_dets} détection(s)"
+            f"{fr.n_dets} détection(s) — clutter scan: {fr.n_clutter}"
         )
 
         hud_txt = [
@@ -322,7 +350,7 @@ def render_mp4(frames: list[FrameState], meta: dict, output: Path, fps: float = 
                 )
             )
 
-        artists = [line_ac_straight, line_ac_arc, line_t2, line_p, line_c, scat_det, title, hud, banner]
+        artists = [line_ac_straight, line_ac_arc, line_t2, line_p, line_c, scat_true, scat_clutter, title, hud, banner]
         return artists
 
     writer = FFMpegWriter(fps=fps, bitrate=4000)
