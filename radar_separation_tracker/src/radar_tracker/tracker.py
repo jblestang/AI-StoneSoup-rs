@@ -180,6 +180,16 @@ class RadarSeparationTracker:
                 track.last_update_scan = batch.scan_id
             elif len(in_gate) > 1:
                 ambiguous_tracks.add(tid)
+                in_gate.sort(key=lambda x: x[1])
+                i_best, _ = in_gate[0]
+                det_best = detection_from_record(dets[i_best], self.measurement_model)
+                self._update_track(track, det_best)
+                assigned_det.add(i_best)
+                track.last_update_scan = batch.scan_id
+                for i_extra, _ in in_gate[1:]:
+                    if i_extra not in assigned_det:
+                        self._propose_detach(track, dets[i_extra], batch)
+                        assigned_det.add(i_extra)
                 for i, d2 in in_gate:
                     candidate_pairs.append((tid, i, d2))
             else:
@@ -189,7 +199,21 @@ class RadarSeparationTracker:
 
         unassigned = [i for i in range(len(dets)) if i not in assigned_det]
 
-        if ambiguous_tracks or (unassigned and self.tracks):
+        # 2e détection dans le scan : poursuite + branche fille (détachement / sens opposé)
+        confirmed = [
+            t for t in self.tracks.values() if t.life == TrackLifeState.CONFIRMED
+        ]
+        if len(dets) >= 2 and confirmed:
+            parent = max(confirmed, key=lambda t: t.age_scans)
+            for i in list(unassigned):
+                if i in assigned_det:
+                    continue
+                if self._loose_detach_gate(parent, dets[i]):
+                    self._propose_detach(parent, dets[i], batch)
+                    assigned_det.add(i)
+            unassigned = [i for i in range(len(dets)) if i not in assigned_det]
+
+        if ambiguous_tracks:
             active = [self.tracks[t] for t in self.tracks if self.tracks[t].life != TrackLifeState.REJECTED]
             hyps = generate_local_hypotheses(
                 active,
@@ -223,14 +247,134 @@ class RadarSeparationTracker:
         dt = time.perf_counter() - t0
         return ScanMetrics(dt, len(dets), len(self.tracks), n_hyps, n_pruned)
 
+    def _loose_detach_gate(self, parent: Track, det_record) -> bool:
+        """Gate conservateur pour une 2e détection (séparation / sens opposé)."""
+        pred = self._predict_track(parent, det_record.timestamp)
+        if pred is None:
+            return False
+        xyz = detection_cartesian(
+            det_record.range_m, det_record.azimuth_rad, det_record.elevation_rad, self.radar_pos
+        )
+        sv = pred.state_vector.ravel()
+        dx = xyz[0] - sv[0]
+        dy = xyz[1] - sv[2]
+        dz = xyz[2] - sv[4]
+        dist = float(np.sqrt(dx * dx + dy * dy + dz * dz))
+        max_dist = max(8000.0, 0.15 * float(np.linalg.norm([sv[0], sv[2], sv[4]])))
+        return dist <= max_dist
+
     def _try_init_tracks(self, batch: ScanBatch) -> None:
         if len(self._init_buffer) < 2:
             return
+        if any(t.life == TrackLifeState.CONFIRMED for t in self.tracks.values()):
+            return
+        recent = self._init_buffer[-3:]
+        scan_ids = {s for s, _, _ in recent}
+        if len(scan_ids) < 2:
+            return
         tid = self._new_track_id()
-        dets = [(ts, vec) for _, ts, vec in self._init_buffer[-3:]]
+        dets = [(ts, vec) for _, ts, vec in recent]
         tr = init_track_from_detections(tid, dets, self.cfg, self.measurement_model)
         if tr:
             self.tracks[tid] = tr
+            self._init_buffer.clear()
+
+    def _propose_detach(self, parent: Track, det_record, batch: ScanBatch) -> None:
+        """Branche fille + accumulation de score (confirmation retardée)."""
+        existing_child = next(
+            (
+                t
+                for t in self.tracks.values()
+                if t.parent_track_id == parent.track_id and t.life != TrackLifeState.REJECTED
+            ),
+            None,
+        )
+        if existing_child is not None:
+            child = existing_child
+            child_id = child.track_id
+        else:
+            child_id = self._new_track_id()
+            child = init_track_from_detections(
+                child_id,
+                [(batch.timestamp, det_record.stonesoup_vector)],
+                self.cfg,
+                self.measurement_model,
+            )
+            if child is None:
+                child = Track(track_id=child_id)
+            child.parent_track_id = parent.track_id
+            child.life = TrackLifeState.CANDIDATE
+            self.tracks[child_id] = child
+        det = detection_from_record(det_record, self.measurement_model)
+        if child.state is not None:
+            self._update_track(child, det)
+        elif existing_child is None:
+            self._update_track(child, det)
+
+        ev_key = parent.track_id
+        pending = self._pending_separations.get(ev_key, {"count": 0, "score": 0.0})
+        pending["count"] += 1
+        cor = common_origin_score(
+            parent.position_history,
+            child.position_history,
+            parent.cov_history,
+            child.cov_history,
+            self.cfg,
+        )
+        pending["score"] += parent.score * 0.01 + cor.score + 2.0
+        self._pending_separations[ev_key] = pending
+
+        pending["child_id"] = child_id
+        if pending["count"] >= self.cfg.hypothesis.separation_confirmation_scans:
+            if pending["score"] >= self.cfg.hypothesis.separation_score_threshold:
+                self._emit_separation_event(
+                    parent.track_id,
+                    pending["child_id"],
+                    batch,
+                    pending["score"],
+                    cor,
+                    HypothesisKind.DETACH_WITH_CONTINUATION,
+                )
+                del self._pending_separations[ev_key]
+
+    def _emit_separation_event(
+        self,
+        parent_id: str,
+        child_id: str,
+        batch: ScanBatch,
+        score: float,
+        cor,
+        kind: HypothesisKind,
+    ) -> None:
+        if any(e.origin_track_or_group_id == parent_id and child_id in e.descendant_track_ids for e in self.events):
+            return
+        etype = (
+            EventType.PROBABLE_DETACH
+            if kind == HypothesisKind.DETACH_WITH_CONTINUATION
+            else EventType.UNRESOLVED_GROUP_RESOLVED
+        )
+        if not cor.compatible and kind == HypothesisKind.DETACH_WITH_CONTINUATION:
+            etype = EventType.AMBIGUOUS
+        self.events.append(
+            SeparationEvent(
+                event_id=new_event_id(),
+                origin_track_or_group_id=parent_id,
+                descendant_track_ids=[parent_id, child_id],
+                event_type=etype.value,
+                remaining_ambiguities=[] if cor.compatible else ["origine_commune_incertaine"],
+                estimated_separation_interval=(None, batch.timestamp.isoformat()),
+                first_observable_resolution_time=batch.timestamp.isoformat(),
+                confirmation_time=batch.timestamp.isoformat(),
+                score=score,
+                rationale={
+                    "hypothesis_kind": kind.name,
+                    "common_origin": cor.details,
+                    "note": "origine commune probable, mécanisme indéterminé"
+                    if cor.compatible
+                    else "mécanisme indéterminé",
+                },
+            )
+        )
 
     def _handle_structural_hypothesis(
         self,
@@ -290,32 +434,13 @@ class RadarSeparationTracker:
 
             if pending["count"] >= self.cfg.hypothesis.separation_confirmation_scans:
                 if pending["score"] >= self.cfg.hypothesis.separation_score_threshold:
-                    etype = (
-                        EventType.PROBABLE_DETACH
-                        if hyp.kind == HypothesisKind.DETACH_WITH_CONTINUATION
-                        else EventType.UNRESOLVED_GROUP_RESOLVED
-                    )
-                    if not cor.compatible and hyp.kind == HypothesisKind.DETACH_WITH_CONTINUATION:
-                        etype = EventType.AMBIGUOUS
-                    self.events.append(
-                        SeparationEvent(
-                            event_id=new_event_id(),
-                            origin_track_or_group_id=parent_id or "unknown",
-                            descendant_track_ids=[parent_id, child_id] if parent_id else [child_id],
-                            event_type=etype.value,
-                            remaining_ambiguities=[] if cor.compatible else ["origine_commune_incertaine"],
-                            estimated_separation_interval=(None, batch.timestamp.isoformat()),
-                            first_observable_resolution_time=batch.timestamp.isoformat(),
-                            confirmation_time=batch.timestamp.isoformat(),
-                            score=pending["score"],
-                            rationale={
-                                "hypothesis_kind": hyp.kind.name,
-                                "common_origin": cor.details,
-                                "note": "origine commune probable, mécanisme indéterminé"
-                                if cor.compatible
-                                else "mécanisme indéterminé",
-                            },
-                        )
+                    self._emit_separation_event(
+                        parent_id or "unknown",
+                        child_id,
+                        batch,
+                        pending["score"],
+                        cor,
+                        hyp.kind,
                     )
                     del self._pending_separations[ev_key]
 

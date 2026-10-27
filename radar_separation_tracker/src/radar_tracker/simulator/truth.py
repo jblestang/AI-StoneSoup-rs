@@ -152,6 +152,35 @@ def generate_scenario_truth(
             )
         )
 
+    elif name in ("probable_detach_opposite", "detach_opposite_1min"):
+        # Scénario B explicite : 2 min de vol, séparation à t=60 s,
+        # une cible poursuit, l'autre repart quasi en sens inverse (détachement).
+        v_continue = (120.0, 70.0, 0.0)
+        make_track("T1", (32000.0, 22000.0, 8500.0), v_continue)
+        sep_idx = int(60 / scan_interval_s)
+        if sep_idx >= n_steps:
+            sep_idx = max(1, n_steps // 2)
+        parent_state = targets[0].states[sep_idx]
+        v_reverse = (-0.95 * parent_state[1], -0.95 * parent_state[3], 0.0)
+        make_track(
+            "T2",
+            (parent_state[0], parent_state[2], parent_state[4]),
+            v_reverse,
+            sep_idx,
+            parent="T1",
+            sep_time=times[sep_idx],
+        )
+        events.append(
+            GroundTruthEvent(
+                event_id="E1",
+                event_type="probable_detach",
+                time=times[sep_idx],
+                parent_ids=["T1"],
+                child_ids=["T1", "T2"],
+                first_resolvable_time=times[min(sep_idx + 2, n_steps - 1)],
+            )
+        )
+
     elif name == "crossing":
         make_track("T1", (20000.0, 10000.0, 6000.0), (200.0, 100.0, 0.0))
         make_track("T2", (40000.0, 30000.0, 6000.0), (-180.0, -120.0, 0.0))

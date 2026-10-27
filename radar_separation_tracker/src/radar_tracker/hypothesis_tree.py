@@ -39,7 +39,8 @@ class HypothesisTree:
 
 
 def _clone_tracks(tracks: list[Track]) -> list[Track]:
-    return copy.deepcopy(tracks)
+    # Références seulement — les hypothèses servent au score, pas à cloner les états Stone Soup.
+    return list(tracks)
 
 
 def generate_local_hypotheses(

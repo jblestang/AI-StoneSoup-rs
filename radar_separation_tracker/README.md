@@ -62,9 +62,10 @@ Réordonnancement interne vers Stone Soup : `[élévation, azimut, distance]`.
 
 | Nom | Description |
 |-----|-------------|
+| `probable_detach_opposite` | **Démo par défaut** : 120 s, séparation à **60 s**, une cible **continue**, l’autre repart **quasi en sens inverse** (scénario B) |
 | `single_target` | Pas de séparation |
-| `unresolved_group_disperses` | Groupe fusionné puis résolu |
-| `probable_detach` | Détachement avec poursuite |
+| `unresolved_group_disperses` | Scénario A : deux cibles toujours présentes mais **fusionnées** en mesure jusqu’à la résolution (séparation à 40 s dans la démo) |
+| `probable_detach` | Détachement avec poursuite (écart de vitesse modéré, séparation à 50 s) |
 | `crossing` | Croisement sans origine commune |
 | `independent_birth_near` | Naissance indépendante proche |
 | `dense_clutter` | Clutter dense |

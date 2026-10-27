@@ -51,7 +51,8 @@ simulation:
   duration_s: 120
   scan_interval_s: 1.0
   max_detections_per_scan: 1000
-  scenario: unresolved_group_disperses  # voir simulateur pour la liste
+  # Scénario B : 120 s, séparation à 60 s, poursuite + sens inverse
+  scenario: probable_detach_opposite
 
 benchmark:
   scenarios:
