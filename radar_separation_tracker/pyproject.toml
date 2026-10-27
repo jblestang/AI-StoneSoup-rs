@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "radar-separation-tracker"
+version = "0.1.0"
+description = "Suivi radar 3D multi-hypothèses avec détection de séparation (Stone Soup)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "stonesoup==1.9.1",
+  "numpy>=1.26,<3",
+  "scipy>=1.11",
+  "matplotlib>=3.8",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

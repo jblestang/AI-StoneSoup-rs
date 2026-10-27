@@ -1,0 +1,76 @@
+# Hypothèses de démonstration — remplacer par les caractéristiques radar réelles.
+# Voir docs/TECHNICAL.md pour les équations et unités.
+
+radar:
+  id: RADAR_01
+  position_m: [0.0, 0.0, 0.0]  # origine locale (x Est, y Nord, z Haut), m
+  rotation_offset_rad: [0.0, 0.0, 0.0]  # Stone Soup: rotation capteur (x,y,z)
+
+measurement:
+  # Précision (écart-type) — modèle gaussien sur [élévation, azimut, distance]
+  sigma_elevation_rad: 0.002
+  sigma_azimuth_rad: 0.002
+  sigma_range_m: 5.0
+  # Résolution minimale pour distinguer deux objets (approximation boîte)
+  resolution_elevation_rad: 0.015
+  resolution_azimuth_rad: 0.015
+  resolution_range_m: 30.0
+
+tracking:
+  filter: ekf  # ekf | ukf — EKF justifié: modèle CV linéaire, non-linéarité modérée en CBR
+  process_noise_accel_mps2: 2.0  # bruit d'accélération (modèle CV Stone Soup)
+  probability_detection: 0.92
+  clutter_density_per_m3: 1.0e-9  # approx. Poisson dans le volume de gate
+  gate_probability: 0.997
+  init_position_sigma_m: 50.0
+  init_velocity_sigma_mps: 80.0
+  min_scans_to_confirm: 4
+  min_scans_to_reject: 3
+  confirmation_score_threshold: -15.0
+  rejection_score_threshold: -40.0
+  max_missed_scans_before_coast: 5
+  max_active_tracks: 200
+
+hypothesis:
+  window_depth_scans: 12
+  max_hypotheses: 64
+  max_branches_per_event: 2
+  complexity_penalty: 3.0
+  common_origin_lookback_scans: 8
+  common_origin_sigma_multiplier: 3.0
+  # 2 scans consécutifs à 2+ détections après le split (≈2 s @ 1 Hz, pas 5+ s)
+  separation_confirmation_scans: 2
+  separation_score_threshold: -8.0
+
+performance:
+  spatial_gate_max_range_m: 150000.0
+  max_detections_per_scan: 1000
+  log_pruned_hypotheses: true
+
+simulation:
+  seed: 42
+  duration_s: 120
+  scan_interval_s: 1.0
+  max_detections_per_scan: 1000
+  # Scénario B : avion porteur + missile air-mer (lâcher à 60 s)
+  scenario: probable_detach_opposite
+  aircraft_max_load_g: 5.5  # hyp. pour tenir 15°/s ~ v·ω à ~155 m/s
+  # Après lâcher : demi-tour en arc 15°/s × 12 s (= 180°), puis cap stabilisé
+  aircraft_turn_deg_per_s: 15.0
+  aircraft_turn_duration_s: 12.0
+  missile_boost_accel_mps2: 40.0
+  missile_boost_duration_s: 7.0
+  missile_pitch_down_deg: 25.0
+  # Fausses alarmes ~10 % du total par scan (léger stress-test)
+  clutter_fraction: 0.10
+
+benchmark:
+  scenarios:
+    - single_target
+    - unresolved_group_disperses
+    - probable_detach
+    - crossing
+    - independent_birth_near
+  n_tracks_list: [5, 20, 50]
+  clutter_detections: [50, 200, 1000]
+  repeats: 3
